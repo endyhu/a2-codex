@@ -12,4 +12,4 @@
 - Preview config for the app browser: `.claude/launch.json`.
 
 ## Not done yet (owner action)
-- Repo created, `main` pushed, DNS (grey-cloud CNAME) and custom domain verified. Still to confirm: a green deploy run after the Node 24 / actions update, then the site loading at the custom domain.
+- None. Repo, DNS, custom domain, HTTPS and deploy are live at https://a2codex.prezenith.com.
