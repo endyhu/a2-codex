@@ -241,17 +241,20 @@ const order: Step[] = [
     li.classList.remove('flash');
     void li.offsetWidth;
     li.classList.add('flash');
-    setTimeout(() => li.classList.remove('flash'), 1700);
+    setTimeout(() => li.classList.remove('flash'), 2800);
   };
   const glow = (id: string) => {
     const li = document.getElementById(id);
     if (!li) return;
     // Best stat lines already glows through :target when the address changes; replay it only for a repeat click.
     if (id === 'best-lines') { if (location.hash === '#best-lines') flash(li); return; }
-    let done = false;
-    const run = () => { if (!done) { done = true; flash(li); } };
-    addEventListener('scrollend', run, { once: true });
-    setTimeout(run, 900);
+    // Start the glow once the scroll has stopped (no scroll event for 150ms), at the latest after 3s; if no scroll starts within 400ms the target is already in place.
+    let timer = 0, moving = false;
+    const finish = () => { removeEventListener('scroll', bump); clearTimeout(timer); clearTimeout(cap); flash(li); };
+    const bump = () => { moving = true; clearTimeout(timer); timer = window.setTimeout(finish, 150); };
+    const cap = window.setTimeout(finish, 3000);
+    addEventListener('scroll', bump, { passive: true });
+    timer = window.setTimeout(() => { if (!moving) finish(); }, 400);
   };
   document.addEventListener('click', (e) => {
     const a = (e.target as Element).closest<HTMLAnchorElement>('a[href*="#"]');
@@ -434,14 +437,15 @@ const order: Step[] = [
   .bsl:hover { transform: translateY(-1px); box-shadow: 0 0 28px -4px var(--accent); background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 42%, transparent), color-mix(in srgb, var(--accent) 16%, transparent)); }
   .bsl:hover .bsl-go { transform: translateY(-2px); }
   #best-lines { scroll-margin-top: 16px; }
-  #best-lines:target { animation: bsl-flash 1.6s ease-out; }
-  @keyframes bsl-flash { 0% { box-shadow: 0 0 0 2px var(--accent), 0 0 28px -4px var(--accent); } 100% { box-shadow: 0 0 0 0 transparent; } }
-  /* Same glow on the Best stat lines card and on each step. A step's glow box takes half of the gap above and below it, so neighbouring glows meet without a seam. */
-  #best-lines.flash { animation: bsl-flash-again 1.6s ease-out; }
-  @keyframes bsl-flash-again { 0% { box-shadow: 0 0 0 2px var(--accent), 0 0 28px -4px var(--accent); } 100% { box-shadow: 0 0 0 0 transparent; } }
+  #best-lines:target { animation: bsl-flash 2.6s ease-out; }
+  @keyframes bsl-flash { 0% { box-shadow: 0 0 0 2px var(--accent), 0 0 56px 0 var(--accent); } 100% { box-shadow: 0 0 0 0 transparent, 0 0 56px 0 transparent; } }
+  /* Same glow on the Best stat lines card and on each step. A step's glow box takes half of the gap above and below it so neighbours meet without a seam; middle steps only glow sideways (top and bottom are clipped), the first also glows up and the last down. */
+  #best-lines.flash { animation: bsl-flash-again 2.6s ease-out; }
+  @keyframes bsl-flash-again { 0% { box-shadow: 0 0 0 2px var(--accent), 0 0 56px 0 var(--accent); } 100% { box-shadow: 0 0 0 0 transparent, 0 0 56px 0 transparent; } }
   .path > li { isolation: isolate; }
-  .path > li.flash::after { content: ''; position: absolute; z-index: -1; inset: -16px -16px 16px -16px; border-radius: 4px; pointer-events: none; animation: bsl-flash 1.6s ease-out; }
-  .path > li:last-child.flash::after { inset: -16px -16px -16px -16px; }
+  .path > li.flash::after { content: ''; position: absolute; z-index: -1; inset: -16px -16px 16px -16px; border-radius: 4px; pointer-events: none; clip-path: inset(0 -90px 0 -90px); animation: bsl-flash 2.6s ease-out; }
+  .path > li:first-child.flash::after { clip-path: inset(-90px -90px 0 -90px); }
+  .path > li:last-child.flash::after { inset: -16px -16px -16px -16px; clip-path: inset(0 -90px -90px -90px); }
   @media (prefers-reduced-motion: reduce) { #best-lines.flash, .path > li.flash::after { animation: none; } }
   .actions { display: grid; gap: 0; margin: 12px 0 8px; border: 1px solid var(--line); border-radius: 3px; background: var(--panel); }
   .actions div { display: grid; grid-template-columns: 4.5em 1fr; gap: 12px; padding: 8px 12px; }
