@@ -41,7 +41,9 @@ One-time setup (already done if the site is live): in the repo's Settings > Page
 | --- | --- |
 | `src/pages/` | One file per page (URL = file path) |
 | `src/data/nav.ts` | Navigation, mirrors the in-game menu names |
-| `src/components/` | Shared components (e.g. `Badge.astro`) |
+| `src/components/` | Shared components (`Badge.astro`, `TagGroup.astro`) |
+| `src/data/stat-sources.json` | Where each stat can be obtained, generated from Global client data |
+| `scripts/global-sources.mjs` | Rebuilds `stat-sources.json` (`mise exec -- node scripts/global-sources.mjs`) |
 | `src/layouts/Base.astro` | Page shell |
 | `src/styles/global.css` | Theme and global styles |
 | `public/` | Static files copied as-is (favicon, CNAME) |

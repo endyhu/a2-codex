@@ -75,12 +75,16 @@ Clean, modern cheatsheet site for the **AION 2 Global** server. Hosted free on G
 - **One session per feature.** Keep this file and `docs/` current so a fresh session can start fast. At the end of a feature, update `docs/STATUS.md`.
 - **Tooling:** Node via `mise` (`mise.toml`, Node 24). Run commands with `mise exec -- npm ...` if Node isn't on PATH.
 - **Stack:** Astro (static), Markdown/MDX pages, game data as JSON/YAML in the repo, dark theme default, mobile-first.
+- **Commits:** decide commits and amends yourself at sensible checkpoints; do not ask. On "finalize feature": quick inspection (say so if it is not actually ready), clean up, commit, push, update `docs/` and this file.
+- **UI rules:** the owner asks for features from a desktop (incl. ultrawide) perspective; choose phone/tablet behaviour yourself. No filler or explanatory text about the page itself. Info that matters is visible, not hover-only, but use good UX (a visible "+N" popup is fine). Light theme keeps the dark theme's styling; only retune colours. Do not suggest support/tank/DPS splits unless a source says priorities differ.
+- **Verify layout** in a wide iframe (1280, 1920, 3440) plus about 360 for phones; restart the dev server if styles look stale. Details in `docs/STATUS.md`.
 
 ## Content rules
 - Global server only. Use the **Global client's English names**. No Korea/KR/TW references, no Korean-to-Global glossary, no "KR values" sections.
 - Cheatsheet style: lead with the answer (table), short "why" below. No roadmap, beginner or leveling pages.
 - Never invent numbers. If a value can't be confirmed for Global, leave it out.
-- Each BiS entry carries a badge: **Confirmed** (checked in Global game data) or **Community pick** (used by top players, not provable from data).
+- Each BiS entry carries a badge: **Confirmed** (checked in Global game data) or **Community pick** (used by top players, not provable from data). The Stats page has no badges; it shows community-sourced tags dashed instead.
+- Before saying a source exists on Global (slot, system, stat), check it against Global client data: `mise exec -- node scripts/global-sources.mjs`. Community guides are KR-based and name things that do not exist on Global (e.g. a Brooch slot). Source ranking is in `docs/data-sources.md`.
 - Images: use own screenshots or link out. Do not hotlink or copy third-party site assets (e.g. questlog.gg, metabot.gg); linking to their pages is fine.
 
 ## Planned pages (approved)
@@ -88,7 +92,8 @@ Navigation mirrors the in-game menu and uses its exact names (see `src/data/nav.
 - Character > **Stats** (stats reference), **Pets** (Genus BiS lives at `pets/genus/`), **Enhancement** (Gear BiS, stat lines/BiS lines, enhancement order), **Arcana** (Arcana BiS)
 - Menu > **Daevanion** (node routes), **Skills** (class pages)
 Do not invent menu names; if a page needs a new one, copy the in-game label.
-Build order: scaffold, Gear BiS + Stats, Arcana, Genus, Daevanion, Class pages last. Later ideas: Abyss shop, weekly checklist, calculators.
+Build order: scaffold, Stats (done), Gear BiS, Arcana, Genus, Daevanion, Class pages last. Later ideas: Abyss shop, weekly checklist, calculators.
+When a page ships, the "Get it from" tags on the Stats page link to it automatically (flip `ready` in `nav.ts`; mapping in `TAG_PAGE` in `stats.astro`).
 
 ## Start of every session
 Read `docs/STATUS.md` first (what's done, what's next), then `docs/data-sources.md` when touching game facts. Do this without being asked.
@@ -98,7 +103,8 @@ Never commit personal info: real names, emails, usernames, character names, loca
 
 ## Pointers
 - `docs/STATUS.md`: what's done, what's next.
-- `docs/data-sources.md`: where facts come from, verified Global terms, game-client findings.
+- `docs/data-sources.md`: source policy (what to trust for Global), verified Global terms, how to cross-check sources, game-client findings.
+- `scripts/global-sources.mjs` -> `src/data/stat-sources.json`: where each stat can be obtained, from Global client data. Re-run after patches.
 
 ## Money-saving tips
 There is no separate "save money" page. Put "what not to waste resources on" inside each category page (Enhancement, Arcana, Pets/Genus). A Market page for cross-server price comparison is a possible later addition, not planned yet.
