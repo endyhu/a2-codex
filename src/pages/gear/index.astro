@@ -235,8 +235,8 @@ const order: Step[] = [
   const unpin = () => { if (pinned) { pinned = null; mark(); } };
   // Short glow on the section a link jumps to, started once the scroll has settled.
   const glow = (id: string) => {
-    const section = document.getElementById(id);
-    const el = id === 'best-lines' ? section : section?.querySelector<HTMLElement>('.step');
+    if (id === 'best-lines') return; // that card glows through :target
+    const el = document.getElementById(id)?.querySelector<HTMLElement>('.step');
     if (!el) return;
     let done = false;
     const run = () => {
@@ -431,11 +431,15 @@ const order: Step[] = [
   .bsl:hover { transform: translateY(-1px); box-shadow: 0 0 28px -4px var(--accent); background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 42%, transparent), color-mix(in srgb, var(--accent) 16%, transparent)); }
   .bsl:hover .bsl-go { transform: translateY(-2px); }
   #best-lines { scroll-margin-top: 16px; }
-  #best-lines.flash { animation: glow-card 1.6s ease-out; }
-  .step.flash { border-radius: 3px; animation: glow-step 1.6s ease-out; }
-  @keyframes glow-card { 0% { box-shadow: 0 0 0 2px var(--accent), 0 0 28px -4px var(--accent); } 100% { box-shadow: 0 0 0 0 transparent; } }
-  @keyframes glow-step { 0% { box-shadow: 0 0 0 8px var(--accent-soft), 0 0 0 9px var(--accent), 0 0 30px -2px var(--accent); background: var(--accent-soft); } 100% { box-shadow: 0 0 0 8px transparent, 0 0 0 9px transparent, 0 0 0 0 transparent; background: transparent; } }
-  @media (prefers-reduced-motion: reduce) { #best-lines.flash, .step.flash { animation: none; } }
+  #best-lines:target { animation: bsl-flash 1.6s ease-out; }
+  @keyframes bsl-flash { 0% { box-shadow: 0 0 0 2px var(--accent), 0 0 28px -4px var(--accent); } 100% { box-shadow: 0 0 0 0 transparent; } }
+  /* Steps: a soft band that spreads sideways, so it never spills onto the neighbouring steps. The first step also glows up, the last one down. */
+  .step.flash { position: relative; isolation: isolate; }
+  .step.flash::before { content: ''; position: absolute; z-index: -1; inset: -4px -36px; border-radius: 4px; pointer-events: none; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent) 16%, transparent) 16%, color-mix(in srgb, var(--accent) 16%, transparent) 84%, transparent); box-shadow: -18px 0 22px -16px var(--accent), 18px 0 22px -16px var(--accent); animation: band 1.4s ease-out forwards; }
+  .path > li:first-child .step.flash::before { box-shadow: -18px 0 22px -16px var(--accent), 18px 0 22px -16px var(--accent), 0 -12px 20px -14px var(--accent); }
+  .path > li:last-child .step.flash::before { box-shadow: -18px 0 22px -16px var(--accent), 18px 0 22px -16px var(--accent), 0 12px 20px -14px var(--accent); }
+  @keyframes band { 0% { opacity: 0; } 18% { opacity: 1; } 100% { opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .step.flash::before { animation: none; opacity: 0; } }
   .actions { display: grid; gap: 0; margin: 12px 0 8px; border: 1px solid var(--line); border-radius: 3px; background: var(--panel); }
   .actions div { display: grid; grid-template-columns: 4.5em 1fr; gap: 12px; padding: 8px 12px; }
   .actions div + div { border-top: 1px solid var(--line); }
