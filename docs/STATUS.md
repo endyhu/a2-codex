@@ -2,7 +2,7 @@
 
 **Live:** https://a2codex.prezenith.com (GitHub Pages, deploys on push to `main`).
 **Done:** repo + mise (Node 24), project rules in CLAUDE.md, Astro scaffold (dark/light theme, `Base` layout), GitHub Pages workflow, DNS, **Stats page** (see below).
-**Next:** Gear BiS (Enhancement page), then Arcana, Genus, Daevanion, Class pages. To publish a page, create `src/pages/<href>index.astro` and set `ready: true` in `src/data/nav.ts`. Money-saving tips go inside each category page, not a separate page.
+**Next:** Gear page (`gear/`, right after Stats; includes enhancement), then Arcana, Genus, Daevanion, Class pages. To publish a page, create `src/pages/<href>index.astro` and set `ready: true` in `src/data/nav.ts`. Money-saving tips go inside each category page, not a separate page.
 
 ## Stats page (`src/pages/stats.astro`), finished
 - **Layout:** left, a wheel like the in-game Stat Info window (6 primary stats inside 10 Daevanion stats, 5 per side in the game's order), fixed to the screen and centred on desktop. Right, "Most important stats": 15 ranked rows with the official description, a plain-language note, which wheel stats raise it (coloured chips) and where to get it (GEAR / OTHER tags). Stacks on narrow screens.

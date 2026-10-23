@@ -96,7 +96,7 @@ const GEAR_TAGS = ['Helm', 'Pauldrons', 'Top', 'Cloak', 'Gloves', 'Legs', 'Shoes
   'Amulet', 'Belt', 'Rune', 'All armor', 'Manastone'];
 const TAG_PAGE: Record<string, string> = {
   Arcana: 'Arcana', Daevanion: 'Daevanion', 'Genus Insight': 'Genus',
-  ...Object.fromEntries(GEAR_TAGS.map((g) => [g, 'Enhancement'])),
+  ...Object.fromEntries(GEAR_TAGS.map((g) => [g, 'Gear'])),
 };
 const pages = nav.flatMap((g) => g.items);
 const hrefFor = (label: string) => {

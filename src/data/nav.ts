@@ -20,16 +20,16 @@ export interface NavGroup {
   items: NavItem[];
 }
 
-// Labels are the in-game menu names exactly (Pets, Enhancement, Arcana, Daevanion, Skills, Stats).
-// Order inside Character follows the client: Stats, then Pets, Enhancement, Arcana.
+// Labels are the in-game menu names (Pets, Arcana, Daevanion, Skills, Stats); Gear is the owner's own name for gear BiS, lines and enhancement.
+// Order inside Character: Stats, Gear, Pets, Arcana.
 export const nav: NavGroup[] = [
   {
     title: 'Character',
     items: [
       { label: 'Stats', href: 'stats/', icon: chart, ready: true, text: 'The stats that matter most, ranked, and where to get each one.' },
+      { label: 'Gear', href: 'gear/', icon: anvil, ready: false, text: 'Best gear, best lines, enhancement order and what not to waste Kinah on.' },
       { label: 'Pets', href: 'pets/', icon: paw, ready: false, text: 'Best pets and how to use them.' },
       { label: 'Genus', href: 'pets/genus/', icon: paw, ready: false, sub: true, text: 'Best line per slot, when to stop rerolling and how not to burn resources.' },
-      { label: 'Enhancement', href: 'enhancement/', icon: anvil, ready: false, text: 'Best gear, best lines, enhancement order and what not to waste Kinah on.' },
       { label: 'Arcana', href: 'arcana/', icon: spade, ready: false, text: 'Best card per slot, best set and what not to waste on it.' },
     ],
   },
