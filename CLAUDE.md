@@ -90,6 +90,12 @@ Navigation mirrors the in-game menu and uses its exact names (see `src/data/nav.
 Do not invent menu names; if a page needs a new one, copy the in-game label.
 Build order: scaffold, Gear BiS + Stats, Arcana, Genus, Daevanion, Class pages last. Later ideas: Abyss shop, weekly checklist, calculators.
 
+## Start of every session
+Read `docs/STATUS.md` first (what's done, what's next), then `docs/data-sources.md` when touching game facts. Do this without being asked.
+
+## Privacy (repo will be public)
+Never commit personal info: real names, emails, usernames, character names, local file paths, screenshots with chat or account details, tokens or keys. Game install paths in docs stay generic.
+
 ## Pointers
 - `docs/STATUS.md`: what's done, what's next.
 - `docs/data-sources.md`: where facts come from, verified Global terms, game-client findings.
