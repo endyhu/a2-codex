@@ -1,14 +1,12 @@
 ---
 import '../styles/global.css';
+import { nav, homeIcon } from '../data/nav';
 
 interface Props { title: string; description?: string }
 const { title, description = 'Clear gearing cheatsheets for AION 2 Global.' } = Astro.props;
 const base = import.meta.env.BASE_URL;
-const nav = [
-  { href: base, label: 'Home' },
-  { href: `${base}stats/`, label: 'Stats' },
-];
 const path = Astro.url.pathname;
+const isActive = (href: string) => path === `${base}${href}`;
 ---
 <!doctype html>
 <html lang="en" data-theme="dark">
@@ -26,24 +24,52 @@ const path = Astro.url.pathname;
     </script>
   </head>
   <body>
-    <header>
-      <div class="bar-inner">
-        <a class="brand" href={base}>AION 2 Codex</a>
-        <nav>
-          {nav.map((n) => <a href={n.href} aria-current={path === n.href ? 'page' : undefined}>{n.label}</a>)}
+    <div class="shell">
+      <aside id="side">
+        <a class="brand" href={base}><span class="logo">A2</span> Codex</a>
+        <nav aria-label="Main">
+          <a class="item" href={base} aria-current={path === base ? 'page' : undefined}>
+            <span class="ico" set:html={homeIcon} /> Home
+          </a>
+          {nav.map((g) => (
+            <div class="group">
+              <div class="group-title">{g.title}</div>
+              {g.items.map((i) =>
+                i.ready ? (
+                  <a class="item" href={`${base}${i.href}`} aria-current={isActive(i.href) ? 'page' : undefined}>
+                    <span class="ico" set:html={i.icon} /> {i.label}
+                  </a>
+                ) : (
+                  <span class="item soon" title="Coming soon">
+                    <span class="ico" set:html={i.icon} /> {i.label}
+                  </span>
+                )
+              )}
+            </div>
+          ))}
         </nav>
-        <button id="theme" type="button" aria-label="Toggle light or dark theme">Theme</button>
+        <button id="theme" type="button" aria-label="Toggle light or dark theme">Light / Dark</button>
+      </aside>
+      <div class="content">
+        <div class="topbar">
+          <button id="menu" type="button" aria-label="Open menu" aria-controls="side" aria-expanded="false">Menu</button>
+          <a class="brand" href={base}><span class="logo">A2</span> Codex</a>
+        </div>
+        <main><slot /></main>
+        <footer>Global server. Fan-made, not affiliated with NCSOFT. AION 2 is a trademark of its owner.</footer>
       </div>
-    </header>
-    <main><slot /></main>
-    <footer>
-      <div class="inner">Global server. Fan-made, not affiliated with NCSOFT. AION 2 is a trademark of its owner.</div>
-    </footer>
+    </div>
     <script is:inline>
+      const root = document.documentElement;
       document.getElementById('theme').addEventListener('click', () => {
-        const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
-        document.documentElement.dataset.theme = next;
+        const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+        root.dataset.theme = next;
         try { localStorage.setItem('theme', next); } catch {}
+      });
+      const menu = document.getElementById('menu');
+      menu.addEventListener('click', () => {
+        const open = document.body.classList.toggle('menu-open');
+        menu.setAttribute('aria-expanded', String(open));
       });
     </script>
   </body>
