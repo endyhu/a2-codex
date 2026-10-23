@@ -83,7 +83,7 @@ Clean, modern cheatsheet site for the **AION 2 Global** server. Hosted free on G
 - Global server only. Use the **Global client's English names**. No Korea/KR/TW references, no Korean-to-Global glossary, no "KR values" sections.
 - Cheatsheet style: lead with the answer (table), short "why" below. No roadmap, beginner or leveling pages.
 - Never invent numbers. If a value can't be confirmed for Global, leave it out.
-- Each BiS entry carries a badge: **Confirmed** (checked in Global game data) or **Community pick** (used by top players, not provable from data). The Stats page has no badges; it shows community-sourced tags dashed instead.
+- No Confirmed / Community pick badges anywhere (owner does not want them). Still only publish what is checked against Global data; community-sourced items may stay, but without badges. Dashed tags on the Stats page mark community-sourced tags.
 - Before saying a source exists on Global (slot, system, stat), check it against Global client data: `mise exec -- node scripts/global-sources.mjs`. Community guides are KR-based and name things that do not exist on Global (e.g. a Brooch slot). Source ranking is in `docs/data-sources.md`.
 - Images: use own screenshots or link out. Do not hotlink or copy third-party site assets (e.g. questlog.gg, metabot.gg); linking to their pages is fine.
 

@@ -1,8 +1,8 @@
 # Status
 
 **Live:** https://a2codex.prezenith.com (GitHub Pages, deploys on push to `main`).
-**Done:** repo + mise (Node 24), project rules in CLAUDE.md, Astro scaffold (dark/light theme, `Base` layout), GitHub Pages workflow, DNS, **Stats page** (see below).
-**Next:** Gear page (`gear/`, right after Stats; includes enhancement), then Arcana, Genus, Daevanion, Class pages. To publish a page, create `src/pages/<href>index.astro` and set `ready: true` in `src/data/nav.ts`. Money-saving tips go inside each category page, not a separate page.
+**Done:** repo + mise (Node 24), project rules in CLAUDE.md, Astro scaffold (dark/light theme, `Base` layout), GitHub Pages workflow, DNS, **Stats page**, **Gear page** (see below).
+**Next:** finish the Gear page (Enhancement order first), then Arcana, then Pets/Genus, Daevanion, Class pages. To publish a page, create `src/pages/<href>index.astro` and set `ready: true` in `src/data/nav.ts`. Money-saving tips go inside each category page, not a separate page.
 
 ## Stats page (`src/pages/stats.astro`), finished
 - **Layout:** left, a wheel like the in-game Stat Info window (6 primary stats inside 10 Daevanion stats, 5 per side in the game's order), fixed to the screen and centred on desktop. Right, "Most important stats": 15 ranked rows with the official description, a plain-language note, which wheel stats raise it (coloured chips) and where to get it (GEAR / OTHER tags). Stacks on narrow screens.
@@ -11,6 +11,18 @@
 - **Tags link to pages** once the matching nav page is `ready` (map in `TAG_PAGE`, stats.astro).
 - **Themes:** light uses the same styling as dark with colours retuned for white; do not restyle light separately. The theme toggle is an icon button in `Base.astro`.
 - **Known gaps:** icons are generic Lucide stand-ins (real emblems need the owner's own screenshots, no chat/account details visible). Attack Bonus has no client-data source. Wings tag is unconfirmed on Global. Only the top two gear tiers are read by the sources script.
+
+
+## Gear page (`src/pages/gear/index.astro`), in progress
+- **Content:** best stat lines per slot with roll chances (cards), Manastone roll order with per-roll chances (Superior stone, Global data), enhancement order (stepped path), each step says why and when not to; steps that do not survive a transfer (Manastones, Theostone, Potential) carry a small icon with a hover tooltip and a legend. No Heroic gear or transfer content: the Global client has no Heroic or Mythic gear yet. Bracelet, Amulet and Belt were removed (owner: no control over them yet on Global). Data is inline in the page frontmatter.
+- **Sources:** every line was checked against each slot's Global random-stat pool (metabot.gg item pages, top tier). Order and enhancement/transfer rules are from the Aion 2 Bible, and no badges are shown (owner rule). The lines themselves exist on that slot on Global. Dropped as not on Global: Cloak Perfect Chance, Brooch, Pendant. Bible "Smite" = Double Chance, "Movement Speed" = Move Speed.
+- **Known gaps:** roll chances are read from metabot item pages (same on both top tiers and all weapon types); skill-line chances not shown. Rune left out (only unconfirmed Bible numbers). Heroic set names and Soulstones, Synch/Amplify/Potential Stones, Philosopher's Stone are not verified in Global data; they come from the Bible only. Enhancement materials could not be checked because metabot's item search is client-side.
+- **Not done:** per-class weapon picks, specific item names per slot.
+- **In progress, continue next session:** Gear is not finished. Resume with the Enhancement order, step by step, starting at step 1 (Enhance), then Amplify, Soul Binding, Manastones, Theostone, Potential. Owner feedback so far: no tag chips, no warning cards, short tooltips, explain what each step uses and why or when not to do it, match in-game visuals (the in-game item tooltip screenshot shows +15 in green, five teal gems for Amplify, Amp stats, Soul Binding rate, four Manastone slots, Theostone). Enhance rates and Amplify costs on the page come from metabot's Global data; the owner confirmed Amplify shows as gems, not +x.
+- **Open questions:** Soul Binding facts conflict between the Bible (extra stat line, Philosopher's Stone) and metabot (extra Manastone slot at 100%); the page follows metabot. Heroic gear is not in the Global client, so no Transfer or Heroic content. Theostone numbers (about 1% PvE damage) are from the owner.
+
+## Shared styling
+`src/styles/global.css` holds the chrome every page uses: `.panel`, `.panel-head`, `.page-title` and the tooltip look (`#tip` on Stats, `[data-tip]` hover tips on Gear). Put new shared styles there, not in a page.
 
 ## How to test the layout (the browser pane is narrow)
 - Desktop and ultrawide: load the page in an iframe sized 1280, 1920 or 3440 wide and scale it down with CSS transform, then measure with JS. Check phone width at about 360.
