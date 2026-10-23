@@ -230,7 +230,7 @@ const order: Step[] = [
       if (innerHeight + scrollY >= document.documentElement.scrollHeight - 4) current = sections[sections.length - 1];
       id = current?.id ?? null;
     }
-    if (id !== lastId && !pinned && id && id !== 'best-lines' && lastId !== null) flash(document.getElementById(id)!);
+    if (id !== lastId && !pinned && id && lastId !== null) flash(document.getElementById(id)!);
     lastId = id;
     links.forEach((a) => a.classList.toggle('on', a.dataset.step === id));
     side.forEach((a) => a.classList.toggle('on', a.dataset.hash === id));
@@ -244,8 +244,10 @@ const order: Step[] = [
     setTimeout(() => li.classList.remove('flash'), 1700);
   };
   const glow = (id: string) => {
-    const li = id === 'best-lines' ? null : document.getElementById(id);
-    if (!li) return; // Best stat lines glows through :target
+    const li = document.getElementById(id);
+    if (!li) return;
+    // Best stat lines already glows through :target when the address changes; replay it only for a repeat click.
+    if (id === 'best-lines') { if (location.hash === '#best-lines') flash(li); return; }
     let done = false;
     const run = () => { if (!done) { done = true; flash(li); } };
     addEventListener('scrollend', run, { once: true });
@@ -434,13 +436,13 @@ const order: Step[] = [
   #best-lines { scroll-margin-top: 16px; }
   #best-lines:target { animation: bsl-flash 1.6s ease-out; }
   @keyframes bsl-flash { 0% { box-shadow: 0 0 0 2px var(--accent), 0 0 28px -4px var(--accent); } 100% { box-shadow: 0 0 0 0 transparent; } }
-  /* Steps: a soft band across the card behind the whole step row; it never spills onto the neighbouring steps. The first step also glows up, the last one down. */
+  /* Same glow on the Best stat lines card and on each step. A step's glow box takes half of the gap above and below it, so neighbouring glows meet without a seam. */
+  #best-lines.flash { animation: bsl-flash-again 1.6s ease-out; }
+  @keyframes bsl-flash-again { 0% { box-shadow: 0 0 0 2px var(--accent), 0 0 28px -4px var(--accent); } 100% { box-shadow: 0 0 0 0 transparent; } }
   .path > li { isolation: isolate; }
-  .path > li.flash::after { content: ''; position: absolute; z-index: -1; inset: -6px -16px 26px -16px; border-radius: 4px; pointer-events: none; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent) 18%, transparent) 14%, color-mix(in srgb, var(--accent) 18%, transparent) 86%, transparent); box-shadow: inset 22px 0 24px -18px var(--accent), inset -22px 0 24px -18px var(--accent); animation: band 1.4s ease-out forwards; }
-  .path > li:first-child.flash::after { box-shadow: inset 22px 0 24px -18px var(--accent), inset -22px 0 24px -18px var(--accent), 0 -10px 18px -12px var(--accent); }
-  .path > li:last-child.flash::after { inset: -6px -16px -6px -16px; box-shadow: inset 22px 0 24px -18px var(--accent), inset -22px 0 24px -18px var(--accent), 0 10px 18px -12px var(--accent); }
-  @keyframes band { 0% { opacity: 0; } 18% { opacity: 1; } 100% { opacity: 0; } }
-  @media (prefers-reduced-motion: reduce) { .path > li.flash::after { animation: none; opacity: 0; } }
+  .path > li.flash::after { content: ''; position: absolute; z-index: -1; inset: -16px -16px 16px -16px; border-radius: 4px; pointer-events: none; animation: bsl-flash 1.6s ease-out; }
+  .path > li:last-child.flash::after { inset: -16px -16px -16px -16px; }
+  @media (prefers-reduced-motion: reduce) { #best-lines.flash, .path > li.flash::after { animation: none; } }
   .actions { display: grid; gap: 0; margin: 12px 0 8px; border: 1px solid var(--line); border-radius: 3px; background: var(--panel); }
   .actions div { display: grid; grid-template-columns: 4.5em 1fr; gap: 12px; padding: 8px 12px; }
   .actions div + div { border-top: 1px solid var(--line); }
