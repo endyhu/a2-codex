@@ -245,7 +245,7 @@ const order: Step[] = [
       el.classList.remove('flash');
       void el.offsetWidth;
       el.classList.add('flash');
-      el.addEventListener('animationend', () => el.classList.remove('flash'), { once: true });
+      setTimeout(() => el.classList.remove('flash'), 1700);
     };
     addEventListener('scrollend', run, { once: true });
     setTimeout(run, 900);
