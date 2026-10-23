@@ -240,18 +240,24 @@ const order: Step[] = [
     side.forEach((a) => a.classList.toggle('on', a.dataset.hash === id));
   };
   const unpin = () => { if (pinned) { pinned = null; mark(); } };
-  // Short glow on a step: after a link jump once the scroll has settled, or straight away when scrolling reaches the next step.
-  const flash = (li: HTMLElement) => {
-    li.classList.remove('flash');
-    void li.offsetWidth;
-    li.classList.add('flash');
-    setTimeout(() => li.classList.remove('flash'), 2800);
+  // Short glow on a section: after a link jump once the scroll has settled, or straight away when scrolling reaches the next one.
+  // Any glow still running fades out quickly so the new one takes over.
+  const fadeOut = (el: Element) => {
+    if (!el.classList.contains('flash')) return;
+    el.classList.remove('flash');
+    el.classList.add('flash-out');
+    setTimeout(() => el.classList.remove('flash-out'), 450);
+  };
+  const flash = (el: HTMLElement) => {
+    document.querySelectorAll('.flash').forEach((o) => { if (o !== el) fadeOut(o); });
+    el.classList.remove('flash', 'flash-out');
+    void el.offsetWidth;
+    el.classList.add('flash');
+    setTimeout(() => el.classList.remove('flash'), 2200);
   };
   const glow = (id: string) => {
     const li = document.getElementById(id);
     if (!li) return;
-    // Best stat lines already glows through :target when the address changes; replay it only for a repeat click.
-    if (id === 'best-lines') { if (location.hash === '#best-lines') flash(li); return; }
     // Start the glow once the scroll has stopped (no scroll event for 150ms), at the latest after 3s; if no scroll starts within 400ms the target is already in place.
     let timer = 0, moving = false;
     const finish = () => { removeEventListener('scroll', bump); clearTimeout(timer); clearTimeout(cap); flash(li); };
@@ -441,15 +447,16 @@ const order: Step[] = [
   .bsl:hover { transform: translateY(-1px); box-shadow: 0 0 28px -4px var(--accent); background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 42%, transparent), color-mix(in srgb, var(--accent) 16%, transparent)); }
   .bsl:hover .bsl-go { transform: translateY(-2px); }
   #best-lines { scroll-margin-top: 16px; }
-  #best-lines:target { animation: bsl-flash 2.6s ease-out; }
-  @keyframes bsl-flash { 0% { box-shadow: 0 0 0 2px var(--accent), 0 0 56px 0 var(--accent); } 100% { box-shadow: 0 0 0 0 transparent, 0 0 56px 0 transparent; } }
-  /* Same glow on the Best stat lines card and on each step. A step's glow box takes half of the gap above and below it so neighbours meet without a seam; middle steps only glow sideways (top and bottom are clipped), the first also glows up and the last down. */
-  #best-lines.flash { animation: bsl-flash-again 2.6s ease-out; }
-  @keyframes bsl-flash-again { 0% { box-shadow: 0 0 0 2px var(--accent), 0 0 56px 0 var(--accent); } 100% { box-shadow: 0 0 0 0 transparent, 0 0 56px 0 transparent; } }
+  /* One glow for the Best stat lines card and for each step. A step's glow box takes half of the gap above and below it so neighbours meet without a seam; middle steps only glow sideways (top and bottom are clipped), the first also glows up and the last down. When the next section takes over, the old glow fades out quickly (.flash-out). */
+  @keyframes glow { 0% { box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 60%, transparent), 0 0 40px 0 color-mix(in srgb, var(--accent) 40%, transparent); } 100% { box-shadow: 0 0 0 0 transparent, 0 0 40px 0 transparent; } }
+  #best-lines.flash { animation: glow 2s ease-out; }
+  #best-lines.flash-out { animation: none; box-shadow: 0 0 0 0 transparent, 0 0 40px 0 transparent; transition: box-shadow 0.35s ease-out; }
   .path > li { isolation: isolate; }
-  .path > li.flash::after { content: ''; position: absolute; z-index: -1; inset: -16px -16px 16px -16px; border-radius: 4px; pointer-events: none; clip-path: inset(0 -90px 0 -90px); animation: bsl-flash 2.6s ease-out; }
-  .path > li:first-child.flash::after { clip-path: inset(-90px -90px 0 -90px); }
-  .path > li:last-child.flash::after { inset: -16px -16px -16px -16px; clip-path: inset(0 -90px -90px -90px); }
+  .path > li.flash::after, .path > li.flash-out::after { content: ''; position: absolute; z-index: -1; inset: -16px -16px 16px -16px; border-radius: 4px; pointer-events: none; clip-path: inset(0 -90px 0 -90px); }
+  .path > li.flash::after { animation: glow 2s ease-out; }
+  .path > li.flash-out::after { box-shadow: 0 0 0 0 transparent, 0 0 40px 0 transparent; transition: box-shadow 0.35s ease-out; }
+  .path > li:first-child.flash::after, .path > li:first-child.flash-out::after { clip-path: inset(-90px -90px 0 -90px); }
+  .path > li:last-child.flash::after, .path > li:last-child.flash-out::after { inset: -16px -16px -16px -16px; clip-path: inset(0 -90px -90px -90px); }
   @media (prefers-reduced-motion: reduce) { #best-lines.flash, .path > li.flash::after { animation: none; } }
   .actions { display: grid; gap: 0; margin: 12px 0 8px; border: 1px solid var(--line); border-radius: 3px; background: var(--panel); }
   .actions div { display: grid; grid-template-columns: 4.5em 1fr; gap: 12px; padding: 8px 12px; }
