@@ -1,0 +1,178 @@
+{
+  "generatedAt": "2026-10-23",
+  "clientBuild": "0.0.4387.0",
+  "source": "metabot.gg (Global client data tables)",
+  "stats": {
+    "Double Chance": {
+      "gear": [
+        "Helm",
+        "Pauldrons",
+        "Cloak"
+      ],
+      "manastone": false,
+      "daevanion": false,
+      "arcana": false,
+      "titles": 0,
+      "wings": 0
+    },
+    "Combat Speed": {
+      "gear": [
+        "Gloves",
+        "Weapons",
+        "Necklace",
+        "Rune"
+      ],
+      "manastone": false,
+      "daevanion": true,
+      "arcana": false,
+      "titles": 12,
+      "wings": 0
+    },
+    "Front / Back Attack Damage Boost": {
+      "gear": [],
+      "manastone": true,
+      "daevanion": false,
+      "arcana": false,
+      "titles": 7,
+      "wings": 0
+    },
+    "Weapon Damage Boost": {
+      "gear": [
+        "Weapons",
+        "Amulet"
+      ],
+      "manastone": true,
+      "daevanion": false,
+      "arcana": false,
+      "titles": 0,
+      "wings": 0
+    },
+    "Critical Damage Boost": {
+      "gear": [
+        "Pauldrons"
+      ],
+      "manastone": true,
+      "daevanion": true,
+      "arcana": false,
+      "titles": 8,
+      "wings": 0
+    },
+    "Damage Boost": {
+      "gear": [
+        "Top",
+        "Weapons"
+      ],
+      "manastone": true,
+      "daevanion": true,
+      "arcana": false,
+      "titles": 3,
+      "wings": 2
+    },
+    "Multi-hit Chance": {
+      "gear": [
+        "Weapons",
+        "Rune"
+      ],
+      "manastone": false,
+      "daevanion": true,
+      "arcana": false,
+      "titles": 3,
+      "wings": 0
+    },
+    "Perfect Chance": {
+      "gear": [
+        "Top",
+        "Gloves",
+        "Legs",
+        "Shoes",
+        "Amulet"
+      ],
+      "manastone": false,
+      "daevanion": false,
+      "arcana": false,
+      "titles": 1,
+      "wings": 0
+    },
+    "Cooldown": {
+      "gear": [],
+      "manastone": false,
+      "daevanion": false,
+      "arcana": false,
+      "titles": 6,
+      "wings": 1
+    },
+    "Attack": {
+      "gear": [
+        "All armor",
+        "Weapons",
+        "Earrings",
+        "Necklace",
+        "Ring",
+        "Bracelet"
+      ],
+      "manastone": true,
+      "daevanion": false,
+      "arcana": false,
+      "titles": 0,
+      "wings": 0
+    },
+    "Max Attack": {
+      "gear": [
+        "Weapons"
+      ],
+      "manastone": false,
+      "daevanion": false,
+      "arcana": false,
+      "titles": 0,
+      "wings": 0
+    },
+    "Attack Bonus": {
+      "gear": [],
+      "manastone": false,
+      "daevanion": false,
+      "arcana": false,
+      "titles": 59,
+      "wings": 14
+    },
+    "Accuracy": {
+      "gear": [
+        "All armor",
+        "Weapons",
+        "Earrings",
+        "Necklace",
+        "Ring"
+      ],
+      "manastone": false,
+      "daevanion": false,
+      "arcana": false,
+      "titles": 0,
+      "wings": 0
+    },
+    "Critical Hit": {
+      "gear": [
+        "All armor",
+        "Weapons",
+        "Earrings",
+        "Necklace",
+        "Ring"
+      ],
+      "manastone": true,
+      "daevanion": true,
+      "arcana": false,
+      "titles": 45,
+      "wings": 8
+    },
+    "Endurance": {
+      "gear": [
+        "Helm",
+        "Cloak",
+        "Legs"
+      ],
+      "manastone": false,
+      "daevanion": false,
+      "arcana": false,
+      "titles": 1,
+      "wings": 0
+    }
+  }
+}
