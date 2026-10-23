@@ -458,24 +458,24 @@ const order: Step[] = [
   @keyframes glow { 0% { box-shadow: 0 0 0 0 transparent, 0 0 40px 0 transparent; } 15% { box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 60%, transparent), 0 0 40px 0 color-mix(in srgb, var(--accent) 40%, transparent); } 100% { box-shadow: 0 0 0 0 transparent, 0 0 40px 0 transparent; } }
   #best-lines.flash { animation: glow 2.3s ease-out; }
   #best-lines.flash-out { animation: none; box-shadow: 0 0 0 0 transparent, 0 0 40px 0 transparent; transition: box-shadow 0.6s ease-out; }
-  /* Step glow, drawn as plain fades instead of a shadow: a strip fading out sideways from each card edge, the same strength top to bottom, so no box edge can show as a line and neighbouring steps meet without a seam (boxes overlap by 1px). The first step also fades upward from the very top of the card, the last one downward. Opacity does the fading, so a replaced glow can fade out quickly (.flash-out). */
-  .path > li { isolation: isolate; --glow: color-mix(in srgb, var(--accent) 21%, transparent); --glow-mid: color-mix(in srgb, var(--accent) 7%, transparent); --f: 70px; }
+  /* Step glow, drawn as plain fades instead of a shadow: a strip fading out sideways from each card edge, the same strength top to bottom, so no box edge can show as a line and neighbouring steps meet without a seam (boxes overlap by 1px). Its reach and falloff follow the Best stat lines shadow (40px blur at 40%), so the two glows look alike. The first step also fades upward from the very top of the card, the last one downward. Opacity does the fading, so a replaced glow can fade out quickly (.flash-out). */
+  .path > li { isolation: isolate; --f: 44px; --g1: color-mix(in srgb, var(--accent) 0.9%, transparent); --g2: color-mix(in srgb, var(--accent) 2.7%, transparent); --g3: color-mix(in srgb, var(--accent) 6.4%, transparent); --g4: color-mix(in srgb, var(--accent) 12.3%, transparent); --g5: color-mix(in srgb, var(--accent) 20%, transparent); }
   .path > li.flash::after, .path > li.flash-out::after { content: ''; position: absolute; z-index: -1; pointer-events: none; inset: -16px calc(-16px - var(--f)) 15px calc(-16px - var(--f));
-    background: linear-gradient(90deg, transparent, var(--glow-mid) 55%, var(--glow)) left top / var(--f) 100% no-repeat, linear-gradient(270deg, transparent, var(--glow-mid) 55%, var(--glow)) right top / var(--f) 100% no-repeat; }
+    background: linear-gradient(90deg, transparent, var(--g1) 4px, var(--g2) 14px, var(--g3) 24px, var(--g4) 34px, var(--g5) var(--f)) left top / var(--f) 100% no-repeat, linear-gradient(270deg, transparent, var(--g1) 4px, var(--g2) 14px, var(--g3) 24px, var(--g4) 34px, var(--g5) var(--f)) right top / var(--f) 100% no-repeat; }
   .path > li:first-child.flash::after, .path > li:first-child.flash-out::after { inset: calc(-1 * var(--up, 16px) - var(--f)) calc(-16px - var(--f)) 15px calc(-16px - var(--f));
     background:
-      linear-gradient(180deg, transparent, var(--glow-mid) 55%, var(--glow)) left var(--f) top / calc(100% - 2 * var(--f)) var(--f) no-repeat,
-      linear-gradient(90deg, transparent, var(--glow-mid) 55%, var(--glow)) left top var(--f) / var(--f) calc(100% - var(--f)) no-repeat,
-      linear-gradient(270deg, transparent, var(--glow-mid) 55%, var(--glow)) right top var(--f) / var(--f) calc(100% - var(--f)) no-repeat,
-      radial-gradient(circle at 100% 100%, var(--glow), var(--glow-mid) calc(var(--f) * 0.45), transparent var(--f)) left top / var(--f) var(--f) no-repeat,
-      radial-gradient(circle at 0 100%, var(--glow), var(--glow-mid) calc(var(--f) * 0.45), transparent var(--f)) right top / var(--f) var(--f) no-repeat; }
+      linear-gradient(180deg, transparent, var(--g1) 4px, var(--g2) 14px, var(--g3) 24px, var(--g4) 34px, var(--g5) var(--f)) left var(--f) top / calc(100% - 2 * var(--f)) var(--f) no-repeat,
+      linear-gradient(90deg, transparent, var(--g1) 4px, var(--g2) 14px, var(--g3) 24px, var(--g4) 34px, var(--g5) var(--f)) left top var(--f) / var(--f) calc(100% - var(--f)) no-repeat,
+      linear-gradient(270deg, transparent, var(--g1) 4px, var(--g2) 14px, var(--g3) 24px, var(--g4) 34px, var(--g5) var(--f)) right top var(--f) / var(--f) calc(100% - var(--f)) no-repeat,
+      radial-gradient(circle at 100% 100%, var(--g5), var(--g4) 10px, var(--g3) 20px, var(--g2) 30px, var(--g1) 40px, transparent var(--f)) left top / var(--f) var(--f) no-repeat,
+      radial-gradient(circle at 0 100%, var(--g5), var(--g4) 10px, var(--g3) 20px, var(--g2) 30px, var(--g1) 40px, transparent var(--f)) right top / var(--f) var(--f) no-repeat; }
   .path > li:last-child.flash::after, .path > li:last-child.flash-out::after { inset: -16px calc(-16px - var(--f)) calc(-16px - var(--f)) calc(-16px - var(--f));
     background:
-      linear-gradient(0deg, transparent, var(--glow-mid) 55%, var(--glow)) left var(--f) bottom / calc(100% - 2 * var(--f)) var(--f) no-repeat,
-      linear-gradient(90deg, transparent, var(--glow-mid) 55%, var(--glow)) left top / var(--f) calc(100% - var(--f)) no-repeat,
-      linear-gradient(270deg, transparent, var(--glow-mid) 55%, var(--glow)) right top / var(--f) calc(100% - var(--f)) no-repeat,
-      radial-gradient(circle at 100% 0, var(--glow), var(--glow-mid) calc(var(--f) * 0.45), transparent var(--f)) left bottom / var(--f) var(--f) no-repeat,
-      radial-gradient(circle at 0 0, var(--glow), var(--glow-mid) calc(var(--f) * 0.45), transparent var(--f)) right bottom / var(--f) var(--f) no-repeat; }
+      linear-gradient(0deg, transparent, var(--g1) 4px, var(--g2) 14px, var(--g3) 24px, var(--g4) 34px, var(--g5) var(--f)) left var(--f) bottom / calc(100% - 2 * var(--f)) var(--f) no-repeat,
+      linear-gradient(90deg, transparent, var(--g1) 4px, var(--g2) 14px, var(--g3) 24px, var(--g4) 34px, var(--g5) var(--f)) left top / var(--f) calc(100% - var(--f)) no-repeat,
+      linear-gradient(270deg, transparent, var(--g1) 4px, var(--g2) 14px, var(--g3) 24px, var(--g4) 34px, var(--g5) var(--f)) right top / var(--f) calc(100% - var(--f)) no-repeat,
+      radial-gradient(circle at 100% 0, var(--g5), var(--g4) 10px, var(--g3) 20px, var(--g2) 30px, var(--g1) 40px, transparent var(--f)) left bottom / var(--f) var(--f) no-repeat,
+      radial-gradient(circle at 0 0, var(--g5), var(--g4) 10px, var(--g3) 20px, var(--g2) 30px, var(--g1) 40px, transparent var(--f)) right bottom / var(--f) var(--f) no-repeat; }
   /* The 1px where two neighbouring boxes overlap is half strength on each, so two lit steps add up to one glow there instead of a brighter line. */
   .path > li.flash::after, .path > li.flash-out::after { -webkit-mask-image: linear-gradient(180deg, rgba(0,0,0,0.5), #000 1px, #000 calc(100% - 1px), rgba(0,0,0,0.5)); mask-image: linear-gradient(180deg, rgba(0,0,0,0.5), #000 1px, #000 calc(100% - 1px), rgba(0,0,0,0.5)); }
   .path > li:first-child.flash::after, .path > li:first-child.flash-out::after { -webkit-mask-image: linear-gradient(180deg, #000 calc(100% - 1px), rgba(0,0,0,0.5)); mask-image: linear-gradient(180deg, #000 calc(100% - 1px), rgba(0,0,0,0.5)); }
