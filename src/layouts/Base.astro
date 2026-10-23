@@ -1,6 +1,8 @@
 ---
 import '../styles/global.css';
 import { nav, homeIcon } from '../data/nav';
+import sun from 'lucide-static/icons/sun.svg?raw';
+import moon from 'lucide-static/icons/moon.svg?raw';
 
 interface Props { title: string; description?: string }
 const { title, description = 'Clear gearing cheatsheets for AION 2 Global.' } = Astro.props;
@@ -48,7 +50,9 @@ const isActive = (href: string) => path === `${base}${href}`;
             </div>
           ))}
         </nav>
-        <button id="theme" type="button" aria-label="Toggle light or dark theme">Light / Dark</button>
+        <button id="theme" type="button" aria-label="Switch theme" title="Switch theme">
+          <span class="theme-sun" set:html={sun} /><span class="theme-moon" set:html={moon} />
+        </button>
       </aside>
       <div class="content">
         <div class="topbar">
@@ -61,9 +65,17 @@ const isActive = (href: string) => path === `${base}${href}`;
     </div>
     <script is:inline>
       const root = document.documentElement;
-      document.getElementById('theme').addEventListener('click', () => {
+      const themeBtn = document.getElementById('theme');
+      const labelTheme = () => {
+        const label = root.dataset.theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme';
+        themeBtn.setAttribute('aria-label', label);
+        themeBtn.title = label;
+      };
+      labelTheme();
+      themeBtn.addEventListener('click', () => {
         const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
         root.dataset.theme = next;
+        labelTheme();
         try { localStorage.setItem('theme', next); } catch {}
       });
       const menu = document.getElementById('menu');

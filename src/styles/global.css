@@ -57,8 +57,14 @@ a.item:hover { color: var(--text); background: var(--panel-2); }
 .item.sub .ico svg { width: 14px; height: 14px; }
 .ico { display: inline-flex; width: 18px; height: 18px; flex: none; }
 .ico svg { width: 18px; height: 18px; }
-#theme { margin-top: auto; background: transparent; border: 1px solid var(--line); color: var(--muted); border-radius: 10px; padding: 8px 10px; cursor: pointer; font: inherit; font-size: 0.85rem; }
-#theme:hover { color: var(--text); }
+#theme { margin-top: auto; align-self: flex-start; display: grid; place-items: center; width: 36px; height: 36px; padding: 0; background: transparent; border: 1px solid var(--line); color: var(--muted); border-radius: 10px; cursor: pointer; transition: color 0.15s, border-color 0.15s, background 0.15s; }
+#theme:hover, #theme:focus-visible { color: var(--text); border-color: var(--accent); background: var(--accent-soft); outline: none; }
+#theme span { display: grid; line-height: 0; }
+#theme svg { width: 18px; height: 18px; }
+/* One icon at a time: the sun in the dark theme (click for light), the moon in the light theme. */
+#theme .theme-moon { display: none; }
+:root[data-theme='light'] #theme .theme-sun { display: none; }
+:root[data-theme='light'] #theme .theme-moon { display: grid; }
 
 .content { min-width: 0; display: flex; flex-direction: column; }
 main { width: 100%; max-width: 960px; margin: 0 auto; padding: 48px 32px 80px; flex: 1; }
