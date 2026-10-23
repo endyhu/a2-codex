@@ -53,6 +53,8 @@ a.item:hover { color: var(--text); background: var(--panel-2); }
 .item[aria-current='page'] { color: var(--text); background: var(--accent-soft); box-shadow: inset 2px 0 0 var(--accent); }
 .item.soon { opacity: 0.45; cursor: default; }
 .item.sub { margin-left: 18px; padding: 5px 10px; font-size: 0.9rem; }
+.item.child { margin-left: 28px; padding: 4px 10px; font-size: 0.86rem; border-left: 1px solid var(--line); border-radius: 0 8px 8px 0; }
+.item.child.on { color: var(--text); border-left-color: var(--accent); background: linear-gradient(90deg, var(--accent-soft), transparent); }
 .item.sub .ico { width: 14px; height: 14px; }
 .item.sub .ico svg { width: 14px; height: 14px; }
 .ico { display: inline-flex; width: 18px; height: 18px; flex: none; }

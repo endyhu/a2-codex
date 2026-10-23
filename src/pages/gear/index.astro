@@ -220,6 +220,7 @@ const order: Step[] = [
     for (const el of steps) if (el.getBoundingClientRect().top <= line) current = el;
     if (innerHeight + scrollY >= document.documentElement.scrollHeight - 4) current = steps[steps.length - 1];
     links.forEach((a) => a.classList.toggle('on', a.dataset.step === current?.id));
+    document.querySelectorAll<HTMLAnchorElement>('#side .child').forEach((a) => a.classList.toggle('on', a.dataset.hash === current?.id));
   };
   addEventListener('scroll', mark, { passive: true });
   addEventListener('resize', mark);
