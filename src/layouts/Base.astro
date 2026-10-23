@@ -3,6 +3,7 @@ import '../styles/global.css';
 import { nav, homeIcon } from '../data/nav';
 import sun from 'lucide-static/icons/sun.svg?raw';
 import moon from 'lucide-static/icons/moon.svg?raw';
+import arrowUp from 'lucide-static/icons/arrow-up.svg?raw';
 
 interface Props { title: string; description?: string }
 const { title, description = 'Clear gearing cheatsheets for AION 2 Global.' } = Astro.props;
@@ -63,8 +64,14 @@ const isActive = (href: string) => path === `${base}${href}`;
         <footer>Global server. Fan-made, not affiliated with NCSOFT. AION 2 is a trademark of its owner.</footer>
       </div>
     </div>
+    <button id="to-top" type="button" aria-label="Back to top" title="Back to top" set:html={arrowUp} />
     <script is:inline>
       const root = document.documentElement;
+      const toTop = document.getElementById('to-top');
+      const showTop = () => toTop.classList.toggle('show', scrollY > 700);
+      addEventListener('scroll', showTop, { passive: true });
+      showTop();
+      toTop.addEventListener('click', () => scrollTo({ top: 0 }));
       const themeBtn = document.getElementById('theme');
       const labelTheme = () => {
         const label = root.dataset.theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme';
