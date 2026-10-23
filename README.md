@@ -4,7 +4,7 @@ Cheatsheet site for the AION 2 Global server. Static Astro site, live at https:/
 
 ## Requirements
 
-- Node 22 (pinned in `mise.toml`)
+- Node 24 (pinned in `mise.toml`)
 - [mise](https://mise.jdx.dev) is optional but recommended; it installs the right Node version.
 
 ```bash

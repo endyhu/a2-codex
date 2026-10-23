@@ -73,7 +73,7 @@ Clean, modern cheatsheet site for the **AION 2 Global** server. Hosted free on G
 ## Working rules (from the owner)
 - **Git:** local repo, commit here. **No AI attribution anywhere**: no `Co-Authored-By`, no "Generated with" lines in commits, PRs, code or docs.
 - **One session per feature.** Keep this file and `docs/` current so a fresh session can start fast. At the end of a feature, update `docs/STATUS.md`.
-- **Tooling:** Node via `mise` (`mise.toml`, Node 22). Run commands with `mise exec -- npm ...` if Node isn't on PATH.
+- **Tooling:** Node via `mise` (`mise.toml`, Node 24). Run commands with `mise exec -- npm ...` if Node isn't on PATH.
 - **Stack:** Astro (static), Markdown/MDX pages, game data as JSON/YAML in the repo, dark theme default, mobile-first.
 
 ## Content rules
