@@ -211,20 +211,40 @@ const order: Step[] = [
 
 <script>
   const links = [...document.querySelectorAll<HTMLAnchorElement>('.rail a')];
-  const steps = links.map((a) => document.getElementById(a.dataset.step!)!).filter(Boolean);
+  const side = [...document.querySelectorAll<HTMLAnchorElement>('#side .child')];
   const rail = document.querySelector('.rail')!;
+  const sections = ['best-lines', ...links.map((a) => a.dataset.step!)].map((id) => document.getElementById(id)!).filter(Boolean);
+  const ids = sections.map((el) => el.id);
+  // A clicked link stays highlighted (the last sections cannot scroll up to the trigger line) until the reader scrolls on their own.
+  let pinned: string | null = ids.includes(location.hash.slice(1)) ? location.hash.slice(1) : null;
   const mark = () => {
-    const bar = matchMedia('(max-width: 1799px)').matches ? rail.getBoundingClientRect().bottom : 0;
-    const line = bar + 80;
-    let current = steps[0];
-    for (const el of steps) if (el.getBoundingClientRect().top <= line) current = el;
-    if (innerHeight + scrollY >= document.documentElement.scrollHeight - 4) current = steps[steps.length - 1];
-    links.forEach((a) => a.classList.toggle('on', a.dataset.step === current?.id));
-    document.querySelectorAll<HTMLAnchorElement>('#side .child').forEach((a) => a.classList.toggle('on', a.dataset.hash === current?.id));
+    let id = pinned;
+    if (!id) {
+      // The bar only pushes the trigger line down while it is stuck to the top of the screen.
+      const r = rail.getBoundingClientRect();
+      const bar = matchMedia('(max-width: 1799px)').matches && r.top <= parseFloat(getComputedStyle(rail).top) + 1 ? r.bottom : 0;
+      const line = bar + innerHeight * 0.3;
+      let current: HTMLElement | undefined;
+      for (const el of sections) if (el.getBoundingClientRect().top <= line) current = el;
+      if (innerHeight + scrollY >= document.documentElement.scrollHeight - 4) current = sections[sections.length - 1];
+      id = current?.id ?? null;
+    }
+    links.forEach((a) => a.classList.toggle('on', a.dataset.step === id));
+    side.forEach((a) => a.classList.toggle('on', a.dataset.hash === id));
   };
+  const unpin = () => { if (pinned) { pinned = null; mark(); } };
+  document.addEventListener('click', (e) => {
+    const a = (e.target as Element).closest<HTMLAnchorElement>('a[href*="#"]');
+    const hash = a ? new URL(a.href).hash.slice(1) : '';
+    if (a && ids.includes(hash) && new URL(a.href).pathname === location.pathname) { pinned = hash; mark(); }
+  });
+  addEventListener('wheel', unpin, { passive: true });
+  addEventListener('touchmove', unpin, { passive: true });
+  addEventListener('keydown', (e) => { if (['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '].includes(e.key)) unpin(); });
+  addEventListener('pointerdown', (e) => { if (!(e.target as Element).closest('a')) unpin(); });
   addEventListener('scroll', mark, { passive: true });
   addEventListener('resize', mark);
-  document.querySelector('.rail .top-btn')!.addEventListener('click', () => scrollTo({ top: 0 }));
+  document.querySelector('.rail .top-btn')!.addEventListener('click', () => { pinned = null; scrollTo({ top: 0 }); });
   mark();
 </script>
 
