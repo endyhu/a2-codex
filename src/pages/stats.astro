@@ -1,0 +1,24 @@
+---
+import Base from '../layouts/Base.astro';
+import Badge from '../components/Badge.astro';
+const primary = [
+  ['Might', 'Raises Attack'],
+  ['Dexterity', 'Raises Evasion, Block and Critical Hit Resist'],
+  ['Intelligence', 'Raises Status Effect Chance'],
+  ['Constitution', 'Raises HP'],
+  ['Precision', 'Raises Accuracy and Critical Hit'],
+  ['Willpower', 'Raises Status Effect Resist'],
+];
+---
+<Base title="Stats" description="The six primary stats in AION 2 Global and what they do.">
+  <h1>Stats</h1>
+  <p class="lead">Work in progress. Primary stats below; sub-stats and caps are added once confirmed.</p>
+  <h2>Primary stats <Badge kind="confirmed" /></h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Stat</th><th>Effect</th></tr></thead>
+      <tbody>{primary.map(([s, e]) => <tr><td>{s}</td><td>{e}</td></tr>)}</tbody>
+    </table>
+  </div>
+  <p class="meta">Source: <a href="https://aion2data.com/stats">aion2data.com</a>, <a href="https://metabot.gg/en/aion-2/stats">metabot.gg</a>. Both read the Global client data.</p>
+</Base>

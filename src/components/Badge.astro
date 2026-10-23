@@ -1,0 +1,6 @@
+---
+interface Props { kind: 'confirmed' | 'community' }
+const { kind } = Astro.props;
+const label = kind === 'confirmed' ? 'Confirmed' : 'Community pick';
+---
+<span class={`badge ${kind}`}>{label}</span>

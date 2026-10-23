@@ -1,0 +1,26 @@
+---
+import Base from '../layouts/Base.astro';
+const base = import.meta.env.BASE_URL;
+const pages = [
+  { href: `${base}stats/`, title: 'Stats', text: 'What every stat does, in Global names.', ready: true },
+  { href: '#', title: 'Gear BiS', text: 'Best item per slot and priority order.', ready: false },
+  { href: '#', title: 'Gear stat lines', text: 'Best lines per slot and class.', ready: false },
+  { href: '#', title: 'Arcana', text: 'Best card per slot and best set.', ready: false },
+  { href: '#', title: 'Genus', text: 'Best line per slot and when to stop rerolling.', ready: false },
+  { href: '#', title: 'Daevanion', text: 'Best node route per class.', ready: false },
+  { href: '#', title: 'Classes', text: 'Every pick for your class in one page.', ready: false },
+  { href: '#', title: 'Save Kinah', text: 'What not to waste money on.', ready: false },
+];
+---
+<Base title="AION 2 Codex">
+  <h1>AION 2 Codex</h1>
+  <p class="lead">Straight answers for gearing on the Global server: best items, best lines, best Arcana, best Genus.</p>
+  <div class="cards">
+    {pages.map((p) => (
+      <a class={`card${p.ready ? '' : ' soon'}`} href={p.href}>
+        <strong>{p.title}{p.ready ? '' : ' (soon)'}</strong>
+        <span>{p.text}</span>
+      </a>
+    ))}
+  </div>
+</Base>
