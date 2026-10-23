@@ -249,7 +249,7 @@ const order: Step[] = [
     if (!el.classList.contains('flash')) return;
     el.classList.remove('flash');
     el.classList.add('flash-out');
-    setTimeout(() => el.classList.remove('flash-out'), 450);
+    setTimeout(() => el.classList.remove('flash-out'), 750);
   };
   const flash = (el: HTMLElement) => {
     document.querySelectorAll('.flash').forEach((o) => { if (o !== el) fadeOut(o); });
@@ -453,11 +453,11 @@ const order: Step[] = [
   /* One glow for the Best stat lines card and for each step. A step's glow box takes half of the gap above and below it so neighbours meet without a seam; middle steps only glow sideways (top and bottom are clipped), the first also glows up and the last down. When the next section takes over, the old glow fades out quickly (.flash-out). */
   @keyframes glow { 0% { box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 60%, transparent), 0 0 40px 0 color-mix(in srgb, var(--accent) 40%, transparent); } 100% { box-shadow: 0 0 0 0 transparent, 0 0 40px 0 transparent; } }
   #best-lines.flash { animation: glow 2s ease-out; }
-  #best-lines.flash-out { animation: none; box-shadow: 0 0 0 0 transparent, 0 0 40px 0 transparent; transition: box-shadow 0.35s ease-out; }
+  #best-lines.flash-out { animation: none; box-shadow: 0 0 0 0 transparent, 0 0 40px 0 transparent; transition: box-shadow 0.6s ease-out; }
   .path > li { isolation: isolate; }
-  .path > li.flash::after, .path > li.flash-out::after { content: ''; position: absolute; z-index: -1; inset: -16px -16px 16px -16px; border-radius: 4px; pointer-events: none; clip-path: inset(0 -90px 0 -90px); }
+  .path > li.flash::after, .path > li.flash-out::after { content: ''; position: absolute; z-index: -1; inset: -16px -16px 16px -16px; pointer-events: none; border-radius: 0; clip-path: inset(0 -90px 0 -90px); }
   .path > li.flash::after { animation: glow 2s ease-out; }
-  .path > li.flash-out::after { box-shadow: 0 0 0 0 transparent, 0 0 40px 0 transparent; transition: box-shadow 0.35s ease-out; }
+  .path > li.flash-out::after { box-shadow: 0 0 0 0 transparent, 0 0 40px 0 transparent; transition: box-shadow 0.6s ease-out; }
   .path > li:first-child.flash::after, .path > li:first-child.flash-out::after { clip-path: inset(-90px -90px 0 -90px); }
   .path > li:last-child.flash::after, .path > li:last-child.flash-out::after { inset: -16px -16px -16px -16px; clip-path: inset(0 -90px -90px -90px); }
   @media (prefers-reduced-motion: reduce) { #best-lines.flash, .path > li.flash::after { animation: none; } }
