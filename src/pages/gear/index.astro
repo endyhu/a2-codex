@@ -217,6 +217,9 @@ const order: Step[] = [
   const ids = sections.map((el) => el.id);
   // A clicked link stays highlighted (the last sections cannot scroll up to the trigger line) until the reader scrolls on their own.
   let pinned: string | null = ids.includes(location.hash.slice(1)) ? location.hash.slice(1) : null;
+  const firstStep = document.querySelector<HTMLElement>('.path > li')!;
+  const card = document.querySelector('[aria-label="Enhancement order"]')!;
+  const setUp = () => firstStep.style.setProperty('--up', `${firstStep.getBoundingClientRect().top - card.getBoundingClientRect().top - 1}px`);
   let lastNatural: string | null = null;
   // While a clicked link scrolls the page, sections between where you were and the target glow as they pass, like when scrolling by hand.
   let travel: [number, number] | null = null;
@@ -280,7 +283,8 @@ const order: Step[] = [
   addEventListener('keydown', (e) => { if (['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '].includes(e.key)) unpin(); });
   addEventListener('pointerdown', (e) => { if (!(e.target as Element).closest('a')) unpin(); });
   addEventListener('scroll', mark, { passive: true });
-  addEventListener('resize', mark);
+  addEventListener('resize', () => { setUp(); mark(); });
+  setUp();
   document.querySelector('.rail .top-btn')!.addEventListener('click', () => { pinned = null; travel = null; scrollTo({ top: 0 }); });
   mark();
 </script>
@@ -454,13 +458,15 @@ const order: Step[] = [
   @keyframes glow { 0% { box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 60%, transparent), 0 0 40px 0 color-mix(in srgb, var(--accent) 40%, transparent); } 100% { box-shadow: 0 0 0 0 transparent, 0 0 40px 0 transparent; } }
   #best-lines.flash { animation: glow 2s ease-out; }
   #best-lines.flash-out { animation: none; box-shadow: 0 0 0 0 transparent, 0 0 40px 0 transparent; transition: box-shadow 0.6s ease-out; }
-  .path > li { isolation: isolate; }
-  .path > li.flash::after, .path > li.flash-out::after { content: ''; position: absolute; z-index: -1; inset: -16px -16px 16px -16px; pointer-events: none; border-radius: 0; clip-path: inset(0 -90px 0 -90px); }
-  .path > li.flash::after { animation: glow 2s ease-out; }
-  .path > li.flash-out::after { box-shadow: 0 0 0 0 transparent, 0 0 40px 0 transparent; transition: box-shadow 0.6s ease-out; }
-  .path > li:first-child.flash::after, .path > li:first-child.flash-out::after { clip-path: inset(-90px -90px 0 -90px); }
-  .path > li:last-child.flash::after, .path > li:last-child.flash-out::after { inset: -16px -16px -16px -16px; clip-path: inset(0 -90px -90px -90px); }
-  @media (prefers-reduced-motion: reduce) { #best-lines.flash, .path > li.flash::after { animation: none; } }
+  /* Step glow stays inside the card: an inset glow on the card's left and right edges (the first step also on top, from the card's very top, the last also at the bottom). Fades through opacity. */
+  .path > li { isolation: isolate; --glow: color-mix(in srgb, var(--accent) 55%, transparent); }
+  .path > li.flash::after, .path > li.flash-out::after { content: ''; position: absolute; z-index: -1; inset: -16px -16px 16px -16px; pointer-events: none; border-radius: 0; box-shadow: inset 44px 0 44px -34px var(--glow), inset -44px 0 44px -34px var(--glow); }
+  .path > li:first-child.flash::after, .path > li:first-child.flash-out::after { inset: calc(-1 * var(--up, 16px)) -16px 16px -16px; box-shadow: inset 44px 0 44px -34px var(--glow), inset -44px 0 44px -34px var(--glow), inset 0 44px 44px -34px var(--glow); }
+  .path > li:last-child.flash::after, .path > li:last-child.flash-out::after { inset: -16px -16px -16px -16px; box-shadow: inset 44px 0 44px -34px var(--glow), inset -44px 0 44px -34px var(--glow), inset 0 -44px 44px -34px var(--glow); }
+  .path > li.flash::after { animation: glow-fade 2s ease-out forwards; }
+  .path > li.flash-out::after { opacity: 0; transition: opacity 0.6s ease-out; }
+  @keyframes glow-fade { 0% { opacity: 1; } 100% { opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { #best-lines.flash, .path > li.flash::after { animation: none; opacity: 0; } }
   .actions { display: grid; gap: 0; margin: 12px 0 8px; border: 1px solid var(--line); border-radius: 3px; background: var(--panel); }
   .actions div { display: grid; grid-template-columns: 4.5em 1fr; gap: 12px; padding: 8px 12px; }
   .actions div + div { border-top: 1px solid var(--line); }
