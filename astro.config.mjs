@@ -1,5 +1,5 @@
 import { defineConfig } from 'astro/config';
 
 export default defineConfig({
-  site: 'https://codex.prezenith.com',
+  site: 'https://a2codex.prezenith.com',
 });

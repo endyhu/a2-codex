@@ -68,7 +68,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 # Project: AION 2 Codex
 
-Clean, modern cheatsheet site for the **AION 2 Global** server. Hosted free on GitHub Pages at a subdomain of prezenith.com (default `codex.prezenith.com`, not yet confirmed).
+Clean, modern cheatsheet site for the **AION 2 Global** server. Hosted free on GitHub Pages at a subdomain of prezenith.com (`a2codex.prezenith.com`).
 
 ## Working rules (from the owner)
 - **Git:** local repo, commit here. **No AI attribution anywhere**: no `Co-Authored-By`, no "Generated with" lines in commits, PRs, code or docs.
@@ -87,10 +87,12 @@ Clean, modern cheatsheet site for the **AION 2 Global** server. Hosted free on G
 Navigation mirrors the in-game menu and uses its exact names (see `src/data/nav.ts`):
 - Character > **Stats** (stats reference), **Pets** (Genus BiS lives at `pets/genus/`), **Enhancement** (Gear BiS, stat lines/BiS lines, enhancement order), **Arcana** (Arcana BiS)
 - Menu > **Daevanion** (node routes), **Skills** (class pages)
-- Activity > **Market** (Save Kinah)
 Do not invent menu names; if a page needs a new one, copy the in-game label.
 Build order: scaffold, Gear BiS + Stats, Arcana, Genus, Daevanion, Class pages last. Later ideas: Abyss shop, weekly checklist, calculators.
 
 ## Pointers
 - `docs/STATUS.md`: what's done, what's next.
 - `docs/data-sources.md`: where facts come from, verified Global terms, game-client findings.
+
+## Money-saving tips
+There is no separate "save money" page. Put "what not to waste resources on" inside each category page (Enhancement, Arcana, Pets/Genus). A Market page for cross-server price comparison is a possible later addition, not planned yet.
