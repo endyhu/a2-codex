@@ -259,7 +259,7 @@ const order: Step[] = [
     el.classList.remove('flash', 'flash-out');
     void el.offsetWidth;
     el.classList.add('flash');
-    setTimeout(() => el.classList.remove('flash'), 2200);
+    setTimeout(() => el.classList.remove('flash'), 2500);
   };
   const glow = (id: string) => {
     const li = document.getElementById(id);
@@ -455,8 +455,8 @@ const order: Step[] = [
   .bsl:hover .bsl-go { transform: translateY(-2px); }
   #best-lines { scroll-margin-top: 16px; }
   /* One glow for the Best stat lines card and for each step. A step's glow box takes half of the gap above and below it so neighbours meet without a seam; middle steps only glow sideways (top and bottom are clipped), the first also glows up and the last down. When the next section takes over, the old glow fades out quickly (.flash-out). */
-  @keyframes glow { 0% { box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 60%, transparent), 0 0 40px 0 color-mix(in srgb, var(--accent) 40%, transparent); } 100% { box-shadow: 0 0 0 0 transparent, 0 0 40px 0 transparent; } }
-  #best-lines.flash { animation: glow 2s ease-out; }
+  @keyframes glow { 0% { box-shadow: 0 0 0 0 transparent, 0 0 40px 0 transparent; } 15% { box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 60%, transparent), 0 0 40px 0 color-mix(in srgb, var(--accent) 40%, transparent); } 100% { box-shadow: 0 0 0 0 transparent, 0 0 40px 0 transparent; } }
+  #best-lines.flash { animation: glow 2.3s ease-out; }
   #best-lines.flash-out { animation: none; box-shadow: 0 0 0 0 transparent, 0 0 40px 0 transparent; transition: box-shadow 0.6s ease-out; }
   /* Step glow, drawn as plain fades instead of a shadow: a strip fading out sideways from each card edge, the same strength top to bottom, so no box edge can show as a line and neighbouring steps meet without a seam (boxes overlap by 1px). The first step also fades upward from the very top of the card, the last one downward. Opacity does the fading, so a replaced glow can fade out quickly (.flash-out). */
   .path > li { isolation: isolate; --glow: color-mix(in srgb, var(--accent) 21%, transparent); --glow-mid: color-mix(in srgb, var(--accent) 7%, transparent); --f: 70px; }
@@ -480,9 +480,9 @@ const order: Step[] = [
   .path > li.flash::after, .path > li.flash-out::after { -webkit-mask-image: linear-gradient(180deg, rgba(0,0,0,0.5), #000 1px, #000 calc(100% - 1px), rgba(0,0,0,0.5)); mask-image: linear-gradient(180deg, rgba(0,0,0,0.5), #000 1px, #000 calc(100% - 1px), rgba(0,0,0,0.5)); }
   .path > li:first-child.flash::after, .path > li:first-child.flash-out::after { -webkit-mask-image: linear-gradient(180deg, #000 calc(100% - 1px), rgba(0,0,0,0.5)); mask-image: linear-gradient(180deg, #000 calc(100% - 1px), rgba(0,0,0,0.5)); }
   .path > li:last-child.flash::after, .path > li:last-child.flash-out::after { -webkit-mask-image: linear-gradient(180deg, rgba(0,0,0,0.5), #000 1px); mask-image: linear-gradient(180deg, rgba(0,0,0,0.5), #000 1px); }
-  .path > li.flash::after { animation: glow-fade 2s ease-out forwards; }
+  .path > li.flash::after { animation: glow-fade 2.3s ease-out forwards; }
   .path > li.flash-out::after { opacity: 0; transition: opacity 0.6s ease-out; }
-  @keyframes glow-fade { 0% { opacity: 1; } 100% { opacity: 0; } }
+  @keyframes glow-fade { 0% { opacity: 0; } 15% { opacity: 1; } 100% { opacity: 0; } }
   @media (prefers-reduced-motion: reduce) { #best-lines.flash, .path > li.flash::after { animation: none; opacity: 0; } }
   .actions { display: grid; gap: 0; margin: 12px 0 8px; border: 1px solid var(--line); border-radius: 3px; background: var(--panel); }
   .actions div { display: grid; grid-template-columns: 4.5em 1fr; gap: 12px; padding: 8px 12px; }
