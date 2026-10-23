@@ -233,11 +233,29 @@ const order: Step[] = [
     side.forEach((a) => a.classList.toggle('on', a.dataset.hash === id));
   };
   const unpin = () => { if (pinned) { pinned = null; mark(); } };
+  // Short glow on the section a link jumps to, started once the scroll has settled.
+  const glow = (id: string) => {
+    const section = document.getElementById(id);
+    const el = id === 'best-lines' ? section : section?.querySelector<HTMLElement>('.step');
+    if (!el) return;
+    let done = false;
+    const run = () => {
+      if (done) return;
+      done = true;
+      el.classList.remove('flash');
+      void el.offsetWidth;
+      el.classList.add('flash');
+      el.addEventListener('animationend', () => el.classList.remove('flash'), { once: true });
+    };
+    addEventListener('scrollend', run, { once: true });
+    setTimeout(run, 900);
+  };
   document.addEventListener('click', (e) => {
     const a = (e.target as Element).closest<HTMLAnchorElement>('a[href*="#"]');
     const hash = a ? new URL(a.href).hash.slice(1) : '';
-    if (a && ids.includes(hash) && new URL(a.href).pathname === location.pathname) { pinned = hash; mark(); }
+    if (a && ids.includes(hash) && new URL(a.href).pathname === location.pathname) { pinned = hash; mark(); glow(hash); }
   });
+  if (pinned) glow(pinned);
   addEventListener('wheel', unpin, { passive: true });
   addEventListener('touchmove', unpin, { passive: true });
   addEventListener('keydown', (e) => { if (['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '].includes(e.key)) unpin(); });
@@ -413,8 +431,11 @@ const order: Step[] = [
   .bsl:hover { transform: translateY(-1px); box-shadow: 0 0 28px -4px var(--accent); background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 42%, transparent), color-mix(in srgb, var(--accent) 16%, transparent)); }
   .bsl:hover .bsl-go { transform: translateY(-2px); }
   #best-lines { scroll-margin-top: 16px; }
-  #best-lines:target { animation: bsl-flash 1.6s ease-out; }
-  @keyframes bsl-flash { 0% { box-shadow: 0 0 0 2px var(--accent), 0 0 28px -4px var(--accent); } 100% { box-shadow: 0 0 0 0 transparent; } }
+  #best-lines.flash { animation: glow-card 1.6s ease-out; }
+  .step.flash { border-radius: 3px; animation: glow-step 1.6s ease-out; }
+  @keyframes glow-card { 0% { box-shadow: 0 0 0 2px var(--accent), 0 0 28px -4px var(--accent); } 100% { box-shadow: 0 0 0 0 transparent; } }
+  @keyframes glow-step { 0% { box-shadow: 0 0 0 8px var(--accent-soft), 0 0 0 9px var(--accent), 0 0 30px -2px var(--accent); background: var(--accent-soft); } 100% { box-shadow: 0 0 0 8px transparent, 0 0 0 9px transparent, 0 0 0 0 transparent; background: transparent; } }
+  @media (prefers-reduced-motion: reduce) { #best-lines.flash, .step.flash { animation: none; } }
   .actions { display: grid; gap: 0; margin: 12px 0 8px; border: 1px solid var(--line); border-radius: 3px; background: var(--panel); }
   .actions div { display: grid; grid-template-columns: 4.5em 1fr; gap: 12px; padding: 8px 12px; }
   .actions div + div { border-top: 1px solid var(--line); }
