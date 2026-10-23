@@ -26,7 +26,7 @@ export const nav: NavGroup[] = [
   {
     title: 'Character',
     items: [
-      { label: 'Stats', href: 'stats/', icon: chart, ready: true, text: 'What every stat does.' },
+      { label: 'Stats', href: 'stats/', icon: chart, ready: true, text: 'The stats that matter most, ranked, and where to get each one.' },
       { label: 'Pets', href: 'pets/', icon: paw, ready: false, text: 'Best pets and how to use them.' },
       { label: 'Genus', href: 'pets/genus/', icon: paw, ready: false, sub: true, text: 'Best line per slot, when to stop rerolling and how not to burn resources.' },
       { label: 'Enhancement', href: 'enhancement/', icon: anvil, ready: false, text: 'Best gear, best lines, enhancement order and what not to waste Kinah on.' },

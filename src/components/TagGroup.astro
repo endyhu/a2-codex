@@ -1,0 +1,28 @@
+---
+// A labelled line of tags. Past `limit` tags the rest go into a popup opened by a "+N" button (hover, focus or tap).
+// A tag with an `href` renders as a link; tags get one once the page they point to is published.
+interface Tag { label: string; community?: boolean; href?: string }
+interface Props { label: string; tags: Tag[]; limit?: number }
+const { label, tags, limit = 4 } = Astro.props;
+// Hiding a single tag behind "+1" saves nothing, so only collapse when at least two would be hidden.
+const visible = tags.length - limit >= 2 ? limit : tags.length;
+const shown = tags.slice(0, visible);
+const rest = tags.slice(visible);
+const cls = (t: Tag) => `tag${t.community ? ' community' : ''}${t.href ? ' link' : ''}`;
+---
+<div class="grp">
+  <span class="gl">{label}</span>
+  <span class="tags">
+    {shown.map((t) => (t.href ? <a class={cls(t)} href={t.href}>{t.label}</a> : <span class={cls(t)}>{t.label}</span>))}
+    {rest.length > 0 && (
+      <span class="more-wrap">
+        <button type="button" class="more" aria-haspopup="true" aria-expanded="false">+{rest.length}</button>
+        <span class="pop">
+          <span class="pop-in">
+            {rest.map((t) => (t.href ? <a class={cls(t)} href={t.href}>{t.label}</a> : <span class={cls(t)}>{t.label}</span>))}
+          </span>
+        </span>
+      </span>
+    )}
+  </span>
+</div>
