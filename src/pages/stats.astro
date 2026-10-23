@@ -296,14 +296,8 @@ const rows = ranked.map((s) => ({ ...s, gets: tagsFor(s) }));
 </script>
 
 <style is:global>
-  .panel { background: radial-gradient(120% 90% at 50% 0%, var(--accent-soft), var(--panel) 60%); border: 1px solid var(--line); border-radius: 3px; padding: 14px 16px 16px; }
-  @media (max-width: 480px) { .panel { padding: 14px 8px 16px; } }
-  .page-title { display: flex; align-items: center; gap: 14px; margin: 0 0 22px; font-size: 1.9rem; font-weight: 700; letter-spacing: -0.02em; }
-  .page-title::before { content: ''; width: 4px; height: 1.6rem; border-radius: 2px; background: linear-gradient(180deg, var(--accent), #5b8cff); }
-  .panel-head { text-align: center; border-bottom: 1px solid var(--line); padding-bottom: 12px; margin-bottom: 18px; }
-  .panel-head h2 { margin: 0; justify-content: center; font-size: 1.2rem; }
-  .list-col .panel-head { text-align: left; }
-  .list-col .panel-head h2 { justify-content: flex-start; }
+  .panel:not(.list-col) .panel-head { text-align: center; }
+  .panel:not(.list-col) .panel-head h2 { justify-content: center; }
 
   .wheel { position: relative; width: 100%; max-width: 540px; aspect-ratio: 1; margin: 0 auto; container-type: inline-size; }
   /* No card: a soft glow behind the wheel lets it sit on the page background. */
@@ -361,7 +355,7 @@ const rows = ranked.map((s) => ({ ...s, gets: tagsFor(s) }));
   /* "+N" popup: opens on hover, keyboard focus or tap. The transparent top padding bridges the gap so hover holds. */
   .more-wrap { position: relative; display: inline-flex; line-height: 0; }
   .pop { position: absolute; top: 100%; left: 0; z-index: 20; display: none; padding-top: 6px; }
-  .pop-in { display: flex; flex-wrap: wrap; gap: 4px; width: max-content; max-width: 240px; padding: 8px; background: #0d1018; border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 8px; box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5); }
+  .pop-in { display: flex; flex-wrap: wrap; gap: 4px; width: max-content; max-width: 240px; padding: 8px; background: #0d1018; border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 3px; box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5); }
   .pop .tag { background: rgba(255, 255, 255, 0.05); color: #eceff5; }
   /* Keyboard focus keeps it open; a mouse click must not, or the focused button would hold the popup open after the pointer leaves. */
   .more-wrap:has(.more:focus-visible) .pop, .more-wrap.open .pop { display: block; }
@@ -426,7 +420,7 @@ const rows = ranked.map((s) => ({ ...s, gets: tagsFor(s) }));
   .src .glyph, .src .glyph svg { width: 13px; height: 13px; }
   .sources { text-align: right; margin-top: 16px; }
 
-  #tip { position: fixed; z-index: 50; max-width: min(300px, calc(100vw - 16px)); display: flex; flex-direction: column; gap: 2px; padding: 10px 14px; background: #0d1018; color: #eceff5; border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 3px; box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5); pointer-events: none; font-size: 0.88rem; line-height: 1.45; }
+  #tip { position: fixed; z-index: 50; max-width: min(300px, calc(100vw - 16px)); display: flex; flex-direction: column; gap: 2px; pointer-events: none; }
   #tip[hidden] { display: none; }
   #tip strong { color: var(--warn); }
 </style>
