@@ -238,7 +238,7 @@ const order: Step[] = [
     const natural = current?.id ?? null;
     if (natural && lastNatural !== null && natural !== lastNatural) {
       const i = ids.indexOf(natural);
-      if (!pinned || (travel && i >= Math.min(...travel) && i <= Math.max(...travel))) flash(document.getElementById(natural)!);
+      if (!pinned || (travel && i >= Math.min(...travel) && i <= Math.max(...travel))) flash(document.getElementById(natural)!, !!pinned);
     }
     lastNatural = natural;
     const id = pinned ?? natural;
@@ -247,15 +247,15 @@ const order: Step[] = [
   };
   const unpin = () => { if (pinned) { pinned = null; travel = null; mark(); } };
   // Short glow on a section: after a link jump once the scroll has settled, or straight away when scrolling reaches the next one.
-  // Any glow still running fades out quickly so the new one takes over.
+  // When a clicked link scrolls the page, the glow still running fades out quickly so the next one takes over; when the reader scrolls by hand, glows just finish on their own.
   const fadeOut = (el: Element) => {
     if (!el.classList.contains('flash')) return;
     el.classList.remove('flash');
     el.classList.add('flash-out');
     setTimeout(() => el.classList.remove('flash-out'), 750);
   };
-  const flash = (el: HTMLElement) => {
-    document.querySelectorAll('.flash').forEach((o) => { if (o !== el) fadeOut(o); });
+  const flash = (el: HTMLElement, handover = false) => {
+    if (handover) document.querySelectorAll('.flash').forEach((o) => { if (o !== el) fadeOut(o); });
     el.classList.remove('flash', 'flash-out');
     void el.offsetWidth;
     el.classList.add('flash');
@@ -266,7 +266,7 @@ const order: Step[] = [
     if (!li) return;
     // Start the glow once the scroll has stopped (no scroll event for 150ms), at the latest after 3s; if no scroll starts within 400ms the target is already in place.
     let timer = 0, moving = false;
-    const finish = () => { removeEventListener('scroll', bump); clearTimeout(timer); clearTimeout(cap); if (!li.classList.contains('flash')) flash(li); };
+    const finish = () => { removeEventListener('scroll', bump); clearTimeout(timer); clearTimeout(cap); if (!li.classList.contains('flash')) flash(li, true); };
     const bump = () => { moving = true; clearTimeout(timer); timer = window.setTimeout(finish, 150); };
     const cap = window.setTimeout(finish, 3000);
     addEventListener('scroll', bump, { passive: true });
