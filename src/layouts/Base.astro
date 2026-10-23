@@ -36,11 +36,11 @@ const isActive = (href: string) => path === `${base}${href}`;
               <div class="group-title">{g.title}</div>
               {g.items.map((i) =>
                 i.ready ? (
-                  <a class="item" href={`${base}${i.href}`} aria-current={isActive(i.href) ? 'page' : undefined}>
+                  <a class={`item${i.sub ? ' sub' : ''}`} href={`${base}${i.href}`} aria-current={isActive(i.href) ? 'page' : undefined}>
                     <span class="ico" set:html={i.icon} /> {i.label}
                   </a>
                 ) : (
-                  <span class="item soon" title="Coming soon">
+                  <span class={`item soon${i.sub ? ' sub' : ''}`} title="Coming soon">
                     <span class="ico" set:html={i.icon} /> {i.label}
                   </span>
                 )

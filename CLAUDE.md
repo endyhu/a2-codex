@@ -84,7 +84,11 @@ Clean, modern cheatsheet site for the **AION 2 Global** server. Hosted free on G
 - Images: use own screenshots or link out. Do not hotlink or copy third-party site assets (e.g. questlog.gg, metabot.gg); linking to their pages is fine.
 
 ## Planned pages (approved)
-Home, Gear BiS, Gear stat lines (BiS lines), Arcana BiS, Genus BiS, Daevanion BiS, Class pages, Save Kinah, Stats reference.
+Navigation mirrors the in-game menu and uses its exact names (see `src/data/nav.ts`):
+- Character > **Stats** (stats reference), **Pets** (Genus BiS lives at `pets/genus/`), **Enhancement** (Gear BiS, stat lines/BiS lines, enhancement order), **Arcana** (Arcana BiS)
+- Menu > **Daevanion** (node routes), **Skills** (class pages)
+- Activity > **Market** (Save Kinah)
+Do not invent menu names; if a page needs a new one, copy the in-game label.
 Build order: scaffold, Gear BiS + Stats, Arcana, Genus, Daevanion, Class pages last. Later ideas: Abyss shop, weekly checklist, calculators.
 
 ## Pointers

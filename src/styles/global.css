@@ -52,6 +52,9 @@ nav { display: flex; flex-direction: column; gap: 2px; }
 a.item:hover { color: var(--text); background: var(--panel-2); }
 .item[aria-current='page'] { color: var(--text); background: var(--accent-soft); box-shadow: inset 2px 0 0 var(--accent); }
 .item.soon { opacity: 0.45; cursor: default; }
+.item.sub { margin-left: 18px; padding: 5px 10px; font-size: 0.9rem; }
+.item.sub .ico { width: 14px; height: 14px; }
+.item.sub .ico svg { width: 14px; height: 14px; }
 .ico { display: inline-flex; width: 18px; height: 18px; flex: none; }
 .ico svg { width: 18px; height: 18px; }
 #theme { margin-top: auto; background: transparent; border: 1px solid var(--line); color: var(--muted); border-radius: 10px; padding: 8px 10px; cursor: pointer; font: inherit; font-size: 0.85rem; }

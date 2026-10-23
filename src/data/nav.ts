@@ -13,21 +13,25 @@ export interface NavItem {
   icon: string;
   ready: boolean;
   text: string;
+  /** Page nested under the previous item (e.g. Genus under Pets). */
+  sub?: boolean;
 }
 export interface NavGroup {
   title: string;
   items: NavItem[];
 }
 
-// Groups and labels mirror the in-game menu (default hotkey menu). Keep them in sync with the client.
+// Labels are the in-game menu names exactly (Pets, Enhancement, Arcana, Daevanion, Skills, Market, Stats).
+// Order inside Character follows the client: Stats, then Pets, Enhancement, Arcana.
 export const nav: NavGroup[] = [
   {
     title: 'Character',
     items: [
       { label: 'Stats', href: 'stats/', icon: chart, ready: true, text: 'What every stat does.' },
-      { label: 'Gear', href: 'gear/', icon: sword, ready: false, text: 'Best items, best lines, enhancement order.' },
+      { label: 'Pets', href: 'pets/', icon: paw, ready: false, text: 'Best pets and how to use them.' },
+      { label: 'Genus', href: 'pets/genus/', icon: paw, ready: false, sub: true, text: 'Best line per slot and when to stop rerolling.' },
+      { label: 'Enhancement', href: 'enhancement/', icon: sword, ready: false, text: 'Best gear, best lines, enhancement order.' },
       { label: 'Arcana', href: 'arcana/', icon: layers, ready: false, text: 'Best card per slot and best set.' },
-      { label: 'Genus', href: 'genus/', icon: paw, ready: false, text: 'Best line per slot and when to stop rerolling.' },
     ],
   },
   {
