@@ -1,7 +1,7 @@
 import house from 'lucide-static/icons/house.svg?raw';
 import chart from 'lucide-static/icons/chart-column.svg?raw';
-import sword from 'lucide-static/icons/sword.svg?raw';
-import layers from 'lucide-static/icons/layers.svg?raw';
+import anvil from 'lucide-static/icons/anvil.svg?raw';
+import spade from 'lucide-static/icons/spade.svg?raw';
 import paw from 'lucide-static/icons/paw-print.svg?raw';
 import hexagon from 'lucide-static/icons/hexagon.svg?raw';
 import swords from 'lucide-static/icons/swords.svg?raw';
@@ -29,8 +29,8 @@ export const nav: NavGroup[] = [
       { label: 'Stats', href: 'stats/', icon: chart, ready: true, text: 'What every stat does.' },
       { label: 'Pets', href: 'pets/', icon: paw, ready: false, text: 'Best pets and how to use them.' },
       { label: 'Genus', href: 'pets/genus/', icon: paw, ready: false, sub: true, text: 'Best line per slot, when to stop rerolling and how not to burn resources.' },
-      { label: 'Enhancement', href: 'enhancement/', icon: sword, ready: false, text: 'Best gear, best lines, enhancement order and what not to waste Kinah on.' },
-      { label: 'Arcana', href: 'arcana/', icon: layers, ready: false, text: 'Best card per slot, best set and what not to waste on it.' },
+      { label: 'Enhancement', href: 'enhancement/', icon: anvil, ready: false, text: 'Best gear, best lines, enhancement order and what not to waste Kinah on.' },
+      { label: 'Arcana', href: 'arcana/', icon: spade, ready: false, text: 'Best card per slot, best set and what not to waste on it.' },
     ],
   },
   {
