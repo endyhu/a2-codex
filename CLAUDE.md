@@ -92,7 +92,7 @@ Navigation mirrors the in-game menu and uses its exact names (see `src/data/nav.
 - Character > **Stats** (stats reference), **Gear** (Gear BiS, stat lines/BiS lines, enhancement order; the owner's name, replaces the in-game "Enhancement"), **Pets** (Genus BiS lives at `pets/genus/`), **Arcana** (Arcana BiS)
 - Menu > **Daevanion** (node routes), **Skills** (class pages)
 Do not invent menu names; if a page needs a new one, copy the in-game label.
-Build order: scaffold, Stats (done), Gear BiS, Arcana, Genus, Daevanion, Class pages last. Later ideas: Abyss shop, weekly checklist, calculators.
+Build order: scaffold, Stats (done), Gear (done), Arcana, Genus, Daevanion, Class pages last. Later ideas: Abyss shop, weekly checklist, calculators.
 When a page ships, the "Get it from" tags on the Stats page link to it automatically (flip `ready` in `nav.ts`; mapping in `TAG_PAGE` in `stats.astro`).
 
 ## Start of every session
