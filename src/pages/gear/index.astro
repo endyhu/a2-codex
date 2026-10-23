@@ -459,12 +459,12 @@ const order: Step[] = [
   #best-lines.flash { animation: glow 2s ease-out; }
   #best-lines.flash-out { animation: none; box-shadow: 0 0 0 0 transparent, 0 0 40px 0 transparent; transition: box-shadow 0.6s ease-out; }
   .path > li { isolation: isolate; }
-  /* Step glow: no outline ring (its edge would show as a line along the top and bottom) and a hard clip one pixel inside the box, so nothing spills up or down into the neighbouring steps. The first step's box starts at the very top of the card. */
-  .path > li.flash::after, .path > li.flash-out::after { content: ''; position: absolute; z-index: -1; inset: -16px -16px 16px -16px; pointer-events: none; border-radius: 0; clip-path: inset(1px -90px 1px -90px); }
+  /* Step glow: no outline ring (its edge would show as a line along the top and bottom) and a hard clip at the box edge (1px past it, so neighbouring boxes overlap instead of leaving a hairline gap), so nothing spills further up or down into the neighbouring steps. The first step's box starts at the very top of the card. */
+  .path > li.flash::after, .path > li.flash-out::after { content: ''; position: absolute; z-index: -1; inset: -16px -16px 16px -16px; pointer-events: none; border-radius: 0; clip-path: inset(-1px -90px -1px -90px); }
   .path > li.flash::after { animation: glow-step 2s ease-out; }
   .path > li.flash-out::after { box-shadow: 0 0 40px 0 transparent; transition: box-shadow 0.6s ease-out; }
-  .path > li:first-child.flash::after, .path > li:first-child.flash-out::after { inset: calc(-1 * var(--up, 16px)) -16px 16px -16px; clip-path: inset(-90px -90px 1px -90px); }
-  .path > li:last-child.flash::after, .path > li:last-child.flash-out::after { inset: -16px -16px -16px -16px; clip-path: inset(1px -90px -90px -90px); }
+  .path > li:first-child.flash::after, .path > li:first-child.flash-out::after { inset: calc(-1 * var(--up, 16px)) -16px 16px -16px; clip-path: inset(-90px -90px -1px -90px); }
+  .path > li:last-child.flash::after, .path > li:last-child.flash-out::after { inset: -16px -16px -16px -16px; clip-path: inset(-1px -90px -90px -90px); }
   @keyframes glow-step { 0% { box-shadow: 0 0 40px 0 color-mix(in srgb, var(--accent) 40%, transparent); } 100% { box-shadow: 0 0 40px 0 transparent; } }
   @media (prefers-reduced-motion: reduce) { #best-lines.flash, .path > li.flash::after { animation: none; } }
   .actions { display: grid; gap: 0; margin: 12px 0 8px; border: 1px solid var(--line); border-radius: 3px; background: var(--panel); }
