@@ -217,6 +217,9 @@ const order: Step[] = [
   const ids = sections.map((el) => el.id);
   // A clicked link stays highlighted (the last sections cannot scroll up to the trigger line) until the reader scrolls on their own.
   let pinned: string | null = ids.includes(location.hash.slice(1)) ? location.hash.slice(1) : null;
+  const firstStep = document.querySelector<HTMLElement>('.path > li')!;
+  const card = document.querySelector('[aria-label="Enhancement order"]')!;
+  const setUp = () => firstStep.style.setProperty('--up', `${firstStep.getBoundingClientRect().top - card.getBoundingClientRect().top - 1}px`);
   let lastNatural: string | null = null;
   // While a clicked link scrolls the page, sections between where you were and the target glow as they pass, like when scrolling by hand.
   let travel: [number, number] | null = null;
@@ -280,7 +283,8 @@ const order: Step[] = [
   addEventListener('keydown', (e) => { if (['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '].includes(e.key)) unpin(); });
   addEventListener('pointerdown', (e) => { if (!(e.target as Element).closest('a')) unpin(); });
   addEventListener('scroll', mark, { passive: true });
-  addEventListener('resize', mark);
+  addEventListener('resize', () => { setUp(); mark(); });
+  setUp();
   document.querySelector('.rail .top-btn')!.addEventListener('click', () => { pinned = null; travel = null; scrollTo({ top: 0 }); });
   mark();
 </script>
@@ -455,11 +459,13 @@ const order: Step[] = [
   #best-lines.flash { animation: glow 2s ease-out; }
   #best-lines.flash-out { animation: none; box-shadow: 0 0 0 0 transparent, 0 0 40px 0 transparent; transition: box-shadow 0.6s ease-out; }
   .path > li { isolation: isolate; }
-  .path > li.flash::after, .path > li.flash-out::after { content: ''; position: absolute; z-index: -1; inset: -16px -16px 16px -16px; pointer-events: none; border-radius: 0; clip-path: inset(0 -90px 0 -90px); }
-  .path > li.flash::after { animation: glow 2s ease-out; }
-  .path > li.flash-out::after { box-shadow: 0 0 0 0 transparent, 0 0 40px 0 transparent; transition: box-shadow 0.6s ease-out; }
-  .path > li:first-child.flash::after, .path > li:first-child.flash-out::after { clip-path: inset(-90px -90px 0 -90px); }
-  .path > li:last-child.flash::after, .path > li:last-child.flash-out::after { inset: -16px -16px -16px -16px; clip-path: inset(0 -90px -90px -90px); }
+  /* Step glow: no outline ring (its edge would show as a line along the top and bottom) and a hard clip one pixel inside the box, so nothing spills up or down into the neighbouring steps. The first step's box starts at the very top of the card. */
+  .path > li.flash::after, .path > li.flash-out::after { content: ''; position: absolute; z-index: -1; inset: -16px -16px 16px -16px; pointer-events: none; border-radius: 0; clip-path: inset(1px -90px 1px -90px); }
+  .path > li.flash::after { animation: glow-step 2s ease-out; }
+  .path > li.flash-out::after { box-shadow: 0 0 40px 0 transparent; transition: box-shadow 0.6s ease-out; }
+  .path > li:first-child.flash::after, .path > li:first-child.flash-out::after { inset: calc(-1 * var(--up, 16px)) -16px 16px -16px; clip-path: inset(-90px -90px 1px -90px); }
+  .path > li:last-child.flash::after, .path > li:last-child.flash-out::after { inset: -16px -16px -16px -16px; clip-path: inset(1px -90px -90px -90px); }
+  @keyframes glow-step { 0% { box-shadow: 0 0 40px 0 color-mix(in srgb, var(--accent) 40%, transparent); } 100% { box-shadow: 0 0 40px 0 transparent; } }
   @media (prefers-reduced-motion: reduce) { #best-lines.flash, .path > li.flash::after { animation: none; } }
   .actions { display: grid; gap: 0; margin: 12px 0 8px; border: 1px solid var(--line); border-radius: 3px; background: var(--panel); }
   .actions div { display: grid; grid-template-columns: 4.5em 1fr; gap: 12px; padding: 8px 12px; }
