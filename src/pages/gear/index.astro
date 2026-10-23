@@ -458,15 +458,28 @@ const order: Step[] = [
   @keyframes glow { 0% { box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 60%, transparent), 0 0 40px 0 color-mix(in srgb, var(--accent) 40%, transparent); } 100% { box-shadow: 0 0 0 0 transparent, 0 0 40px 0 transparent; } }
   #best-lines.flash { animation: glow 2s ease-out; }
   #best-lines.flash-out { animation: none; box-shadow: 0 0 0 0 transparent, 0 0 40px 0 transparent; transition: box-shadow 0.6s ease-out; }
-  .path > li { isolation: isolate; }
-  /* Step glow: no outline ring (its edge would show as a line along the top and bottom) and a hard clip at the box edge (1px past it, so neighbouring boxes overlap instead of leaving a hairline gap), so nothing spills further up or down into the neighbouring steps. The first step's box starts at the very top of the card. */
-  .path > li.flash::after, .path > li.flash-out::after { content: ''; position: absolute; z-index: -1; inset: -16px -16px 16px -16px; pointer-events: none; border-radius: 0; clip-path: inset(-1px -90px -1px -90px); }
-  .path > li.flash::after { animation: glow-step 2s ease-out; }
-  .path > li.flash-out::after { box-shadow: 0 0 40px 0 transparent; transition: box-shadow 0.6s ease-out; }
-  .path > li:first-child.flash::after, .path > li:first-child.flash-out::after { inset: calc(-1 * var(--up, 16px)) -16px 16px -16px; clip-path: inset(-90px -90px -1px -90px); }
-  .path > li:last-child.flash::after, .path > li:last-child.flash-out::after { inset: -16px -16px -16px -16px; clip-path: inset(-1px -90px -90px -90px); }
-  @keyframes glow-step { 0% { box-shadow: 0 0 40px 0 color-mix(in srgb, var(--accent) 40%, transparent); } 100% { box-shadow: 0 0 40px 0 transparent; } }
-  @media (prefers-reduced-motion: reduce) { #best-lines.flash, .path > li.flash::after { animation: none; } }
+  /* Step glow, drawn as plain fades instead of a shadow: a strip fading out sideways from each card edge, the same strength top to bottom, so no box edge can show as a line and neighbouring steps meet without a seam (boxes overlap by 1px). The first step also fades upward from the very top of the card, the last one downward. Opacity does the fading, so a replaced glow can fade out quickly (.flash-out). */
+  .path > li { isolation: isolate; --glow: color-mix(in srgb, var(--accent) 42%, transparent); --f: 70px; }
+  .path > li.flash::after, .path > li.flash-out::after { content: ''; position: absolute; z-index: -1; pointer-events: none; inset: -16px calc(-16px - var(--f)) 15px calc(-16px - var(--f));
+    background: linear-gradient(90deg, transparent, var(--glow)) left top / var(--f) 100% no-repeat, linear-gradient(270deg, transparent, var(--glow)) right top / var(--f) 100% no-repeat; }
+  .path > li:first-child.flash::after, .path > li:first-child.flash-out::after { inset: calc(-1 * var(--up, 16px) - var(--f)) calc(-16px - var(--f)) 15px calc(-16px - var(--f));
+    background:
+      linear-gradient(180deg, transparent, var(--glow)) left var(--f) top / calc(100% - 2 * var(--f)) var(--f) no-repeat,
+      linear-gradient(90deg, transparent, var(--glow)) left top var(--f) / var(--f) calc(100% - var(--f)) no-repeat,
+      linear-gradient(270deg, transparent, var(--glow)) right top var(--f) / var(--f) calc(100% - var(--f)) no-repeat,
+      radial-gradient(circle at 100% 100%, var(--glow), transparent var(--f)) left top / var(--f) var(--f) no-repeat,
+      radial-gradient(circle at 0 100%, var(--glow), transparent var(--f)) right top / var(--f) var(--f) no-repeat; }
+  .path > li:last-child.flash::after, .path > li:last-child.flash-out::after { inset: -16px calc(-16px - var(--f)) calc(-16px - var(--f)) calc(-16px - var(--f));
+    background:
+      linear-gradient(0deg, transparent, var(--glow)) left var(--f) bottom / calc(100% - 2 * var(--f)) var(--f) no-repeat,
+      linear-gradient(90deg, transparent, var(--glow)) left top / var(--f) calc(100% - var(--f)) no-repeat,
+      linear-gradient(270deg, transparent, var(--glow)) right top / var(--f) calc(100% - var(--f)) no-repeat,
+      radial-gradient(circle at 100% 0, var(--glow), transparent var(--f)) left bottom / var(--f) var(--f) no-repeat,
+      radial-gradient(circle at 0 0, var(--glow), transparent var(--f)) right bottom / var(--f) var(--f) no-repeat; }
+  .path > li.flash::after { animation: glow-fade 2s ease-out forwards; }
+  .path > li.flash-out::after { opacity: 0; transition: opacity 0.6s ease-out; }
+  @keyframes glow-fade { 0% { opacity: 1; } 100% { opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { #best-lines.flash, .path > li.flash::after { animation: none; opacity: 0; } }
   .actions { display: grid; gap: 0; margin: 12px 0 8px; border: 1px solid var(--line); border-radius: 3px; background: var(--panel); }
   .actions div { display: grid; grid-template-columns: 4.5em 1fr; gap: 12px; padding: 8px 12px; }
   .actions div + div { border-top: 1px solid var(--line); }
