@@ -98,7 +98,14 @@ const isActive = (href: string) => path === `${base}${href}`;
       // Links to a section of the current page are left to the browser so they keep the smooth scroll (the router jumps instantly).
       const markSectionLinks = () =>
         document.querySelectorAll<HTMLAnchorElement>('a[href*="#"]').forEach((a) => a.toggleAttribute('data-astro-reload', a.pathname === location.pathname));
-      document.addEventListener('astro:page-load', () => { showTop(); labelTheme(); markSectionLinks(); });
+      // Links to other sites open in a new tab so the app stays open.
+      const markExternalLinks = () =>
+        document.querySelectorAll<HTMLAnchorElement>('a[href^="http"]').forEach((a) => {
+          if (a.origin === location.origin) return;
+          a.target = '_blank';
+          a.rel = 'noopener noreferrer';
+        });
+      document.addEventListener('astro:page-load', () => { showTop(); labelTheme(); markSectionLinks(); markExternalLinks(); });
       // The browser's section jump leaves a history entry without router state, so Back to it would not swap the page in.
       // Copy the previous entry's state onto it, as the router does for its own section jumps.
       let jumpedFrom: unknown = null;
