@@ -4,6 +4,7 @@ import { nav, homeIcon } from '../data/nav';
 import sun from 'lucide-static/icons/sun.svg?raw';
 import moon from 'lucide-static/icons/moon.svg?raw';
 import arrowUp from 'lucide-static/icons/arrow-up.svg?raw';
+import refresh from 'lucide-static/icons/refresh-cw.svg?raw';
 import { ClientRouter } from 'astro:transitions';
 
 interface Props { title: string; description?: string }
@@ -71,8 +72,9 @@ const isActive = (href: string) => path === `${base}${href}`;
         <footer>Global server. Fan-made, not affiliated with NCSOFT. AION 2 is a trademark of its owner.</footer>
       </div>
     </div>
-    <div id="update" transition:persist hidden>
-      New version available
+    <div id="update" transition:persist hidden role="status">
+      <span class="update-ico" set:html={refresh} />
+      <span class="update-text"><strong>New version available</strong><small>Reload to get the latest.</small></span>
       <button type="button" id="update-reload">Reload</button>
     </div>
     <button id="to-top" type="button" aria-label="Back to top" title="Back to top" set:html={arrowUp} />
