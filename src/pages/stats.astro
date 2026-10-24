@@ -95,10 +95,10 @@ const GENUS = ['Double Chance', 'Front / Back Attack Damage Boost', 'Weapon Dama
 const GEAR_TAGS = ['Helm', 'Pauldrons', 'Top', 'Cloak', 'Gloves', 'Legs', 'Shoes', 'Weapons', 'Earrings', 'Necklace', 'Ring', 'Bracelet',
   'Amulet', 'Belt', 'Rune', 'All armor', 'Manastone'];
 const TAG_PAGE: Record<string, string> = {
-  Arcana: 'Arcana', Daevanion: 'Daevanion', 'Genus Insight': 'Genus',
+  Arcana: 'Arcana', Daevanion: 'Daevanion', 'Genus Insight': 'Genus Insight',
   ...Object.fromEntries(GEAR_TAGS.map((g) => [g, 'Gear'])),
 };
-const pages = nav.flatMap((g) => g.items);
+const pages = nav;
 const hrefFor = (label: string) => {
   const page = pages.find((p) => p.label === TAG_PAGE[label] && p.ready);
   return page ? `${import.meta.env.BASE_URL}${page.href}` : undefined;

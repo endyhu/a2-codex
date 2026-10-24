@@ -46,8 +46,6 @@ aside {
 .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: -0.01em; color: var(--text); text-decoration: none; padding: 0 8px 14px; }
 .logo { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 9px; font-size: 0.8rem; color: #fff; background: linear-gradient(135deg, #8b7bff, #5b8cff); }
 nav { display: flex; flex-direction: column; gap: 2px; }
-.group { margin-top: 16px; }
-.group-title { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); padding: 0 10px 6px; }
 .item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; color: var(--muted); text-decoration: none; font-weight: 500; }
 a.item:hover { color: var(--text); background: var(--panel-2); }
 .item[aria-current='page'] { color: var(--text); background: var(--accent-soft); box-shadow: inset 2px 0 0 var(--accent); }
@@ -78,7 +76,7 @@ h2 { font-size: 1.15rem; letter-spacing: -0.01em; margin: 2.4rem 0 12px; display
 .lead { color: var(--muted); font-size: 1.05rem; margin: 0 0 28px; max-width: 60ch; }
 
 .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
-.card { display: flex; flex-direction: column; gap: 6px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; text-decoration: none; color: var(--text); transition: border-color 0.15s, transform 0.15s; }
+.card { display: flex; flex-direction: column; gap: 6px; background: radial-gradient(120% 90% at 50% 0%, var(--accent-soft), var(--panel) 60%); border: 1px solid var(--line); border-radius: 3px; padding: 18px; text-decoration: none; color: var(--text); transition: border-color 0.15s, transform 0.15s; }
 a.card:hover { border-color: var(--accent); transform: translateY(-2px); }
 .card .ico { color: var(--accent); width: 22px; height: 22px; }
 .card .ico svg { width: 22px; height: 22px; }

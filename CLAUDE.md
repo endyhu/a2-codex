@@ -88,11 +88,11 @@ Clean, modern cheatsheet site for the **AION 2 Global** server. Hosted free on G
 - Images: use own screenshots or link out. Do not hotlink or copy third-party site assets (e.g. questlog.gg, metabot.gg); linking to their pages is fine.
 
 ## Planned pages (approved)
-Navigation mirrors the in-game menu and uses its exact names (see `src/data/nav.ts`):
-- Character > **Stats** (stats reference), **Gear** (Gear BiS, stat lines/BiS lines, enhancement order; the owner's name, replaces the in-game "Enhancement"), **Pets** (Genus BiS lives at `pets/genus/`), **Arcana** (Arcana BiS)
+Navigation is one flat list (no Character/Menu groups) in in-game order and uses its exact names (see `src/data/nav.ts`):
+- Character > **Stats** (stats reference), **Gear** (Gear BiS, stat lines/BiS lines, enhancement order; the owner's name, replaces the in-game "Enhancement"), **Genus Insight** (pet Genus BiS, `genus/`; replaces a separate Pets page), **Arcana** (Arcana BiS)
 - Menu > **Daevanion** (node routes), **Skills** (class pages)
 Do not invent menu names; if a page needs a new one, copy the in-game label.
-Build order: scaffold, Stats (done), Gear (done), Arcana, Genus, Daevanion, Class pages last. Later ideas: Abyss shop, weekly checklist, calculators.
+Build order: scaffold, Stats (done), Gear (done), Arcana, Genus Insight, Daevanion, Class pages last. Later ideas: Abyss shop, weekly checklist, calculators.
 When a page ships, the "Get it from" tags on the Stats page link to it automatically (flip `ready` in `nav.ts`; mapping in `TAG_PAGE` in `stats.astro`).
 
 ## Start of every session
@@ -107,4 +107,4 @@ Never commit personal info: real names, emails, usernames, character names, loca
 - `scripts/global-sources.mjs` -> `src/data/stat-sources.json`: where each stat can be obtained, from Global client data. Re-run after patches.
 
 ## Money-saving tips
-There is no separate "save money" page. Put "what not to waste resources on" inside each category page (Gear, Arcana, Pets/Genus). A Market page for cross-server price comparison is a possible later addition, not planned yet.
+There is no separate "save money" page. Put "what not to waste resources on" inside each category page (Gear, Arcana, Genus Insight). A Market page for cross-server price comparison is a possible later addition, not planned yet.

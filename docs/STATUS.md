@@ -2,7 +2,8 @@
 
 **Live:** https://a2codex.prezenith.com (GitHub Pages, deploys on push to `main`).
 **Done:** repo + mise (Node 24), project rules in CLAUDE.md, Astro scaffold (dark/light theme, `Base` layout), GitHub Pages workflow, DNS, **Stats page**, **Gear page**, finished (see below).
-**Next:** Arcana, then Pets/Genus, Daevanion, Class pages. To publish a page, create `src/pages/<href>index.astro` and set `ready: true` in `src/data/nav.ts`. Money-saving tips go inside each category page, not a separate page.
+**Nav/home:** one flat sidebar list, home cards use the panel look; Pets and Genus are one entry, Genus Insight (`genus/`); Arcana icon is a custom two-card SVG in `nav.ts`.
+**Next:** Arcana, then Genus Insight (Pets and Genus are one page), Daevanion, Class pages. To publish a page, create `src/pages/<href>index.astro` and set `ready: true` in `src/data/nav.ts`. Money-saving tips go inside each category page, not a separate page.
 
 ## Stats page (`src/pages/stats.astro`), finished
 - **Layout:** left, a wheel like the in-game Stat Info window (6 primary stats inside 10 Daevanion stats, 5 per side in the game's order), fixed to the screen and centred on desktop. Right, "Most important stats": 15 ranked rows with the official description, a plain-language note, which wheel stats raise it (coloured chips) and where to get it (GEAR / OTHER tags). Stacks on narrow screens.
@@ -28,7 +29,7 @@
 - **Open questions:** the Bible says 100% Soul Binding unlocks an extra stat line (Philosopher's Stone), metabot says an extra Manastone slot; the page follows metabot. The Bible lists different Potential values than the page (owner's numbers kept). No Heroic or Mythic gear in the Global client, so no Heroic content.
 
 ## Shared styling
-`src/styles/global.css` holds the chrome every page uses: `.panel`, `.panel-head`, `.page-title` and the tooltip look (`#tip` on Stats, `[data-tip]` hover tips on Gear). Put new shared styles there, not in a page.
+`src/styles/global.css` holds the chrome every page uses: `.panel`, `.panel-head`, `.page-title` (the home page uses it too, with `.card`s in the same 3px-radius panel gradient; the sidebar nav is one flat list, no group titles) and the tooltip look (`#tip` on Stats, `[data-tip]` hover tips on Gear). Put new shared styles there, not in a page.
 
 ## Page switches (Astro `ClientRouter` in `Base.astro`)
 - Full page loads showed a blank frame in Vivaldi/Chromium on every click, so the site uses Astro's client-side router: it fetches the next page and swaps it in, no reload. The sidebar (phone: top bar) has its own `view-transition-name` and stays still; the content crossfades in 0.12s and the browser's own 250ms page-group animation is off (off entirely for reduced motion); a switch takes about 160ms on the built site. The dev server renders Stats and Gear on each request (about 300ms), so judge speed with the `astro-preview` launch config (built site, port 4322) after `npm run build`. `scrollbar-gutter: stable` keeps the layout from shifting sideways between short and long pages.

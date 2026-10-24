@@ -4,23 +4,17 @@ import { nav } from '../data/nav';
 const base = import.meta.env.BASE_URL;
 ---
 <Base title="AION 2 Codex">
-  <h1>AION 2 Codex</h1>
-  <p class="lead">Straight answers for gearing on the Global server. Sections follow the in-game menu, so you can find things where you'd look for them in the client.</p>
-  {nav.map((g) => (
-    <>
-      <h2>{g.title}</h2>
-      <div class="cards">
-        {g.items.map((i) => {
-          const Tag = i.ready ? 'a' : 'div';
-          return (
-            <Tag class={`card${i.ready ? '' : ' soon'}`} href={i.ready ? `${base}${i.href}` : undefined}>
-              <span class="ico" set:html={i.icon} />
-              <strong>{i.label}{i.ready ? '' : ' (soon)'}</strong>
-              <span class="t">{i.text}</span>
-            </Tag>
-          );
-        })}
-      </div>
-    </>
-  ))}
+  <h1 class="page-title">AION 2 Codex</h1>
+  <div class="cards">
+    {nav.map((i) => {
+      const Tag = i.ready ? 'a' : 'div';
+      return (
+        <Tag class={`card${i.ready ? '' : ' soon'}`} href={i.ready ? `${base}${i.href}` : undefined}>
+          <span class="ico" set:html={i.icon} />
+          <strong>{i.label}{i.ready ? '' : ' (soon)'}</strong>
+          <span class="t">{i.text}</span>
+        </Tag>
+      );
+    })}
+  </div>
 </Base>
