@@ -28,6 +28,13 @@
 }
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; scrollbar-gutter: stable; overflow-x: clip; }
+
+/* Thin accent scrollbars everywhere (Firefox and Chromium 121+ use the standard properties; the webkit block covers older WebKit). */
+* { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--accent) 40%, transparent) transparent; }
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-track, *::-webkit-scrollbar-corner { background: transparent; }
+*::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--accent) 35%, transparent); border-radius: 3px; border: 2px solid transparent; background-clip: padding-box; }
+*::-webkit-scrollbar-thumb:hover { background: color-mix(in srgb, var(--accent) 65%, transparent); background-clip: padding-box; }
 body {
   margin: 0;
   background: var(--bg);
@@ -46,6 +53,7 @@ aside {
 .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: -0.01em; color: var(--text); text-decoration: none; padding: 0 8px 14px; }
 .logo { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 9px; font-size: 0.8rem; color: #fff; background: linear-gradient(135deg, #8b7bff, #5b8cff); }
 nav { display: flex; flex-direction: column; gap: 2px; }
+.nav-title { margin: 14px 0 4px; padding: 0 10px; color: var(--muted); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
 .item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 3px; color: var(--muted); text-decoration: none; font-weight: 500; }
 a.item:hover { color: var(--text); background: var(--panel-2); }
 .item[aria-current='page'] { color: var(--text); background: var(--accent-soft); box-shadow: inset 2px 0 0 var(--accent); }
@@ -76,6 +84,8 @@ h1 { font-size: 2.2rem; line-height: 1.15; letter-spacing: -0.03em; margin: 0 0 
 h2 { font-size: 1.15rem; letter-spacing: -0.01em; margin: 2.4rem 0 12px; display: flex; align-items: center; gap: 10px; }
 .lead { color: var(--muted); font-size: 1.05rem; margin: 0 0 28px; max-width: 60ch; }
 
+.group-title { margin: 28px 0 12px; color: var(--muted); font-size: 0.74rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
+.group-title:first-of-type { margin-top: 8px; }
 .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
 .card { display: flex; flex-direction: column; gap: 6px; background: radial-gradient(120% 90% at 50% 0%, var(--accent-soft), var(--panel) 60%); border: 1px solid var(--line); border-radius: 3px; padding: 18px; text-decoration: none; color: var(--text); transition: border-color 0.15s, box-shadow 0.15s; }
 a.card:hover, a.card:focus-visible { border-color: var(--accent); box-shadow: 0 0 20px -8px var(--accent); outline: none; }

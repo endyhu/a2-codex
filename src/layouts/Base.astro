@@ -1,6 +1,6 @@
 ---
 import '../styles/global.css';
-import { nav, homeIcon } from '../data/nav';
+import { navGroups, homeIcon } from '../data/nav';
 import sun from 'lucide-static/icons/sun.svg?raw';
 import moon from 'lucide-static/icons/moon.svg?raw';
 import arrowUp from 'lucide-static/icons/arrow-up.svg?raw';
@@ -40,7 +40,9 @@ const isActive = (href: string) => path === `${base}${href}`;
           <a class="item" href={base} aria-current={path === base ? 'page' : undefined}>
             <span class="ico" set:html={homeIcon} /> Home
           </a>
-          {nav.map((i) =>
+          {navGroups.map((g) => (<>
+          <h2 class="nav-title">{g.title}</h2>
+          {g.items.map((i) =>
             i.ready ? (
               <>
                 <a class="item" href={`${base}${i.href}`} aria-current={isActive(i.href) ? 'page' : undefined}>
@@ -54,6 +56,7 @@ const isActive = (href: string) => path === `${base}${href}`;
               </span>
             )
           )}
+          </>))}
         </nav>
         <div class="side-tools">
           <button id="theme" type="button" aria-label="Switch theme" title="Switch theme">

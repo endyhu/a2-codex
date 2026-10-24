@@ -4,6 +4,7 @@ Look here before inventing a style. Everything shared lives in `src/styles/globa
 
 ## Principles
 - Dark theme is the design; light keeps the same styling and only retunes colours (never restyle light separately).
+- Scrollbars are global (`global.css`): thin, accent-tinted, transparent track; do not style them per page (the Gear rail hides its own with `scrollbar-width: none`).
 - Calm and game-UI like: flat 3px corners, thin 1px lines, one accent, soft glows. No big rounded boxes, no heavy shadows.
 - No filler text about the page itself. Page titles are bare (`<h1 class="page-title">`).
 - Match an existing pattern before adding a new one. Check the table below first.
@@ -46,7 +47,7 @@ Rule of thumb: glows are soft (negative spread, 16-28px, accent only). The stron
 
 ## Content-in-UI rules
 - No Confirmed/Community badges; dashed tags mean community-sourced (Stats only).
-- Nav is one flat list in in-game order, labels are in-game names (`src/data/nav.ts`).
+- Nav has two headed groups, Tools then Character (`group` in `src/data/nav.ts`; `.nav-title` in the sidebar, `.group-title` on home); labels are in-game names except the owner's own (Gear, Daevanion, Market).
 - Card text on the home page is one short line, no "what not to waste" phrasing there (money-saving tips live inside each page).
 
 ## New category page checklist (Gear and Genus Insight are the reference)

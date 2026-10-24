@@ -44,7 +44,7 @@ export function sectionGlow(sectionIds: string[], opts: { barHeight?: () => numb
     lastNatural = natural;
     const id = pinned ?? natural;
     opts.onActive?.(id);
-    side.forEach((a) => a.classList.toggle('on', a.dataset.hash === id));
+    side.forEach((a) => a.classList.toggle('on', a.pathname === location.pathname && a.dataset.hash === id));
   };
   const unpin = () => { if (pinned) { pinned = null; travel = null; mark(); } };
   // After a link jump, start the glow once the scroll has stopped (no scroll event for 150ms), at the latest after 3s; if no scroll starts within 400ms the target is already in place.
