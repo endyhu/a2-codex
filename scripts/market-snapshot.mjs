@@ -10,6 +10,9 @@ const HEADERS = { 'User-Agent': 'a2codex-market-snapshot (+https://a2codex.preze
 const PAUSE_MS = 400;
 const MIN_SERVERS = 0.9;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+// Early Access (Advanced Access) servers are the first pairs of each region; the API has no field for it. The pair number is the last two digits of server_id. Cross-checked on senseos.gg and neonsect.com (Oct 2026): EU 1-9, NA East 1-3, Asia 1-3, NA West 1-2, Latin America 1-2.
+const EA_PAIRS = { EU: 9, NAE: 3, AS: 3, NAW: 2, LA: 2 };
+const early = (s) => s.server_id % 100 <= (EA_PAIRS[s.region] ?? 0);
 
 const get = async (path) => {
   for (let attempt = 1; ; attempt++) {
@@ -57,7 +60,7 @@ if (ok < live.length * MIN_SERVERS) {
 }
 const out = {
   generated: new Date().toISOString(),
-  servers: live.filter((s) => updated[s.server_id]).map((s) => [s.server_id, s.name, s.region, s.region_name, s.faction, updated[s.server_id]]),
+  servers: live.filter((s) => updated[s.server_id]).map((s) => [s.server_id, s.name, s.region, s.region_name, s.faction, updated[s.server_id], early(s) ? 1 : 0]),
   items: [...items.values()].map((i) => [...i, traded[i[0]] ?? 0]).sort((a, b) => a[1].localeCompare(b[1])),
   prices,
 };

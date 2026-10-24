@@ -20,6 +20,9 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
         {factions.map(([v, l]) => <button type="button" class="tog" role="radio" aria-checked="false" data-v={v} style={v === "all" ? "" : `--h:${v === "Elyos" ? 200 : 290}`}>{v !== "all" && <i class="dot" />}{l}</button>)}
       </div>
 
+      <h3 class="mini">Servers</h3>
+      <div class="togs seg" id="launch" role="radiogroup" aria-label="Server launch">{[["launch", "Launch"], ["ea", "Early Access"], ["all", "Both"]].map(([v, l]) => <button type="button" class="tog" role="radio" aria-checked="false" data-v={v}>{l}</button>)}</div>
+
       <h3 class="mini">Server</h3>
       <select id="server" class="num" aria-label="Server"><option value="0">All servers</option></select>
 
@@ -70,7 +73,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
   .mkt .wrap .ico svg { width: 15px; height: 15px; }
   .mkt .wrap .tog[aria-checked='true'] { border-color: color-mix(in srgb, var(--accent) 70%, transparent); background: radial-gradient(120% 140% at 0% 0%, var(--accent-soft), var(--panel) 70%); box-shadow: 0 0 14px -8px var(--accent); }
   .mkt .wrap .tog[aria-checked='true'] .ico { color: var(--accent); }
-  #faction { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  #faction, #launch { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   #minl { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .mkt .tog { min-width: 0; padding: 5px 4px; text-align: center; font-size: 0.82rem; font-weight: 600; line-height: 1.4; background: var(--panel); border: 1px solid var(--line); border-radius: 3px; color: var(--muted); cursor: pointer; transition: border-color 0.15s, color 0.15s; }
   .mkt .tog:hover, .mkt .tog:focus-visible { border-color: color-mix(in srgb, var(--accent) 55%, transparent); color: var(--text); outline: none; }
@@ -147,9 +150,9 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
 </style>
 
 <script>
-  type Server = [number, string, string, string, string, string];
+  type Server = [number, string, string, string, string, string, number];
   type Market = { generated: string; servers: Server[]; items: [number, string, string, string, number][]; prices: Record<string, number[]> };
-  type Saved = { region: string; faction: string; section: string; minl: number };
+  type Saved = { region: string; faction: string; launch: string; section: string; minl: number };
   type Row = { key: number; name: string; cat: string; vol: number; me: number; list: { s: Server; price: number; n: number }[]; min: number; max: number; spread: number };
   const STORE = 'a2codex-market-v1';
   const nf = new Intl.NumberFormat('en-US');
@@ -174,15 +177,16 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
 
     let saved: Partial<Saved> = {};
     try { saved = JSON.parse(localStorage.getItem(STORE) || '{}') || {}; } catch {}
-    const state = { server: 0, region: saved.region || '', faction: saved.faction || 'all', section: saved.section || 'all', minl: [1, 3, 5, 10].reduce((a, v) => (v <= (saved.minl || 3) ? v : a), 1), q: '', sort: 'vol', dir: -1};
+    const state = { server: 0, region: saved.region || '', faction: saved.faction || 'all', launch: saved.launch || 'launch', section: saved.section || 'all', minl: [1, 3, 5, 10].reduce((a, v) => (v <= (saved.minl || 3) ? v : a), 1), q: '', sort: 'vol', dir: -1};
     const open = new Set<number>();
-    let data: Market, rows: Row[] = [];
+    let data: Market, rows: Row[] = [], regionsEl = () => {};
 
     const checked = (id: string, v: string) => document.querySelectorAll<HTMLElement>(`#${id} [data-v]`).forEach((b) => b.setAttribute('aria-checked', String(b.dataset.v === v)));
-    const persist = () => { try { localStorage.setItem(STORE, JSON.stringify({ region: state.region, faction: state.faction, section: state.section, minl: state.minl })); } catch {} };
+    const persist = () => { try { localStorage.setItem(STORE, JSON.stringify({ region: state.region, faction: state.faction, launch: state.launch, section: state.section, minl: state.minl })); } catch {} };
 
+    const pick = (s: Server) => s[2] === state.region && (state.faction === 'all' || s[4] === state.faction) && (state.launch === 'all' || (state.launch === 'ea') === !!s[6]);
     const compute = () => {
-      const want = new Map(data.servers.filter((s) => s[2] === state.region && (state.faction === 'all' || s[4] === state.faction)).map((s) => [s[0], s]));
+      const want = new Map(data.servers.filter(pick).map((s) => [s[0], s]));
       const needle = state.q.trim().toLowerCase();
       rows = [];
       for (const it of data.items) {
@@ -235,7 +239,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
     };
     const serverEl = $<HTMLSelectElement>('#server');
     const syncServers = () => {
-      const pool = data.servers.filter((s) => s[2] === state.region && (state.faction === 'all' || s[4] === state.faction)).sort((a, b) => a[1].localeCompare(b[1]) || a[4].localeCompare(b[4]));
+      const pool = data.servers.filter(pick).sort((a, b) => a[1].localeCompare(b[1]) || a[4].localeCompare(b[4]));
       if (!pool.some((s) => s[0] === state.server)) state.server = 0;
       serverEl.innerHTML = '<option value="0">All servers</option>' + pool.map((s) => `<option value="${s[0]}">${esc(s[1])}${state.faction === 'all' ? ' · ' + s[4] : ''}</option>`).join('');
       serverEl.value = String(state.server);
@@ -243,10 +247,11 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
     serverEl.addEventListener('change', () => { state.server = Number(serverEl.value); refresh(); }, { signal });
     const refresh = () => { compute(); render(); $('#scroll').scrollTop = 0; };
 
-    document.querySelectorAll<HTMLElement>('#faction, #section, #minl').forEach((g) => g.addEventListener('click', (e) => {
+    document.querySelectorAll<HTMLElement>('#faction, #launch, #section, #minl').forEach((g) => g.addEventListener('click', (e) => {
       const b = (e.target as HTMLElement).closest<HTMLElement>('[data-v]');
       if (!b) return;
-      if (g.id === 'minl') state.minl = Number(b.dataset.v); else state[g.id as 'faction' | 'section'] = b.dataset.v!;
+      if (g.id === 'minl') state.minl = Number(b.dataset.v); else state[g.id as 'faction' | 'launch' | 'section'] = b.dataset.v!;
+      if (g.id === 'launch') { regionsEl(); checked('region', state.region); }
       checked(g.id, b.dataset.v!); persist(); syncServers(); refresh();
     }, { signal }));
     $('#region').addEventListener('click', (e) => {
@@ -274,14 +279,14 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
     rowsEl.addEventListener('click', (e) => toggle(e.target as Element), { signal });
 
     checked('minl', String(state.minl));
-    checked('faction', state.faction); checked('section', state.section);
+    checked('faction', state.faction); checked('launch', state.launch); checked('section', state.section);
     load().then((d) => {
       if (signal.aborted) return;
       data = d;
       const regions = [...new Map(d.servers.map((s) => [s[2], s[3]])).entries()];
       if (!regions.some(([c]) => c === state.region)) state.region = regions.some(([c]) => c === 'EU') ? 'EU' : regions[0][0];
-      $('#region').innerHTML = regions.map(([c, n]) => `<button type="button" class="tog" role="radio" aria-checked="false" data-v="${esc(c)}">${esc(n.replace('North America', 'NA'))}<small>${d.servers.filter((s) => s[2] === c).length} servers</small></button>`).join('');
-      checked('region', state.region);
+      regionsEl = () => $('#region').innerHTML = regions.map(([c, n]) => `<button type="button" class="tog" role="radio" aria-checked="false" data-v="${esc(c)}">${esc(n.replace('North America', 'NA'))}<small>${d.servers.filter((s) => s[2] === c && (state.launch === 'all' || (state.launch === 'ea') === !!s[6])).length} servers</small></button>`).join('');
+      regionsEl(); checked('region', state.region);
       syncServers(); refresh();
     }).catch(() => { status.textContent = 'Prices could not be loaded'; });
   });
