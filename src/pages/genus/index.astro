@@ -72,24 +72,14 @@ const hueOf = (n: string) =>
 
   <section class="panel" id="rolling-order" aria-label="Rolling order">
     <header class="panel-head"><h2>Rolling order</h2></header>
-    <ol class="path">
-      {rules.map(([t, d], i) => (
-        <li>
-          <b>{i + 1}</b>
-          <div class="step">
-            <strong>{t}</strong>
-            <p>{d}</p>
-            {i === 0 && (
-              <table class="saving" aria-label="Cost per roll">
-                <caption>Cost of one roll by locked lines</caption>
-                <thead><tr><th>Locked lines</th><th>Crystals</th><th>Kinah</th></tr></thead>
-                <tbody>{costs.map(([n, c, k]) => <tr><th>{n}</th><td>{c}</td><td>{k || '–'}</td></tr>)}</tbody>
-              </table>
-            )}
-          </div>
-        </li>
-      ))}
+    <ol class="flow">
+      {rules.map(([t, d], i) => <li><b>{String(i + 1).padStart(2, '0')}</b><strong>{t}</strong><span>{d}</span></li>)}
     </ol>
+    <table class="saving" aria-label="Cost per roll">
+      <caption>Cost of one roll by locked lines</caption>
+      <thead><tr><th>Locked lines</th><th>Crystals</th><th>Kinah</th></tr></thead>
+      <tbody>{costs.map(([n, c, k]) => <tr><th>{n}</th><td>{c}</td><td>{k || '–'}</td></tr>)}</tbody>
+    </table>
   </section>
 
   <p class="meta sources">Slot layout, picks and roll costs: a Global Genus Insight video guide by a community creator (Season 1). Board names: <a href="https://www.aion2bible.com">Aion 2 Bible</a>. Genus Insight lines are not in the Global client data, so roll chances are not shown.</p>
@@ -111,15 +101,12 @@ const hueOf = (n: string) =>
   .slot-card li.top { font-weight: 600; border-left-color: var(--c); background: linear-gradient(90deg, hsl(var(--h) 70% 55% / 0.26), transparent 85%); box-shadow: 0 0 16px -8px hsl(var(--h) 80% 55% / 0.6); }
   .slot-card li small { color: var(--muted); font-size: 0.72rem; font-weight: 400; margin-left: auto; text-align: right; }
   .slot-card li.rest { border-left-style: dashed; border-left-color: var(--line); background: none; color: var(--muted); font-size: 0.8rem; }
-  .path { list-style: none; margin: 0; padding: 0; position: relative; }
-  .path li { position: relative; display: flex; gap: 14px; padding-bottom: 32px; }
-  .path li:last-child { padding-bottom: 0; }
-  .path li:not(:last-child)::before { content: ''; position: absolute; left: 15px; top: 34px; bottom: 2px; width: 2px; background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 60%, transparent), var(--line)); }
-  .path b { display: grid; place-items: center; flex: none; width: 32px; height: 32px; border-radius: 50%; background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent); color: var(--accent); font-variant-numeric: tabular-nums; }
-  .step { flex: 1; min-width: 0; }
-  .step strong { display: block; margin-top: 5px; font-size: 1rem; }
-  .step p { margin: 0 0 8px; }
-  .step > :last-child { margin-bottom: 0; }
+  .flow { list-style: none; margin: 0 0 22px; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: 14px; }
+  .flow li { padding-top: 10px; border-top: 2px solid color-mix(in srgb, var(--accent) 45%, var(--line)); }
+  .flow li:first-child { border-top-color: var(--accent); }
+  .flow b { display: block; margin-bottom: 2px; color: var(--accent); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; font-variant-numeric: tabular-nums; }
+  .flow strong { display: block; }
+  .flow span { display: block; margin-top: 4px; color: var(--muted); font-size: 0.84rem; line-height: 1.4; }
   .saving { width: 100%; max-width: 420px; border-collapse: collapse; margin: 4px 0 10px; font-size: 0.88rem; font-variant-numeric: tabular-nums; }
   .saving caption { text-align: left; padding: 0 0 6px; color: var(--muted); font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.04em; }
   .saving th, .saving td { padding: 6px 10px; text-align: right; border-bottom: 1px solid var(--line); }
