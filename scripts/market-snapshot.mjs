@@ -31,7 +31,8 @@ const get = async (path) => {
 
 const { servers, default: defaultServer } = await get('/servers');
 // Temporary speed-up: only Europe launch servers. Remove the extra conditions to fetch every server again (the Market page shows its Servers filter and other regions automatically).
-const live = servers.filter((s) => s.has_data && s.region === 'EU' && !early(s));
+const wanted = (s) => s.region === 'EU' && !early(s);
+const live = servers.filter((s) => s.has_data && (wanted(s) || s.server_id === defaultServer)); // the default server is always fetched: it is the only one with sales stats
 const items = new Map(); // key -> [key, name, section, category]
 const prices = {}; // key -> [serverId, price, listings, ...]
 const updated = {}; // serverId -> latest captured_at
@@ -47,7 +48,7 @@ const worker = async () => {
       const { items: list } = await get(`/items?server=${s.server_id}&limit=1000&sort=key`);
       for (const it of list) {
         if (s.server_id === defaultServer) traded[it.item_key] = Math.round((it.units_sold ?? 0) * (it.sold_avg_price ?? 0));
-        if (!it.listed || it.price == null || !it.name) continue;
+        if (!wanted(s) || !it.listed || it.price == null || !it.name) continue;
         if (!items.has(it.item_key)) items.set(it.item_key, [it.item_key, it.name, it.category.section_id, it.category.name]);
         (prices[it.item_key] ??= []).push(s.server_id, it.price, it.listings);
         if (!updated[s.server_id] || it.captured_at > updated[s.server_id]) updated[s.server_id] = it.captured_at;
@@ -77,7 +78,7 @@ if (ok < live.length * MIN_SERVERS) {
 }
 const out = {
   generated: new Date().toISOString(),
-  servers: live.filter((s) => updated[s.server_id]).map((s) => [s.server_id, s.name, s.region, s.region_name, s.faction, updated[s.server_id], early(s) ? 1 : 0]),
+  servers: live.filter((s) => wanted(s) && updated[s.server_id]).map((s) => [s.server_id, s.name, s.region, s.region_name, s.faction, updated[s.server_id], early(s) ? 1 : 0]),
   items: [...items.values()].map((i) => [...i, traded[i[0]] ?? 0]).sort((a, b) => a[1].localeCompare(b[1])),
   prices,
 };
