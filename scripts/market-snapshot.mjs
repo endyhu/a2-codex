@@ -2,12 +2,13 @@
 // Item volume (items[i][4]): Kinah traded in the API's rolling sales window (units sold x average price). Only the API's default server has sales statistics, so that one server stands in for how much an item matters on every server.
 // API: https://aion2.exchange/api/openapi.json (read-only market data, collected hourly there). robots.txt allows /.
 // Usage: mise exec -- node scripts/market-snapshot.mjs
-// One /api/items call per server (all items in one page), sequential with a pause, retries on 5xx. Writes only if enough servers answered.
+// One /api/items call per server (all items in one page), CONCURRENCY at a time, retries on 5xx with exponential backoff; gives up early when the API is clearly down. Writes only if enough servers answered.
 import { writeFileSync } from 'node:fs';
 
 const API = 'https://aion2.exchange/api';
 const HEADERS = { 'User-Agent': 'a2codex-market-snapshot (+https://a2codex.prezenith.com)' };
-const PAUSE_MS = 400;
+const CONCURRENCY = 4;
+const MAX_FAILED = 8; // servers that failed all retries before the run is abandoned
 const MIN_SERVERS = 0.9;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 // Early Access (Advanced Access) servers are the first pairs of each region; the API has no field for it. The pair number is the last two digits of server_id. Cross-checked on senseos.gg and neonsect.com (Oct 2026): EU 1-9, NA East 1-3, Asia 1-3, NA West 1-2, Latin America 1-2.
@@ -23,8 +24,8 @@ const get = async (path) => {
     } catch (e) {
       if (e.message.startsWith(path)) throw e;
     }
-    if (attempt === 6) throw new Error(`${path}: gave up after ${attempt} tries`);
-    await sleep(attempt * 5000);
+    if (attempt === 5) throw new Error(`${path}: gave up after ${attempt} tries`);
+    await sleep(2000 * 2 ** (attempt - 1) + Math.random() * 1000);
   }
 };
 
@@ -36,22 +37,37 @@ const updated = {}; // serverId -> latest captured_at
 const traded = {}; // key -> Kinah traded on the API's default server
 let ok = 0;
 
-for (const s of live) {
-  try {
-    const { items: list } = await get(`/items?server=${s.server_id}&limit=1000&sort=key`);
-    for (const it of list) {
-      if (s.server_id === defaultServer) traded[it.item_key] = Math.round((it.units_sold ?? 0) * (it.sold_avg_price ?? 0));
-      if (!it.listed || it.price == null || !it.name) continue;
-      if (!items.has(it.item_key)) items.set(it.item_key, [it.item_key, it.name, it.category.section_id, it.category.name]);
-      (prices[it.item_key] ??= []).push(s.server_id, it.price, it.listings);
-      if (!updated[s.server_id] || it.captured_at > updated[s.server_id]) updated[s.server_id] = it.captured_at;
+let failed = 0;
+let skipped = [];
+const queue = [...live];
+const worker = async () => {
+  for (let s; failed < MAX_FAILED && (s = queue.shift()); ) {
+    try {
+      const { items: list } = await get(`/items?server=${s.server_id}&limit=1000&sort=key`);
+      for (const it of list) {
+        if (s.server_id === defaultServer) traded[it.item_key] = Math.round((it.units_sold ?? 0) * (it.sold_avg_price ?? 0));
+        if (!it.listed || it.price == null || !it.name) continue;
+        if (!items.has(it.item_key)) items.set(it.item_key, [it.item_key, it.name, it.category.section_id, it.category.name]);
+        (prices[it.item_key] ??= []).push(s.server_id, it.price, it.listings);
+        if (!updated[s.server_id] || it.captured_at > updated[s.server_id]) updated[s.server_id] = it.captured_at;
+      }
+      ok++;
+      console.log(`${ok}/${live.length} ${s.name} ${s.server_id}`);
+    } catch (e) {
+      failed++;
+      skipped.push(s);
+      console.warn(`skipped server ${s.server_id} ${s.name}: ${e.message}`);
     }
-    ok++;
-    console.log(`${ok}/${live.length} ${s.name} ${s.server_id}`);
-  } catch (e) {
-    console.warn(`skipped server ${s.server_id} ${s.name}: ${e.message}`);
   }
-  await sleep(PAUSE_MS);
+};
+await Promise.all(Array.from({ length: CONCURRENCY }, worker));
+// The API's 503s come and go: give servers that failed every retry one more pass, unless the API looks dead.
+if (skipped.length && failed < MAX_FAILED) {
+  console.log(`retrying ${skipped.length} skipped servers`);
+  queue.push(...skipped);
+  skipped = [];
+  failed = 0;
+  await Promise.all(Array.from({ length: CONCURRENCY }, worker));
 }
 
 if (ok < live.length * MIN_SERVERS) {
