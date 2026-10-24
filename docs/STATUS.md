@@ -10,7 +10,7 @@
 - **Interaction:** hovering or tapping a wheel stat shows a tooltip and lights up the rows it raises; hovering a row lights up its wheel stats (gradient when two). Tag groups longer than four collapse behind a "+N" popup (hover/focus, or tap to pin, tap elsewhere to close).
 - **Sources:** descriptions from aion2data.com / metabot.gg (Global client data); order and notes from the Aion 2 Bible (community guide). "Get it from" tags are generated: run `mise exec -- node scripts/global-sources.mjs` to rebuild `src/data/stat-sources.json` from metabot.gg's Global client data (re-run after each patch). Dashed tags (Genus Insight, Wings) are community or unconfirmed. See `docs/data-sources.md` for the source policy.
 - **Tags link to pages** once the matching nav page is `ready` (map in `TAG_PAGE`, stats.astro).
-- **Themes:** light uses the same styling as dark with colours retuned for white; do not restyle light separately. The theme toggle is an icon button in `Base.astro`.
+- **Themes:** light uses the same styling as dark with colours retuned for white; do not restyle light separately. The theme toggle and the GitHub repo link are icon buttons in `.side-tools` at the bottom of the sidebar (`Base.astro`; the GitHub mark is an inline SVG, lucide has none).
 - **Known gaps:** icons are generic Lucide stand-ins (real emblems need the owner's own screenshots, no chat/account details visible). Attack Bonus has no client-data source. Wings tag is unconfirmed on Global. Only the top two gear tiers are read by the sources script.
 
 
