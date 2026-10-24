@@ -15,19 +15,19 @@ import star from 'lucide-static/icons/star.svg?raw';
 // The Bible is KR-based (Smite on lines 3 and 9); the Global guides and the video agree on Double Chance in slot 4 of the Special board, so that is used.
 // Genus Insight is not in any client-data site (docs/data-sources.md), so there are no roll chances here.
 type Line = { name: string; note?: string; rank?: number };
-type Card = { title: string; icon: string; lines: Line[]; ordered?: boolean; rest?: string };
+type Card = { title: string; icon: string; tag?: string; lines: Line[]; ordered?: boolean; rest?: string };
 const boards: Card[] = [
+  { title: 'Special', icon: star, tag: 'Start here', ordered: true, lines: [{ name: 'Double Chance' }, { name: 'Front / Back Attack Damage Boost', note: 'positional class, very high roll' }] },
   { title: 'Cogni', icon: brain, ordered: true, lines: [{ name: 'PvE Damage Boost' }, { name: 'Damage Boost', note: 'same value in PvE' }, { name: 'Critical Damage Boost', note: '2.8% or more, and a class that crits constantly' }] },
   { title: 'Fera', icon: flame, ordered: true, lines: [{ name: 'PvE Damage Boost' }, { name: 'Damage Boost' }, { name: 'Weapon Damage Boost', note: 'equipment Attack only' }] },
   { title: 'Natura', icon: leaf, ordered: true, lines: [{ name: 'PvE Damage Boost' }], rest: 'Multi-hit Chance and Perfect Chance are bait lines' },
   { title: 'Varian', icon: crosshair, ordered: true, lines: [{ name: 'Front / Back Attack Damage Boost', note: 'positional classes' }, { name: 'PvE Damage Boost' }] },
-  { title: 'Special', icon: star, ordered: true, lines: [{ name: 'Double Chance' }, { name: 'Front / Back Attack Damage Boost', note: 'positional class, very high roll' }] },
 ];
 const slots: Card[] = [
-  { title: 'Slots 1 and 5', icon: swords, ordered: true, lines: [{ name: 'PvE Attack', rank: 1 }, { name: 'Boss Attack', rank: 1 }, { name: 'Front / Back Attack', note: 'positional classes', rank: 2 }, { name: 'Attack Bonus', rank: 3 }, { name: 'Max Attack', rank: 4 }] },
-  { title: 'Slots 3, 6 and 9', icon: target, ordered: true, lines: [{ name: 'Accuracy Bonus', note: 'Unique or better' }, { name: 'PvE Accuracy', note: 'Unique or better' }, { name: 'Critical Hit', note: 'Heroic only' }] },
-  { title: 'Slot 7', icon: dices, ordered: true, lines: [{ name: 'Accuracy Bonus', note: 'Heroic' }, { name: 'Critical Hit', note: 'Heroic' }] },
-  { title: 'Slots 2 and 8', icon: shield, ordered: true, lines: [{ name: 'HP Increase', rank: 1 }, { name: 'PvE Defense', rank: 2 }, { name: 'Defense Bonus', rank: 3 }, { name: 'Front Defense', note: 'positional classes', rank: 4 }, { name: 'HP', note: 'flat', rank: 5 }], rest: 'Second preset only' },
+  { title: 'Slots 1 and 5', tag: 'Lock 1st', icon: swords, ordered: true, lines: [{ name: 'PvE Attack', rank: 1 }, { name: 'Boss Attack', rank: 1 }, { name: 'Front / Back Attack', note: 'positional classes', rank: 2 }, { name: 'Attack Bonus', rank: 3 }, { name: 'Max Attack', rank: 4 }] },
+  { title: 'Slots 3, 6 and 9', tag: 'Lock 2nd', icon: target, ordered: true, lines: [{ name: 'Accuracy Bonus', note: 'Unique or better' }, { name: 'PvE Accuracy', note: 'Unique or better' }, { name: 'Critical Hit', note: 'Heroic only' }] },
+  { title: 'Slot 7', tag: 'Lock 3rd', icon: dices, ordered: true, lines: [{ name: 'Accuracy Bonus', note: 'Heroic' }, { name: 'Critical Hit', note: 'Heroic' }] },
+  { title: 'Slots 2 and 8', tag: 'Lock 4th', icon: shield, ordered: true, lines: [{ name: 'HP Increase', rank: 1 }, { name: 'PvE Defense', rank: 2 }, { name: 'Defense Bonus', rank: 3 }, { name: 'Front Defense', note: 'positional classes', rank: 4 }, { name: 'HP', note: 'flat', rank: 5 }], rest: 'Second preset only' },
 ];
 const rules: [string, string][] = [
   ['Level the board, lock nothing', 'Leveling a board re-rolls all its lines, so do not lock before level 9. If unsure, take it to level 10; lines roll better there.'],
@@ -49,7 +49,7 @@ const hueOf = (n: string) =>
     <div class="slot-cards">
       {boards.map((c) => (
         <article class="slot-card">
-          <header><span class="ico" set:html={c.icon} /><strong>{c.title}</strong></header>
+          <header><span class="ico" set:html={c.icon} /><strong>{c.title}</strong>{c.tag && <span class="lock-tag">{c.tag}</span>}</header>
           <ol>
             {c.lines.map((l, i) => <li class={i === 0 ? 'top' : ''} style={`--h:${hueOf(l.name)}`}><b>{i + 1}</b><span class="t">{l.name}{l.note && <small>{l.note}</small>}</span></li>)}
             {c.rest && <li class="rest">{c.rest}</li>}
@@ -57,11 +57,11 @@ const hueOf = (n: string) =>
         </article>
       ))}
     </div>
-    <h3 class="mini">The other slots, the same on every board</h3>
+    <h3 class="mini">The other slots, the same on every board: lock in this order</h3>
     <div class="slot-cards">
       {slots.map((c) => (
         <article class="slot-card">
-          <header><span class="ico" set:html={c.icon} /><strong>{c.title}</strong></header>
+          <header><span class="ico" set:html={c.icon} /><strong>{c.title}</strong>{c.tag && <span class="lock-tag">{c.tag}</span>}</header>
           <ol>
             {c.lines.map((l, i) => <li class={c.ordered && (l.rank ?? i + 1) === 1 ? 'top' : ''} style={`--h:${hueOf(l.name)}`}>{c.ordered ? <b>{l.rank ?? i + 1}</b> : <b class="dot" />}<span class="t">{l.name}{l.note && <small>{l.note}</small>}</span></li>)}
             {c.rest && <li class="rest">{c.rest}</li>}
@@ -89,6 +89,7 @@ const hueOf = (n: string) =>
 </Base>
 
 <style>
+  .lock-tag { margin-left: auto; padding: 2px 8px; border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent); border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-size: 0.72rem; font-weight: 700; white-space: nowrap; }
   .mini { margin: 18px 0 10px; }
   .mini:first-of-type { margin-top: 0; }
   .roll { display: grid; grid-template-columns: minmax(0, 1fr) 360px; align-items: start; gap: 20px 40px; }
