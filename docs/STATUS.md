@@ -33,6 +33,9 @@
 - **Sources:** slot layout, picks and roll costs from a Global-focused community video guide (Season 1); board names from the Aion 2 Bible. The Bible (KR) has Smite on lines 3 and 9 and Damage Tolerance on line 6; the video and the Global guides disagree, so the page follows the video (Double Chance in slot 4 of Special). Genus lines are not in any client-data site, so no roll chances.
 - **Not done:** per-class notes, Owned Effects (no numbers found), in-game check of slot meanings, wide-screen (1920/3440) check (only a phone-width view was seen).
 
+## Phone check (done once, repeat per new page)
+All pages measured at 360px with no sideways scroll (Gear had two overflowing tables, fixed). Audit snippet: load each page in a 360px iframe and compare `documentElement.scrollWidth` to `innerWidth`; list elements whose rect passes the right edge (ignore ones inside `.saving` and `.rail`, which scroll on their own). Not yet checked on a real phone: touch behaviour of the Stats wheel tooltips and the "+N" popups.
+
 ## Shared styling
 See `docs/styling.md` for the full recipes (tokens, hover/glow, icons).
 `src/styles/global.css` holds the chrome every page uses: `.panel`, `.panel-head`, `.page-title` (the home page uses it too, with `.card`s in the same 3px-radius panel gradient; the sidebar nav is one flat list, no group titles) and the tooltip look (`#tip` on Stats, `[data-tip]` hover tips on Gear). Put new shared styles there, not in a page.

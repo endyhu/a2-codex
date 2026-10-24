@@ -93,7 +93,7 @@ const order: Step[] = [
     text: ['Only after +15. Pushes a Unique piece further, and the game shows it as diamonds instead of +x.',
       'Every diamond is a chance. The odds start at 66% and fall to 20% by the fifth. A failure burns the materials but never loses a diamond, and your next try on that diamond gets a bonus that shrinks with each diamond.',
       'Each try costs Kinah and Amplify Stones, and the price climbs with every diamond.',
-      'How many diamonds a piece can get depends on its item level, shown on the right.'] },
+      'How many diamonds a piece can get depends on its item level.'] },
   { t: 'Soul Binding', vis: 'soul', d: '', facts: [],
     text: ['Soul Binding is where a piece gets its main stat lines. Each line is random, drawn from a pool for that type of piece: all helmets share one pool, all weapons share one.',
       'Binding a piece raises its binding rate over 10 steps, which strengthens every line. A step always works, but how much it adds is random. Each line has its own bar, and the rate reads 100% once every line is full. Reaching 100% unlocks an extra Manastone slot.',
@@ -375,11 +375,12 @@ const order: Step[] = [
   .dots i.extra { background: none; border: 1px dashed var(--warn); }
   .actions dt { font-weight: 700; color: var(--accent); }
   .actions dd { margin: 0; color: var(--muted); font-size: 0.86rem; line-height: 1.4; }
-  .saving.pot { width: auto; min-width: 420px; margin: 6px 0 0; }
+  .saving.pot { width: auto; min-width: min(420px, 100%); margin: 6px 0 0; }
   .saving.pot th, .saving.pot td { text-align: left; font-size: 0.88rem; }
   .saving.pot th { width: 14em; white-space: nowrap; color: var(--muted); font-weight: 600; }
   .saving.pot td { font-weight: 600; }
   .saving.pot th { padding-left: 0; }
+  @media (max-width: 600px) { .saving.pot th { width: auto; white-space: normal; } }
   .saving.pot tr:last-child th, .saving.pot tr:last-child td { border-bottom: 1px solid var(--line); }
   .saving.bind { margin-top: 0; }
 </style>
