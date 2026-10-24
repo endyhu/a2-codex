@@ -30,7 +30,8 @@ const get = async (path) => {
 };
 
 const { servers, default: defaultServer } = await get('/servers');
-const live = servers.filter((s) => s.has_data);
+// Temporary speed-up: only Europe launch servers. Remove the extra conditions to fetch every server again (the Market page shows its Servers filter and other regions automatically).
+const live = servers.filter((s) => s.has_data && s.region === 'EU' && !early(s));
 const items = new Map(); // key -> [key, name, section, category]
 const prices = {}; // key -> [serverId, price, listings, ...]
 const updated = {}; // serverId -> latest captured_at

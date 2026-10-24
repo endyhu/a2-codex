@@ -20,7 +20,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
         {factions.map(([v, l]) => <button type="button" class="tog" role="radio" aria-checked="false" data-v={v} style={v === "all" ? "" : `--h:${v === "Elyos" ? 200 : 290}`}>{v !== "all" && <i class="dot" />}{l}</button>)}
       </div>
 
-      <h3 class="mini">Servers</h3>
+      <h3 class="mini" id="launch-h">Servers</h3>
       <div class="togs seg" id="launch" role="radiogroup" aria-label="Server launch">{[["launch", "Launch"], ["ea", "Early Access"], ["all", "Both"]].map(([v, l]) => <button type="button" class="tog" role="radio" aria-checked="false" data-v={v}>{l}</button>)}</div>
 
       <h3 class="mini">Server</h3>
@@ -73,6 +73,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
   .mkt .wrap .ico svg { display: block; width: 15px; height: 15px; }
   .mkt .wrap .tog[aria-checked='true'] { border-color: color-mix(in srgb, var(--accent) 70%, transparent); background: radial-gradient(120% 140% at 0% 0%, var(--accent-soft), var(--panel) 70%); box-shadow: 0 0 14px -8px var(--accent); }
   .mkt .wrap .tog[aria-checked='true'] .ico { color: var(--accent); }
+  #launch[hidden] { display: none; }
   #faction, #launch { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   #minl { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .mkt .tog { min-width: 0; padding: 5px 4px; text-align: center; font-size: 0.82rem; font-weight: 600; line-height: 1.4; background: var(--panel); border: 1px solid var(--line); border-radius: 3px; color: var(--muted); cursor: pointer; transition: border-color 0.15s, color 0.15s; }
@@ -286,6 +287,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
       const regions = [...new Map(d.servers.map((s) => [s[2], s[3]])).entries()];
       if (!regions.some(([c]) => c === state.region)) state.region = regions.some(([c]) => c === 'EU') ? 'EU' : regions[0][0];
       regionsEl = () => $('#region').innerHTML = regions.map(([c, n]) => `<button type="button" class="tog" role="radio" aria-checked="false" data-v="${esc(c)}">${esc(n.replace('North America', 'NA'))}<small>${d.servers.filter((s) => s[2] === c && (state.launch === 'all' || (state.launch === 'ea') === !!s[6])).length} servers</small></button>`).join('');
+      if (!d.servers.some((s) => s[6])) { state.launch = 'all'; $('#launch-h').hidden = $('#launch').hidden = true; }
       regionsEl(); checked('region', state.region);
       syncServers(); refresh();
     }).catch(() => { status.textContent = 'Prices could not be loaded'; });
