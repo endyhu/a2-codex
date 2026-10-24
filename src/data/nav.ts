@@ -18,8 +18,8 @@ export interface NavItem {
   children?: { label: string; hash: string }[];
 }
 
-// Labels are the in-game menu names (Arcana, Stats); Gear and Daevanion Optimizer are the owner's own names.
-// One flat list, no groups: Stats, Gear, Genus Insight, Arcana, Daevanion Optimizer, Market.
+// Labels are the in-game menu names (Arcana, Stats); Gear is the owner's own names.
+// One flat list, no groups: Stats, Gear, Genus Insight, Arcana, Daevanion, Market.
 export const nav: NavItem[] = [
   { label: 'Stats', href: 'stats/', icon: chart, ready: true, text: 'The stats that matter most, ranked, and where to get each one.' },
   { label: 'Gear', href: 'gear/', icon: anvil, ready: true, text: 'Best stat lines and enhancement order.',
@@ -28,7 +28,7 @@ export const nav: NavItem[] = [
     children: [['Best lines', 'best-lines'], ['Rolling order', 'rolling-order']].map(([label, hash]) => ({ label, hash })) },
   { label: 'Arcana', href: 'arcana/', icon: card, ready: true, text: 'Best card per slot and best set.',
     children: [['Best cards', 'best-cards'], ['Sets', 'sets'], ['Upgrading', 'upgrading']].map(([label, hash]) => ({ label, hash })) },
-  { label: 'Daevanion Optimizer', href: 'daevanion/', icon: waypoints, ready: true, text: 'The best node route for your class and crystals.' },
+  { label: 'Daevanion', href: 'daevanion/', icon: waypoints, ready: true, text: 'The best node route for your class and crystals.' },
   { label: 'Market', href: 'market/', icon: scale, ready: true, text: 'Cheapest and most expensive server for every market item.' },
 ];
 
