@@ -77,6 +77,7 @@ Clean, modern cheatsheet site for the **AION 2 Global** server. Hosted free on G
 - **Stack:** Astro (static, client-side router: page scripts follow the pattern in `docs/STATUS.md` > Page switches; open tabs get a "New version available" bar from `version.json`), Markdown/MDX pages, game data as JSON/YAML in the repo, dark theme default, mobile-first.
 - **Commits:** decide commits and amends yourself at sensible checkpoints; do not ask. On "finalize feature": quick inspection (say so if it is not actually ready), clean up, commit, push, update `docs/` and this file.
 - **UI rules:** the owner asks for features from a desktop (incl. ultrawide) perspective; choose phone/tablet behaviour yourself. No filler or explanatory text about the page itself. Info that matters is visible, not hover-only, but use good UX (a visible "+N" popup is fine). Light theme keeps the dark theme's styling; only retune colours. Do not suggest support/tank/DPS splits unless a source says priorities differ.
+- **New pages:** follow the "New category page checklist" in `docs/styling.md` (width 1500px, right-aligned sources line, section glow, Gear table/card styles) without being asked.
 - **Verify layout** in a wide iframe (1280, 1920, 3440) plus about 360 for phones; restart the dev server if styles look stale. Details in `docs/STATUS.md`.
 
 ## Content rules

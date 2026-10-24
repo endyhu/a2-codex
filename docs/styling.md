@@ -48,3 +48,14 @@ Rule of thumb: glows are soft (negative spread, 16-28px, accent only). The stron
 - No Confirmed/Community badges; dashed tags mean community-sourced (Stats only).
 - Nav is one flat list in in-game order, labels are in-game names (`src/data/nav.ts`).
 - Card text on the home page is one short line, no "what not to waste" phrasing there (money-saving tips live inside each page).
+
+## New category page checklist (Gear and Genus Insight are the reference)
+Do all of these on every new page, without being asked. Compare against `src/pages/gear/index.astro` before saying it is done.
+- **Width:** `<style is:global> main { max-width: 1500px; }`. Check that `main` and the first `.panel` measure the same as on Gear in a 1920 iframe.
+- **Frame:** bare `<h1 class="page-title">`, then `.panel`s with `.panel-head`; copy the slot-card, `.path` step and `.saving` table styles from Gear instead of inventing new ones. Table labels bold (`.saving tbody th`), no uppercase override.
+- **Two-column sections:** text left, table or ladder right (`.enh`-style grid, 360px right column, stack at 1280px).
+- **Sources line:** `<p class="meta sources">` at the bottom, `text-align: right; margin-top: 16px`.
+- **Section glow:** `.panel.flash` glow (`@keyframes glow`) on arrival, on a sidebar sub-link click (after the scroll settles) and when scrolling reaches the next section, plus the sidebar sub-link `on` highlight. Copy the script from `src/pages/genus/index.astro` (trimmed from Gear's); add the sections as `children` in `nav.ts`.
+- **Lists of lines:** ranked lines get numbers and the first rank is highlighted; unranked lines get the round `.dot` marker. Notes go under the name, never beside it (names must not wrap).
+- **Wording:** plain US English ("more expensive", not "dearer").
+- **Check:** restart the dev server after CSS edits (stale styles), measure in a wide iframe, and look at 360px.
