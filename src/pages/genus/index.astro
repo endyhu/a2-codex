@@ -30,9 +30,10 @@ const slots: Card[] = [
   { title: 'Slots 2 and 8', icon: shield, ordered: true, lines: [{ name: 'HP Increase', rank: 1 }, { name: 'PvE Defense', rank: 2 }, { name: 'Defense Bonus', rank: 3 }, { name: 'Front Defense', note: 'positional classes', rank: 4 }, { name: 'HP', note: 'flat', rank: 5 }], rest: 'Second preset only' },
 ];
 const rules: [string, string][] = [
-  ['Lock nothing early', 'Leveling a board re-rolls all its lines, and every locked line makes each roll more expensive. Do not lock before level 9. If unsure, take it to level 10 first; lines roll better there.'],
-  ['Use presets', 'You can keep three. Fill all five boards with a good offensive preset first, Unique (gold) lines are fine. Min-max Heroic (orange) and defensive lines in a second one.'],
-  ['Slot 4 first', 'Slot 4 is the best line on every board. Roll it while few lines are locked; PvE Damage Boost goes up to 4%, so 3.6% is excellent and 1.6% is weak. Then fill the offensive slots.'],
+  ['Level the board, lock nothing', 'Leveling a board re-rolls all its lines, so do not lock before level 9. If unsure, take it to level 10; lines roll better there.'],
+  ['Roll slot 4, lock it', 'It is the best line on every board. Roll it while few lines are locked: PvE Damage Boost goes up to 4%, so 3.6% is excellent and 1.6% is weak.'],
+  ['Fill the other slots', 'Roll the offensive slots next, locking each good line. Every lock makes the next roll cost more (table). Unique (gold) lines are fine here.'],
+  ['Then a second preset', 'You can keep three presets. Finish an offensive one on all five boards first, then min-max Heroic (orange) and defensive lines in another.'],
 ];
 // Cost of one roll by number of locked lines: 1 to 7 read in game (Analyze button, owner screenshots); 0 locks from the video guide. Kinah is always 250 per crystal.
 const costs: [string, string, string][] = [['0', '36', '9,000'], ['1', '40', '10,000'], ['2', '44', '11,000'], ['3', '60', '15,000'], ['4', '96', '24,000'], ['5', '172', '43,000'], ['6', '248', '62,000'], ['7', '324', '81,000']];
