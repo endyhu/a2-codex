@@ -24,7 +24,7 @@ const boards: Card[] = [
   { title: 'Special', icon: star, ordered: true, lines: [{ name: 'Double Chance' }, { name: 'Front / Back Attack Damage Boost', note: 'positional class, very high roll' }] },
 ];
 const slots: Card[] = [
-  { title: 'Slots 1 and 5', icon: swords, lines: [{ name: 'Attack Bonus' }, { name: 'Max Attack' }, { name: 'PvE Attack' }, { name: 'Boss Attack' }, { name: 'Back Attack', note: 'Assassin' }] },
+  { title: 'Slots 1 and 5', icon: swords, lines: [{ name: 'Attack Bonus' }, { name: 'Max Attack' }, { name: 'PvE Attack' }, { name: 'Boss Attack' }, { name: 'Front / Back Attack', note: 'positional classes' }] },
   { title: 'Slots 3, 6 and 9', icon: target, ordered: true, lines: [{ name: 'Accuracy Bonus', note: 'Unique or better' }, { name: 'PvE Accuracy', note: 'Unique or better' }, { name: 'Critical Hit', note: 'Heroic only' }] },
   { title: 'Slot 7', icon: dices, ordered: true, lines: [{ name: 'Accuracy Bonus', note: 'Heroic' }, { name: 'Critical Hit', note: 'Heroic' }] },
   { title: 'Slots 2 and 8', icon: shield, lines: [{ name: 'HP Increase' }, { name: 'Defense Bonus' }, { name: 'Back Defense' }, { name: 'Critical Hit Resist' }], rest: 'Second preset only' },
@@ -37,7 +37,7 @@ const rules: [string, string][] = [
 // Cost of one roll by number of locked lines (video guide, Global).
 const costs: [string, string, string][] = [['0', '36', '9,000'], ['5', '172', '43,000'], ['7', '300', '']];
 const hueOf = (n: string) =>
-  /Speed/.test(n) ? 195 : /Accuracy|Critical Hit$/.test(n) ? 280 : /Tolerance|Resist|Defense|HP/.test(n) ? 150 : /^(Attack Bonus|Max Attack|PvE Attack|Boss Attack|Back Attack)$/.test(n) ? 38 : 8;
+  /Speed/.test(n) ? 195 : /Accuracy|Critical Hit$/.test(n) ? 280 : /Tolerance|Resist|Defense|HP/.test(n) ? 150 : /^(Attack Bonus|Max Attack|PvE Attack|Boss Attack|Front \/ Back Attack)$/.test(n) ? 38 : 8;
 ---
 <Base title="Genus Insight" description="Best Genus Insight lines per slot and the order to roll them, for AION 2 Global.">
   <h1 class="page-title">Genus Insight</h1>
