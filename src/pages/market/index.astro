@@ -1,0 +1,232 @@
+---
+import Base from '../../layouts/Base.astro';
+
+const sections: [string, string][] = [['all', 'All'], ['weapons', 'Weapons'], ['armor', 'Armor'], ['accessories', 'Accessories'], ['consumables', 'Consumables'], ['materials', 'Materials'], ['skins', 'Skins'], ['other', 'Other']];
+const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asmodian', 'Asmodian']];
+---
+<Base title="Market" description="Cheapest and most expensive server for every AION 2 Global market item.">
+  <h1 class="page-title">Market</h1>
+
+  <div class="mkt">
+    <section class="panel" id="filters" aria-label="Filters">
+      <header class="panel-head"><h2>Filters</h2></header>
+
+      <h3 class="mini">Region</h3>
+      <div class="togs" id="region" role="radiogroup" aria-label="Region"></div>
+
+      <h3 class="mini">Faction</h3>
+      <div class="togs" id="faction" role="radiogroup" aria-label="Faction">
+        {factions.map(([v, l]) => <button type="button" class="tog" role="radio" aria-checked="false" data-v={v}>{l}</button>)}
+      </div>
+
+      <h3 class="mini">Type</h3>
+      <div class="togs wrap" id="section" role="radiogroup" aria-label="Type">
+        {sections.map(([v, l]) => <button type="button" class="tog" role="radio" aria-checked="false" data-v={v}>{l}</button>)}
+      </div>
+
+      <h3 class="mini">Minimum listings per server</h3>
+      <input id="minl" class="num" type="number" min="1" step="1" inputmode="numeric" />
+    </section>
+
+    <section class="panel" id="prices" aria-label="Prices">
+      <header class="panel-head"><h2>Prices by server</h2><span class="status" id="status">Loading</span></header>
+      <input id="q" class="num search" type="search" placeholder="Search items" autocomplete="off" aria-label="Search items" />
+      <table class="saving mk" id="table" hidden>
+        <thead>
+          <tr>
+            <th scope="col"><button type="button" data-sort="name">Item</button></th>
+            <th scope="col"><button type="button" data-sort="min">Cheapest</button></th>
+            <th scope="col"><button type="button" data-sort="max">Most expensive</button></th>
+            <th scope="col"><button type="button" data-sort="spread">Gap</button></th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+      <p class="empty" id="empty" hidden>No item is listed on two or more of these servers.</p>
+      <button type="button" class="more" id="more" hidden>Show more</button>
+    </section>
+  </div>
+
+  <p class="meta sources">Prices: the cheapest listed unit price per item and server, from the <a href="https://aion2.exchange/">Aion2Market</a> public API, which collects the in-game market every hour. This page is rebuilt from a fresh snapshot every 6 hours.</p>
+</Base>
+
+<style is:global>
+  main { max-width: 1500px; }
+  .mkt { display: grid; grid-template-columns: 340px minmax(0, 1fr); align-items: start; gap: 20px; }
+  .mkt > .panel + .panel { margin-top: 0; }
+  .mkt .panel-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+  .mkt .mini:first-of-type { margin-top: 0; }
+  .mkt .status { color: var(--muted); font-size: 0.84rem; font-variant-numeric: tabular-nums; }
+  .mkt .togs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+  .mkt .togs.wrap { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  #faction { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .mkt .tog { min-width: 0; padding: 5px 4px; text-align: center; font-size: 0.82rem; font-weight: 600; line-height: 1.4; background: var(--panel); border: 1px solid var(--line); border-radius: 3px; color: var(--muted); cursor: pointer; transition: border-color 0.15s, color 0.15s; }
+  .mkt .tog:hover, .mkt .tog:focus-visible { border-color: color-mix(in srgb, var(--accent) 55%, transparent); color: var(--text); outline: none; }
+  .mkt .tog[aria-checked='true'] { color: var(--text); border-color: color-mix(in srgb, var(--accent) 70%, transparent); background: radial-gradient(120% 140% at 0% 0%, var(--accent-soft), var(--panel) 70%); }
+  .mkt .num { width: 100%; padding: 6px 8px; background: var(--bg); border: 1px solid var(--line); border-radius: 3px; color: var(--text); font: inherit; font-variant-numeric: tabular-nums; transition: border-color 0.15s; }
+  .mkt .num:focus-visible { border-color: var(--accent); outline: none; }
+  #minl { width: 6.5em; }
+  .mkt .search { margin-bottom: 10px; }
+
+  .mk { table-layout: fixed; width: 100%; }
+  .mk th:nth-child(2), .mk th:nth-child(3) { width: 22%; }
+  .mk th:nth-child(4) { width: 9em; }
+  .mk td, .mk tbody th { overflow-wrap: anywhere; }
+  .mk thead th button { all: unset; cursor: pointer; color: inherit; font: inherit; }
+  .mk thead th button:hover, .mk thead th button:focus-visible { color: var(--text); }
+  .mk thead th[aria-sort] button { color: var(--accent); }
+  .mk thead th[aria-sort='ascending'] button::after { content: ' ↑'; }
+  .mk thead th[aria-sort='descending'] button::after { content: ' ↓'; }
+  .mk tbody tr.item { cursor: pointer; }
+  .mk tbody tr.item:hover, .mk tbody tr.item:focus-visible, .mk tbody tr.item[aria-expanded='true'] { background: var(--panel-2); outline: none; }
+  .mk tbody th { text-transform: none; letter-spacing: normal; font-size: inherit; color: var(--text); text-align: left; }
+  .mk td b, .mk th b { display: block; font-weight: 600; }
+  .mk small { display: block; color: var(--muted); font-weight: 400; opacity: 1; }
+  .mk td.diff { white-space: nowrap; overflow-wrap: normal; color: var(--ok); font-weight: 700; }
+  .mk td.diff small { color: var(--muted); font-weight: 400; }
+  .mk .fac { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em; margin-left: 6px; }
+  .mk tr.detail > td { padding: 0; background: var(--panel); }
+  .mk .sv { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 0 28px; padding: 6px 12px 10px; text-align: left; }
+  .mk .sv div { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 12px; padding: 4px 0; border-bottom: 1px solid var(--line); font-size: 0.84rem; }
+  .mk .sv div:first-child span:nth-child(2) { color: var(--ok); font-weight: 700; }
+  .mk .sv span:not(:first-child) { text-align: right; font-variant-numeric: tabular-nums; }
+  .mk .sv em { font-style: normal; color: var(--muted); font-size: 0.74rem; margin-left: 4px; }
+  .mkt .empty { color: var(--muted); margin: 14px 0; }
+  .mkt .more { display: block; margin: 12px auto 0; padding: 7px 18px; background: var(--panel); border: 1px solid var(--line); border-radius: 3px; color: var(--text); font: inherit; cursor: pointer; transition: border-color 0.15s; }
+  .mkt .more:hover, .mkt .more:focus-visible { border-color: var(--accent); outline: none; }
+  @media (max-width: 1100px) { .mkt { grid-template-columns: minmax(0, 1fr); } }
+  @media (max-width: 600px) {
+    .mk { display: table; font-size: 0.78rem; }
+    .mk th, .mk td { padding: 6px 4px; }
+    .mk th:nth-child(2), .mk th:nth-child(3) { width: 27%; }
+    .mk th:nth-child(4) { width: 4.6em; }
+    .mkt .togs.wrap { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+</style>
+
+<script>
+  type Server = [number, string, string, string, string, string];
+  type Market = { generated: string; servers: Server[]; items: [number, string, string, string][]; prices: Record<string, number[]> };
+  type Saved = { region: string; faction: string; section: string; minl: number };
+  type Row = { key: number; name: string; cat: string; list: { s: Server; price: number; n: number }[]; min: number; max: number; spread: number };
+  const STORE = 'a2codex-market-v1';
+  const PAGE = 100;
+  const nf = new Intl.NumberFormat('en-US');
+  const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
+  let cache: Promise<Market> | null = null;
+  const load = () => (cache ??= fetch('/market.json').then((r) => { if (!r.ok) throw new Error(String(r.status)); return r.json(); }).catch((e) => { cache = null; throw e; }));
+  const pct = (x: number) => (x >= 100 ? '9,999%+' : `${x >= 0.1 ? Math.round(x * 100) : (x * 100).toFixed(1)}%`);
+  const ago = (iso: string) => {
+    const m = Math.max(0, Math.round((Date.now() - Date.parse(iso)) / 60000));
+    return m < 60 ? `${m} min ago` : m < 2880 ? `${Math.round(m / 60)} h ago` : `${Math.round(m / 1440)} days ago`;
+  };
+
+  document.addEventListener('astro:page-load', () => {
+    if (!document.getElementById('prices')) return;
+    const ac = new AbortController();
+    const { signal } = ac;
+    document.addEventListener('astro:before-swap', () => ac.abort(), { once: true });
+    const $ = <T extends HTMLElement>(s: string) => document.querySelector<T>(s)!;
+    const table = $<HTMLTableElement>('#table'), rowsEl = $('#rows'), status = $('#status'), empty = $('#empty'), more = $('#more');
+    const q = $<HTMLInputElement>('#q'), minl = $<HTMLInputElement>('#minl');
+
+    let saved: Partial<Saved> = {};
+    try { saved = JSON.parse(localStorage.getItem(STORE) || '{}') || {}; } catch {}
+    const state = { region: saved.region || '', faction: saved.faction || 'all', section: saved.section || 'all', minl: Math.max(1, saved.minl || 3), q: '', sort: 'name', dir: 1, shown: PAGE };
+    const open = new Set<number>();
+    let data: Market, rows: Row[] = [];
+
+    const checked = (id: string, v: string) => document.querySelectorAll<HTMLElement>(`#${id} [data-v]`).forEach((b) => b.setAttribute('aria-checked', String(b.dataset.v === v)));
+    const persist = () => { try { localStorage.setItem(STORE, JSON.stringify({ region: state.region, faction: state.faction, section: state.section, minl: state.minl })); } catch {} };
+
+    const compute = () => {
+      const want = new Map(data.servers.filter((s) => s[2] === state.region && (state.faction === 'all' || s[4] === state.faction)).map((s) => [s[0], s]));
+      const needle = state.q.trim().toLowerCase();
+      rows = [];
+      for (const it of data.items) {
+        if (state.section !== 'all' && it[2] !== state.section) continue;
+        if (needle && !it[1].toLowerCase().includes(needle)) continue;
+        const p = data.prices[it[0]], list: Row['list'] = [];
+        for (let i = 0; i < p.length; i += 3) {
+          const s = want.get(p[i]);
+          if (s && p[i + 2] >= state.minl) list.push({ s, price: p[i + 1], n: p[i + 2] });
+        }
+        if (list.length < 2) continue;
+        list.sort((a, b) => a.price - b.price || a.s[1].localeCompare(b.s[1]));
+        const min = list[0].price, max = list[list.length - 1].price;
+        rows.push({ key: it[0], name: it[1], cat: it[3], list, min, max, spread: (max - min) / min });
+      }
+      const k = state.sort as 'name' | 'min' | 'max' | 'spread';
+      rows.sort((a, b) => (k === 'name' ? a.name.localeCompare(b.name) : a[k] - b[k]) * state.dir || a.name.localeCompare(b.name));
+    };
+
+    const sv = (r: Row['list'][number], faction: boolean) => `${esc(r.s[1])}${faction ? `<span class="fac muted">${r.s[4]}</span>` : ''}`;
+    const render = () => {
+      const both = state.faction === 'all';
+      status.textContent = `${nf.format(rows.length)} items · updated ${ago(data.generated)}`;
+      table.hidden = !rows.length;
+      empty.hidden = !!rows.length;
+      more.hidden = rows.length <= state.shown;
+      rowsEl.innerHTML = rows.slice(0, state.shown).map((r) => {
+        const lo = r.list[0], hi = r.list[r.list.length - 1], isOpen = open.has(r.key);
+        const head = `<tr class="item" tabindex="0" data-k="${r.key}" aria-expanded="${isOpen}"><th scope="row"><b>${esc(r.name)}</b><small>${esc(r.cat)} · ${r.list.length} servers</small></th>` +
+          `<td><b>${nf.format(lo.price)}</b><small>${sv(lo, both)}</small></td><td><b>${nf.format(hi.price)}</b><small>${sv(hi, both)}</small></td>` +
+          `<td class="diff">${pct(r.spread)}<small>${nf.format(hi.price - lo.price)}</small></td></tr>`;
+        if (!isOpen) return head;
+        const list = r.list.map((e) => `<div><span>${sv(e, both)}</span><span>${nf.format(e.price)}</span><span>${e.n} listed${e === r.list[0] ? '' : `<em>+${Math.round(((e.price - r.min) / r.min) * 100)}%</em>`}</span></div>`).join('');
+        return head + `<tr class="detail"><td colspan="4"><div class="sv">${list}</div></td></tr>`;
+      }).join('');
+      document.querySelectorAll<HTMLElement>('#table th[data-s], #table thead th').forEach((th) => {
+        const b = th.querySelector<HTMLElement>('button');
+        if (!b) return;
+        if (b.dataset.sort === state.sort) th.setAttribute('aria-sort', state.dir > 0 ? 'ascending' : 'descending'); else th.removeAttribute('aria-sort');
+      });
+    };
+    const refresh = () => { compute(); render(); };
+
+    document.querySelectorAll<HTMLElement>('#faction, #section').forEach((g) => g.addEventListener('click', (e) => {
+      const b = (e.target as HTMLElement).closest<HTMLElement>('[data-v]');
+      if (!b) return;
+      state[g.id as 'faction' | 'section'] = b.dataset.v!;
+      checked(g.id, b.dataset.v!); persist(); state.shown = PAGE; refresh();
+    }, { signal }));
+    $('#region').addEventListener('click', (e) => {
+      const b = (e.target as HTMLElement).closest<HTMLElement>('[data-v]');
+      if (!b) return;
+      state.region = b.dataset.v!; checked('region', state.region); persist(); state.shown = PAGE; refresh();
+    }, { signal });
+    minl.addEventListener('input', () => { state.minl = Math.max(1, Math.floor(Number(minl.value)) || 1); persist(); state.shown = PAGE; refresh(); }, { signal });
+    let t = 0;
+    q.addEventListener('input', () => { clearTimeout(t); t = window.setTimeout(() => { state.q = q.value; state.shown = PAGE; refresh(); }, 120); }, { signal });
+    $('#table thead').addEventListener('click', (e) => {
+      const b = (e.target as HTMLElement).closest<HTMLElement>('[data-sort]');
+      if (!b) return;
+      const s = b.dataset.sort!;
+      if (state.sort === s) state.dir = -state.dir; else { state.sort = s; state.dir = s === 'name' || s === 'min' ? 1 : -1; }
+      compute(); render();
+    }, { signal });
+    const toggle = (el: Element | null) => {
+      const tr = el?.closest<HTMLElement>('tr.item');
+      if (!tr) return;
+      const k = Number(tr.dataset.k);
+      if (!open.delete(k)) open.add(k);
+      render();
+      rowsEl.querySelector<HTMLElement>(`tr.item[data-k="${k}"]`)?.focus();
+    };
+    rowsEl.addEventListener('click', (e) => toggle(e.target as Element), { signal });
+    rowsEl.addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && (e.target as HTMLElement).matches('tr.item')) { e.preventDefault(); toggle(e.target as Element); } }, { signal });
+    more.addEventListener('click', () => { state.shown += PAGE; render(); }, { signal });
+
+    minl.value = String(state.minl);
+    checked('faction', state.faction); checked('section', state.section);
+    load().then((d) => {
+      if (signal.aborted) return;
+      data = d;
+      const regions = [...new Map(d.servers.map((s) => [s[2], s[3]])).entries()];
+      if (!regions.some(([c]) => c === state.region)) state.region = regions.some(([c]) => c === 'EU') ? 'EU' : regions[0][0];
+      $('#region').innerHTML = regions.map(([c, n]) => `<button type="button" class="tog" role="radio" aria-checked="false" data-v="${esc(c)}">${esc(n.replace('North America', 'NA'))}</button>`).join('');
+      checked('region', state.region);
+      refresh();
+    }).catch(() => { status.textContent = 'Prices could not be loaded'; });
+  });
+</script>

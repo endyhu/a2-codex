@@ -60,3 +60,8 @@ Re-run it after each patch and when adding a stat to the Stats page; commit the 
 - Path: `C:\Program Files (x86)\Steam\steamapps\common\AION2` (Unreal Engine, ~84 GB).
 - Data lives in `Aion2\Content\Paks` (`.pak`, `.utoc/.ucas`).
 - **Pak index is encrypted** (checked footers: encrypted-index flag = 1, pak version 11). Reading data needs the AES key. Decision pending: we do not bypass the encryption or pull keys out of the game executable. Owner must check NCSoft's terms before any extraction.
+
+## Market page (aion2.exchange)
+- Source: Aion2Market's public read-only API (`https://aion2.exchange/api/openapi.json`, docs at `/api/docs`; robots.txt allows `/`, no terms page found). It polls the in-game market hourly for every server (106 NA/EU/SA/Asia servers, Elyos and Asmodian separately). `/api/items?server=<id>&limit=1000` returns every item with its cheapest unit price and listing count; item names are the Global client's.
+- `scripts/market-snapshot.mjs` calls `/api/servers` and then `/api/items` once per server (sequential, 400ms pause, retries with backoff, identifying User-Agent) and writes `public/market.json` only if at least 90% of servers answered. The API had short 503 "database unavailable" spells, hence the retries.
+- Prices are the single cheapest listing, so joke or mistaken listings (one at 500 Kinah next to 56M elsewhere) show up as huge gaps; the page has a minimum-listings filter (default 3).

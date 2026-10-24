@@ -93,7 +93,7 @@ Navigation is one flat list (no Character/Menu groups) in in-game order and uses
 - Character > **Stats** (stats reference), **Gear** (Gear BiS, stat lines/BiS lines, enhancement order; the owner's name, replaces the in-game "Enhancement"), **Genus Insight** (Genus BiS, `genus/`; replaces a separate Pets page), **Arcana** (Arcana BiS)
 - **Daevanion Optimizer** (`daevanion/`, the owner's name; a tool, not a cheatsheet: class, boards, crystals, PvE/PvP switch, must-have skills in, best route out)
 Do not invent menu names; if a page needs a new one, copy the in-game label. The Skills / class pages were dropped by the owner (not planned).
-Build order: scaffold, Stats (done), Gear (done), Genus Insight (done), Arcana (done), Daevanion Optimizer (done). Later ideas: Abyss shop, weekly checklist, calculators.
+Build order: scaffold, Stats (done), Gear (done), Genus Insight (done), Arcana (done), Daevanion Optimizer (done). **Market** (`market/`, cross-server prices from the aion2.exchange API; done). Later ideas: Abyss shop, weekly checklist, calculators.
 When a page ships, the "Get it from" tags on the Stats page link to it automatically (flip `ready` in `nav.ts`; mapping in `TAG_PAGE` in `stats.astro`).
 
 ## Start of every session
@@ -109,4 +109,4 @@ Never commit personal info: real names, emails, usernames, character names, loca
 - `scripts/global-sources.mjs` -> `src/data/stat-sources.json`: where each stat can be obtained, from Global client data. Re-run after patches.
 
 ## Money-saving tips
-There is no separate "save money" page. Put "what not to waste resources on" inside each category page (Gear, Arcana, Genus Insight). A Market page for cross-server price comparison is a possible later addition, not planned yet.
+There is no separate "save money" page. Put "what not to waste resources on" inside each category page (Gear, Arcana, Genus Insight). The Market page (cross-server price comparison) is its own tool page.
