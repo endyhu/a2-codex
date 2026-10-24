@@ -27,7 +27,7 @@ const slots: Card[] = [
   { title: 'Slots 1 and 5', icon: swords, ordered: true, lines: [{ name: 'PvE Attack', rank: 1 }, { name: 'Boss Attack', rank: 1 }, { name: 'Front / Back Attack', note: 'positional classes', rank: 2 }, { name: 'Attack Bonus', rank: 3 }, { name: 'Max Attack', rank: 4 }] },
   { title: 'Slots 3, 6 and 9', icon: target, ordered: true, lines: [{ name: 'Accuracy Bonus', note: 'Unique or better' }, { name: 'PvE Accuracy', note: 'Unique or better' }, { name: 'Critical Hit', note: 'Heroic only' }] },
   { title: 'Slot 7', icon: dices, ordered: true, lines: [{ name: 'Accuracy Bonus', note: 'Heroic' }, { name: 'Critical Hit', note: 'Heroic' }] },
-  { title: 'Slots 2 and 8', icon: shield, lines: [{ name: 'HP Increase' }, { name: 'Defense Bonus' }, { name: 'Back Defense' }, { name: 'Critical Hit Resist' }], rest: 'Second preset only' },
+  { title: 'Slots 2 and 8', icon: shield, ordered: true, lines: [{ name: 'HP Increase', rank: 1 }, { name: 'Defense Bonus', rank: 2 }, { name: 'PvE Defense', rank: 2 }, { name: 'Front / Back Defense', note: 'positional classes', rank: 3 }], rest: 'Second preset only' },
 ];
 const rules: [string, string][] = [
   ['Lock nothing early', 'Leveling a board re-rolls all its lines, and every locked line makes each roll more expensive. Do not lock before level 9. If unsure, take it to level 10 first; lines roll better there.'],
