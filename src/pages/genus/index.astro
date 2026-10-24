@@ -62,7 +62,7 @@ const hueOf = (n: string) =>
         <article class="slot-card">
           <header><span class="ico" set:html={c.icon} /><strong>{c.title}</strong></header>
           <ol>
-            {c.lines.map((l, i) => <li class={c.ordered && i === 0 ? 'top' : ''} style={`--h:${hueOf(l.name)}`}>{c.ordered && <b>{i + 1}</b>}<span class="t">{l.name}{l.note && <small>{l.note}</small>}</span></li>)}
+            {c.lines.map((l, i) => <li class={c.ordered && i === 0 ? 'top' : ''} style={`--h:${hueOf(l.name)}`}><b>{c.ordered ? i + 1 : '•'}</b><span class="t">{l.name}{l.note && <small>{l.note}</small>}</span></li>)}
             {c.rest && <li class="rest">{c.rest}</li>}
           </ol>
         </article>
