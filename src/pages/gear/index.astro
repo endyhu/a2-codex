@@ -22,12 +22,12 @@ import target from 'lucide-static/icons/target.svg?raw';
 // (identical across the top two tiers and across weapon types; the Guard matches too).
 type Row = { slot: string; icon: string; lines: [string, number][]; skills?: string };
 const lines: Row[] = [
-  { slot: 'Weapon / Guard', icon: swords, lines: [['Damage Boost', 2], ['Combat Speed', 4], ['Weapon Damage Boost', 4], ['Might', 6], ['Multi-hit Chance', 6], ['Precision', 7], ['Attack', 7]] },
+  { slot: 'Weapon / Guard', icon: swords, lines: [['Combat Speed', 4], ['Weapon Damage Boost', 4], ['Damage Boost', 2], ['Might', 6], ['Multi-hit Chance', 6], ['Precision', 7], ['Attack', 7]] },
   { slot: 'Helm', icon: crown, lines: [['Double Chance', 1.2], ['Attack Increase', 1.2], ['Attack', 4]], skills: 'Passive skills' },
   { slot: 'Pauldrons', icon: shield, lines: [['Double Chance', 1.2], ['Critical Damage Boost', 3], ['Attack', 4]], skills: 'Passive skills' },
-  { slot: 'Top', icon: shirt, lines: [['Perfect Chance', 1.2], ['Damage Boost', 3], ['Attack', 4]], skills: 'Passive skills' },
+  { slot: 'Top', icon: shirt, lines: [['Damage Boost', 3], ['Perfect Chance', 1.2], ['Attack', 4]], skills: 'Passive skills' },
   { slot: 'Cloak', icon: cloak, lines: [['Double Chance', 1.2], ['Attack Increase', 1.2], ['Attack', 4]], skills: 'Passive skills' },
-  { slot: 'Gloves', icon: hand, lines: [['Perfect Chance', 1.2], ['Combat Speed', 3], ['Attack', 4]], skills: 'Passive skills' },
+  { slot: 'Gloves', icon: hand, lines: [['Combat Speed', 3], ['Perfect Chance', 1.2], ['Attack', 4]], skills: 'Passive skills' },
   { slot: 'Legs', icon: footprints, lines: [['Attack Increase', 1.2], ['Perfect Chance', 1.2], ['Damage Tolerance', 3], ['Attack', 4]], skills: 'Passive skills' },
   { slot: 'Shoes', icon: footprints, lines: [['Perfect Chance', 1.2], ['Move Speed', 3], ['Attack', 4]], skills: 'Passive skills' },
   { slot: 'Earrings', icon: ear, lines: [['Attack', 6], ['Accuracy', 6]], skills: 'Passive skills' },
