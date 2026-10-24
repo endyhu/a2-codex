@@ -73,9 +73,8 @@ const isActive = (href: string) => path === `${base}${href}`;
       </div>
     </div>
     <div id="update" transition:persist hidden role="status">
-      <span class="update-ico" set:html={refresh} />
-      <span class="update-text"><strong>New version available</strong><small>Reload to get the latest.</small></span>
-      <button type="button" id="update-reload">Reload</button>
+      <span class="update-text"><strong>New version available</strong><small>Click the arrows to reload.</small></span>
+      <button type="button" id="update-reload" aria-label="Reload to update" title="Reload to update" set:html={refresh} />
     </div>
     <button id="to-top" type="button" aria-label="Back to top" title="Back to top" set:html={arrowUp} />
     <script>
