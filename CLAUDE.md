@@ -103,6 +103,7 @@ Never commit personal info: real names, emails, usernames, character names, loca
 
 ## Pointers
 - `docs/STATUS.md`: what's done, what's next.
+- `docs/styling.md`: shared styling recipes (tokens, shapes, hover/glow, icons). Read it before any UI work; do not guess styles.
 - `docs/data-sources.md`: source policy (what to trust for Global), verified Global terms, how to cross-check sources, game-client findings.
 - `scripts/global-sources.mjs` -> `src/data/stat-sources.json`: where each stat can be obtained, from Global client data. Re-run after patches.
 

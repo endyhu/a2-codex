@@ -293,6 +293,8 @@ const order: Step[] = [
     setUp();
     document.querySelector('.rail .top-btn')!.addEventListener('click', () => { pinned = null; travel = null; scrollTo({ top: 0 }); });
     mark();
+    // Arriving on the page (no other section targeted) lights up the first card, like a link to it would.
+    if (!pinned || pinned === 'best-lines') flash(document.getElementById('best-lines')!);
   });
 </script>
 
