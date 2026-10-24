@@ -116,7 +116,7 @@ const order: Step[] = [
 
   <section class="panel" id="best-lines" aria-label="Best stat lines per slot">
     <header class="panel-head"><h2>Best stat lines</h2></header>
-    <div class="cards">
+    <div class="slot-cards">
       {lines.map((r) => (
         <article class="slot-card">
           <header><span class="ico" set:html={r.icon} /><strong>{r.slot}</strong></header>
@@ -210,91 +210,26 @@ const order: Step[] = [
 </Base>
 
 <script>
+  import { sectionGlow } from '../../scripts/section-glow';
   // The router swaps pages in place: set up on every visit, drop window and document listeners on leaving.
   document.addEventListener('astro:page-load', () => {
-    if (!document.querySelector('.rail')) return;
-    const ac = new AbortController();
-    const { signal } = ac;
-    document.addEventListener('astro:before-swap', () => ac.abort(), { once: true });
+    const rail = document.querySelector('.rail');
+    if (!rail) return;
     const links = [...document.querySelectorAll<HTMLAnchorElement>('.rail a')];
-    const side = [...document.querySelectorAll<HTMLAnchorElement>('#side .child')];
-    const rail = document.querySelector('.rail')!;
-    const sections = ['best-lines', ...links.map((a) => a.dataset.step!)].map((id) => document.getElementById(id)!).filter(Boolean);
-    const ids = sections.map((el) => el.id);
-    // A clicked link stays highlighted (the last sections cannot scroll up to the trigger line) until the reader scrolls on their own.
-    let pinned: string | null = ids.includes(location.hash.slice(1)) ? location.hash.slice(1) : null;
     const firstStep = document.querySelector<HTMLElement>('.path > li')!;
     const card = document.querySelector('[aria-label="Enhancement order"]')!;
     const setUp = () => firstStep.style.setProperty('--up', `${firstStep.getBoundingClientRect().top - card.getBoundingClientRect().top - 1}px`);
-    let lastNatural: string | null = null;
-    // While a clicked link scrolls the page, sections between where you were and the target glow as they pass, like when scrolling by hand.
-    let travel: [number, number] | null = null;
-    const mark = () => {
+    const { signal, mark, unpin } = sectionGlow(['best-lines', ...links.map((a) => a.dataset.step!)], {
       // The bar only pushes the trigger line down while it is stuck to the top of the screen.
-      const r = rail.getBoundingClientRect();
-      const bar = matchMedia('(max-width: 1799px)').matches && r.top <= parseFloat(getComputedStyle(rail).top) + 1 ? r.bottom : 0;
-      // The trigger line sits at 30% of the screen at the top of the page and slides down to the bottom edge as you reach the end of the page,
-      // so the last short steps (Theostone, Potential) can become active even on tall screens where they never scroll up to 30%.
-      const max = document.documentElement.scrollHeight - innerHeight;
-      const p = max > 0 ? Math.min(1, scrollY / max) : 1;
-      const base = bar + innerHeight * 0.3;
-      const line = base + (innerHeight - base) * p;
-      let current: HTMLElement | undefined;
-      for (const el of sections) if (el.getBoundingClientRect().top <= line) current = el;
-      const natural = current?.id ?? null;
-      if (natural && lastNatural !== null && natural !== lastNatural) {
-        const i = ids.indexOf(natural);
-        if (!pinned || (travel && i >= Math.min(...travel) && i <= Math.max(...travel))) flash(document.getElementById(natural)!, !!pinned);
-      }
-      lastNatural = natural;
-      const id = pinned ?? natural;
-      links.forEach((a) => a.classList.toggle('on', a.dataset.step === id));
-      side.forEach((a) => a.classList.toggle('on', a.dataset.hash === id));
-    };
-    const unpin = () => { if (pinned) { pinned = null; travel = null; mark(); } };
-    // Short glow on a section: after a link jump once the scroll has settled, or straight away when scrolling reaches the next one.
-    // When a clicked link scrolls the page, the glow still running fades out quickly so the next one takes over; when the reader scrolls by hand, glows just finish on their own.
-    const fadeOut = (el: Element) => {
-      if (!el.classList.contains('flash')) return;
-      el.classList.remove('flash');
-      el.classList.add('flash-out');
-      setTimeout(() => el.classList.remove('flash-out'), 750);
-    };
-    const flash = (el: HTMLElement, handover = false) => {
-      if (handover) document.querySelectorAll('.flash').forEach((o) => { if (o !== el) fadeOut(o); });
-      el.classList.remove('flash', 'flash-out');
-      void el.offsetWidth;
-      el.classList.add('flash');
-      setTimeout(() => el.classList.remove('flash'), 2500);
-    };
-    const glow = (id: string) => {
-      const li = document.getElementById(id);
-      if (!li) return;
-      // Start the glow once the scroll has stopped (no scroll event for 150ms), at the latest after 3s; if no scroll starts within 400ms the target is already in place.
-      let timer = 0, moving = false;
-      const finish = () => { removeEventListener('scroll', bump); clearTimeout(timer); clearTimeout(cap); if (!li.classList.contains('flash')) flash(li, true); };
-      const bump = () => { moving = true; clearTimeout(timer); timer = window.setTimeout(finish, 150); };
-      const cap = window.setTimeout(finish, 3000);
-      addEventListener('scroll', bump, { passive: true, signal });
-      timer = window.setTimeout(() => { if (!moving) finish(); }, 400);
-    };
-    document.addEventListener('click', (e) => {
-      const a = (e.target as Element).closest<HTMLAnchorElement>('a[href*="#"]');
-      const hash = a ? new URL(a.href).hash.slice(1) : '';
-      if (a && ids.includes(hash) && new URL(a.href).pathname === location.pathname) { travel = [ids.indexOf(lastNatural ?? ids[0]), ids.indexOf(hash)]; pinned = hash; mark(); glow(hash); }
-    }, { signal });
-    if (pinned) glow(pinned);
-    addEventListener('wheel', unpin, { passive: true, signal });
-    addEventListener('touchmove', unpin, { passive: true, signal });
-    addEventListener('keydown', (e) => { if (['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '].includes(e.key)) unpin(); }, { signal });
-    addEventListener('pointerdown', (e) => { if (!(e.target as Element).closest('a')) unpin(); }, { signal });
-    addEventListener('scroll', mark, { passive: true, signal });
+      barHeight: () => {
+        const r = rail.getBoundingClientRect();
+        return matchMedia('(max-width: 1799px)').matches && r.top <= parseFloat(getComputedStyle(rail).top) + 1 ? r.bottom : 0;
+      },
+      onActive: (id) => links.forEach((a) => a.classList.toggle('on', a.dataset.step === id)),
+    });
     addEventListener('resize', () => { setUp(); mark(); }, { signal });
     setUp();
-    document.querySelector('.rail .top-btn')!.addEventListener('click', () => { pinned = null; travel = null; scrollTo({ top: 0 }); });
-    mark();
-    // Arriving on the page (no other section targeted) lights up the first card, like a link to it would.
-    if (!pinned || pinned === 'best-lines') flash(document.getElementById('best-lines')!);
+    document.querySelector('.rail .top-btn')!.addEventListener('click', () => { unpin(); scrollTo({ top: 0 }); });
   });
 </script>
 
@@ -342,21 +277,6 @@ const order: Step[] = [
     .rail .lbl { display: inline; }
     .rail .top-btn { display: flex; align-items: center; justify-content: flex-start; gap: 8px; width: auto; height: auto; margin: 12px 0 0; padding: 7px 10px; border-radius: 3px; font: inherit; font-size: 0.84rem; font-weight: 600; }
   }
-  .path { list-style: none; margin: 0; padding: 0; }
-  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); gap: 12px; }
-  .slot-card { background: var(--panel); border: 1px solid var(--line); border-radius: 3px; padding: 10px 12px 12px; }
-  .slot-card header { display: flex; align-items: center; gap: 10px; padding-bottom: 9px; margin-bottom: 6px; border-bottom: 1px solid var(--line); }
-  .slot-card .ico { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 8px; color: var(--accent); background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent); }
-  .slot-card .ico svg { width: 17px; height: 17px; }
-  .slot-card ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; }
-  .slot-card li { --c: hsl(var(--h) 75% 64%); display: flex; align-items: baseline; gap: 8px; padding: 4px 8px; border-left: 3px solid hsl(var(--h) 70% 55% / 0.55); background: linear-gradient(90deg, hsl(var(--h) 60% 50% / 0.1), transparent 70%); font-size: 0.86rem; }
-  :root[data-theme='light'] .slot-card li { --c: hsl(var(--h) 85% 34%); background: linear-gradient(90deg, hsl(var(--h) 90% 50% / 0.12), transparent 70%); border-left-color: hsl(var(--h) 80% 42% / 0.7); }
-  .slot-card li b { width: 1.1em; color: var(--c); font-variant-numeric: tabular-nums; font-size: 0.78rem; }
-  .slot-card li.top { font-weight: 600; border-left-color: var(--c); background: linear-gradient(90deg, hsl(var(--h) 70% 55% / 0.26), transparent 85%); box-shadow: 0 0 16px -8px hsl(var(--h) 80% 55% / 0.6); }
-  .slot-card li small { color: var(--muted); font-size: 0.72rem; font-weight: 400; margin-left: auto; text-align: right; }
-  .slot-card li em { margin-left: auto; font-style: normal; font-weight: 600; font-size: 0.78rem; font-variant-numeric: tabular-nums; color: var(--c); }
-  .slot-card li small + em { margin-left: 10px; min-width: 2.6em; text-align: right; }
-  .slot-card li.rest { border-left-style: dashed; border-left-color: var(--line); background: none; color: var(--muted); font-size: 0.8rem; }
 
   .line { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
   .stones h4 { margin: 0 0 8px; color: var(--muted); font-size: 0.74rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
@@ -364,13 +284,6 @@ const order: Step[] = [
   .stones .stone.first { font-weight: 600; border-left-color: var(--warn); background: linear-gradient(90deg, color-mix(in srgb, var(--warn) 24%, transparent), transparent 90%); box-shadow: 0 0 18px -9px var(--warn); }
   .stones .stone em { margin-left: auto; font-style: normal; font-weight: 600; font-size: 0.82rem; font-variant-numeric: tabular-nums; color: var(--warn); }
   .stones .stone b { display: grid; place-items: center; flex: none; width: 22px; height: 22px; border-radius: 50%; border: 1px solid color-mix(in srgb, var(--warn) 55%, transparent); background: none; color: var(--warn); font-size: 0.74rem; font-variant-numeric: tabular-nums; }
-  .path { position: relative; }
-  .path li { position: relative; display: flex; gap: 14px; padding-bottom: 32px; }
-  .step > :last-child, .step > :last-child > :last-child, .step > :last-child > :last-child > :last-child { margin-bottom: 0 !important; }
-  .path li:last-child { padding-bottom: 0; }
-  .path li:not(:last-child)::before { content: ''; position: absolute; left: 15px; top: 34px; bottom: 2px; width: 2px; background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 60%, transparent), var(--line)); }
-  .path b { display: grid; place-items: center; flex: none; width: 32px; height: 32px; border-radius: 50%; background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent); color: var(--accent); font-variant-numeric: tabular-nums; }
-  .path strong { display: block; margin-top: 5px; font-size: 1rem; }
   .path a.ext { display: inline-flex; align-items: center; gap: 12px; margin-top: 8px; padding: 7px 18px 7px 8px; border: 1px solid color-mix(in srgb, var(--accent) 60%, transparent); border-radius: 999px; background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 26%, transparent), color-mix(in srgb, var(--accent) 6%, transparent)); box-shadow: 0 0 18px -8px var(--accent); color: var(--text); font-size: 0.9rem; font-weight: 600; text-decoration: none !important; transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s; }
   .path a.ext .play { display: grid; place-items: center; flex: none; width: 30px; height: 30px; border-radius: 50%; background: var(--accent); color: var(--bg); line-height: 0; }
   .path a.ext svg { width: 14px; height: 14px; display: block; fill: currentColor; margin-left: 2px; }
@@ -390,7 +303,6 @@ const order: Step[] = [
   .gem path:nth-child(2) { fill: #2c8d9c; stroke: #0a5361; stroke-width: 1.1; }
   .gem path:nth-child(3) { fill: #d8fcfc; stroke: none; }
   .arrow { color: var(--muted); }
-  .step { flex: 1; min-width: 0; }
   .enh { display: grid; grid-template-columns: minmax(0, 1fr) 360px; align-items: start; gap: 20px 40px; margin-top: 4px; }
   @media (max-width: 1280px) { .enh { grid-template-columns: minmax(0, 1fr); } .ladder { width: auto !important; } }
   .trick { margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--line); }
@@ -402,17 +314,6 @@ const order: Step[] = [
   .path .flow b { all: unset; display: block; margin-bottom: 2px; color: var(--accent); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; font-variant-numeric: tabular-nums; }
   .flow strong { display: block !important; margin: 0 !important; color: var(--text); }
   .flow span { display: block; margin-top: 4px; color: var(--muted); font-size: 0.8rem; line-height: 1.35; }
-  .saving { width: 100%; border-collapse: collapse; margin: 4px 0 10px; font-size: 0.88rem; font-variant-numeric: tabular-nums; }
-  .saving caption { text-align: left; padding: 0 0 6px; color: var(--muted); font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.04em; }
-  .saving th, .saving td { padding: 6px 10px; text-align: right; border-bottom: 1px solid var(--line); }
-  .saving th:first-child { text-align: left; }
-  .saving thead th { color: var(--muted); font-size: 0.74rem; font-weight: 600; }
-  .saving tbody th { font-weight: 600; }
-  .saving td.gain { color: var(--ok); font-weight: 700; }
-  .saving tfoot .sum th, .saving tfoot .sum td { border-top: 1px solid var(--line); border-bottom: 0; font-weight: 700; }
-  .saving tfoot .sum:first-child th, .saving tfoot .sum:first-child td { border-top: 2px solid var(--accent); }
-  .saving tfoot .big { background: var(--accent-soft); }
-  .saving small { font-weight: 600; opacity: 0.85; }
   .trick-notes { margin: 4px 0 0; padding-left: 18px; color: var(--muted); font-size: 0.84rem; line-height: 1.45; }
   .trick-notes li { display: list-item !important; padding: 0 !important; margin: 2px 0; }
   .trick-notes li::before { content: none !important; }
@@ -462,49 +363,11 @@ const order: Step[] = [
   .bsl-go svg { width: 14px; height: 14px; }
   .bsl:hover { transform: translateY(-1px); box-shadow: 0 0 28px -4px var(--accent); background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 42%, transparent), color-mix(in srgb, var(--accent) 16%, transparent)); }
   .bsl:hover .bsl-go { transform: translateY(-2px); }
-  #best-lines { scroll-margin-top: 16px; }
-  /* One glow for the Best stat lines card and for each step. A step's glow box takes half of the gap above and below it so neighbours meet without a seam; middle steps only glow sideways (top and bottom are clipped), the first also glows up and the last down. When the next section takes over, the old glow fades out quickly (.flash-out). */
-  @keyframes glow { 0% { box-shadow: 0 0 0 0 transparent, 0 0 40px 0 transparent; } 15% { box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 60%, transparent), 0 0 40px 0 color-mix(in srgb, var(--accent) 40%, transparent); } 100% { box-shadow: 0 0 0 0 transparent, 0 0 40px 0 transparent; } }
-  #best-lines.flash { animation: glow 2.3s ease-out; }
-  #best-lines.flash-out { animation: none; box-shadow: 0 0 0 0 transparent, 0 0 40px 0 transparent; transition: box-shadow 0.6s ease-out; }
-  /* Step glow, drawn as plain fades instead of a shadow: a strip fading out sideways from each card edge, the same strength top to bottom, so no box edge can show as a line and neighbouring steps meet without a seam (boxes overlap by 1px). Its reach and falloff follow the Best stat lines shadow (40px blur at 40%) and, like that card, it has a brighter 1px line along the card edge (--ring, 60%). The first step also fades upward from the very top of the card, the last one downward. Opacity does the fading, so a replaced glow can fade out quickly (.flash-out). */
-  .path > li { isolation: isolate; --f: 44px; --ring: color-mix(in srgb, var(--accent) 60%, transparent); --g1: color-mix(in srgb, var(--accent) 0.9%, transparent); --g2: color-mix(in srgb, var(--accent) 2.7%, transparent); --g3: color-mix(in srgb, var(--accent) 6.4%, transparent); --g4: color-mix(in srgb, var(--accent) 12.3%, transparent); --g5: color-mix(in srgb, var(--accent) 20%, transparent); }
-  .path > li.flash::after, .path > li.flash-out::after { content: ''; position: absolute; z-index: -1; pointer-events: none; inset: -16px calc(-16px - var(--f)) 15px calc(-16px - var(--f));
-    background: linear-gradient(var(--ring), var(--ring)) left calc(var(--f) - 2px) top 0 / 1px 100% no-repeat, linear-gradient(var(--ring), var(--ring)) right calc(var(--f) - 2px) top 0 / 1px 100% no-repeat, linear-gradient(90deg, transparent, var(--g1) 4px, var(--g2) 14px, var(--g3) 24px, var(--g4) 34px, var(--g5) var(--f)) left top / var(--f) 100% no-repeat, linear-gradient(270deg, transparent, var(--g1) 4px, var(--g2) 14px, var(--g3) 24px, var(--g4) 34px, var(--g5) var(--f)) right top / var(--f) 100% no-repeat; }
-  .path > li:first-child.flash::after, .path > li:first-child.flash-out::after { inset: calc(-1 * var(--up, 16px) - var(--f)) calc(-16px - var(--f)) 15px calc(-16px - var(--f));
-    background:
-      linear-gradient(var(--ring), var(--ring)) left calc(var(--f) - 2px) top calc(var(--f) - 2px) / 1px calc(100% - var(--f) + 2px) no-repeat,
-      linear-gradient(var(--ring), var(--ring)) right calc(var(--f) - 2px) top calc(var(--f) - 2px) / 1px calc(100% - var(--f) + 2px) no-repeat,
-      linear-gradient(var(--ring), var(--ring)) left var(--f) top calc(var(--f) - 2px) / calc(100% - 2 * var(--f)) 1px no-repeat,
-      linear-gradient(180deg, transparent, var(--g1) 4px, var(--g2) 14px, var(--g3) 24px, var(--g4) 34px, var(--g5) var(--f)) left var(--f) top / calc(100% - 2 * var(--f)) var(--f) no-repeat,
-      linear-gradient(90deg, transparent, var(--g1) 4px, var(--g2) 14px, var(--g3) 24px, var(--g4) 34px, var(--g5) var(--f)) left top var(--f) / var(--f) calc(100% - var(--f)) no-repeat,
-      linear-gradient(270deg, transparent, var(--g1) 4px, var(--g2) 14px, var(--g3) 24px, var(--g4) 34px, var(--g5) var(--f)) right top var(--f) / var(--f) calc(100% - var(--f)) no-repeat,
-      radial-gradient(circle at 100% 100%, var(--g5), var(--g4) 10px, var(--g3) 20px, var(--g2) 30px, var(--g1) 40px, transparent var(--f)) left top / var(--f) var(--f) no-repeat,
-      radial-gradient(circle at 0 100%, var(--g5), var(--g4) 10px, var(--g3) 20px, var(--g2) 30px, var(--g1) 40px, transparent var(--f)) right top / var(--f) var(--f) no-repeat; }
-  .path > li:last-child.flash::after, .path > li:last-child.flash-out::after { inset: -16px calc(-16px - var(--f)) calc(-16px - var(--f)) calc(-16px - var(--f));
-    background:
-      linear-gradient(var(--ring), var(--ring)) left calc(var(--f) - 2px) top 0 / 1px calc(100% - var(--f) + 2px) no-repeat,
-      linear-gradient(var(--ring), var(--ring)) right calc(var(--f) - 2px) top 0 / 1px calc(100% - var(--f) + 2px) no-repeat,
-      linear-gradient(var(--ring), var(--ring)) left var(--f) bottom calc(var(--f) - 2px) / calc(100% - 2 * var(--f)) 1px no-repeat,
-      linear-gradient(0deg, transparent, var(--g1) 4px, var(--g2) 14px, var(--g3) 24px, var(--g4) 34px, var(--g5) var(--f)) left var(--f) bottom / calc(100% - 2 * var(--f)) var(--f) no-repeat,
-      linear-gradient(90deg, transparent, var(--g1) 4px, var(--g2) 14px, var(--g3) 24px, var(--g4) 34px, var(--g5) var(--f)) left top / var(--f) calc(100% - var(--f)) no-repeat,
-      linear-gradient(270deg, transparent, var(--g1) 4px, var(--g2) 14px, var(--g3) 24px, var(--g4) 34px, var(--g5) var(--f)) right top / var(--f) calc(100% - var(--f)) no-repeat,
-      radial-gradient(circle at 100% 0, var(--g5), var(--g4) 10px, var(--g3) 20px, var(--g2) 30px, var(--g1) 40px, transparent var(--f)) left bottom / var(--f) var(--f) no-repeat,
-      radial-gradient(circle at 0 0, var(--g5), var(--g4) 10px, var(--g3) 20px, var(--g2) 30px, var(--g1) 40px, transparent var(--f)) right bottom / var(--f) var(--f) no-repeat; }
-  /* The 1px where two neighbouring boxes overlap is half strength on each, so two lit steps add up to one glow there instead of a brighter line. */
-  .path > li.flash::after, .path > li.flash-out::after { -webkit-mask-image: linear-gradient(180deg, rgba(0,0,0,0.5), #000 1px, #000 calc(100% - 1px), rgba(0,0,0,0.5)); mask-image: linear-gradient(180deg, rgba(0,0,0,0.5), #000 1px, #000 calc(100% - 1px), rgba(0,0,0,0.5)); }
-  .path > li:first-child.flash::after, .path > li:first-child.flash-out::after { -webkit-mask-image: linear-gradient(180deg, #000 calc(100% - 1px), rgba(0,0,0,0.5)); mask-image: linear-gradient(180deg, #000 calc(100% - 1px), rgba(0,0,0,0.5)); }
-  .path > li:last-child.flash::after, .path > li:last-child.flash-out::after { -webkit-mask-image: linear-gradient(180deg, rgba(0,0,0,0.5), #000 1px); mask-image: linear-gradient(180deg, rgba(0,0,0,0.5), #000 1px); }
-  .path > li.flash::after { animation: glow-fade 2.3s ease-out forwards; }
-  .path > li.flash-out::after { opacity: 0; transition: opacity 0.6s ease-out; }
-  @keyframes glow-fade { 0% { opacity: 0; } 15% { opacity: 1; } 100% { opacity: 0; } }
-  @media (prefers-reduced-motion: reduce) { #best-lines.flash, .path > li.flash::after { animation: none; opacity: 0; } }
   .actions { display: grid; gap: 0; margin: 12px 0 8px; border: 1px solid var(--line); border-radius: 3px; background: var(--panel); }
   .actions div { display: grid; grid-template-columns: 4.5em 1fr; gap: 12px; padding: 8px 12px; }
   .actions div + div { border-top: 1px solid var(--line); }
   .actions.wide div { grid-template-columns: 7em 1fr; }
 
-  .mini { margin: 14px 0 6px; color: var(--muted); font-size: 0.74rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
   .slots { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; }
   .slots > div { display: flex; flex-direction: column; gap: 6px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 3px; background: var(--panel); font-size: 0.86rem; }
   .dots { display: flex; gap: 5px; }
@@ -519,7 +382,4 @@ const order: Step[] = [
   .saving.pot th { padding-left: 0; }
   .saving.pot tr:last-child th, .saving.pot tr:last-child td { border-bottom: 1px solid var(--line); }
   .saving.bind { margin-top: 0; }
-  .path p { margin: 3px 0 7px; color: var(--muted); font-size: 0.84rem; line-height: 1.45; }
-  .panel + .panel { margin-top: 20px; }
-  .sources { text-align: right; margin-top: 16px; }
 </style>
