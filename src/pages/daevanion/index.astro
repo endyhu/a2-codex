@@ -1,0 +1,527 @@
+---
+import Base from '../../layouts/Base.astro';
+import data from '../../data/daevanion.json';
+import { Image } from 'astro:assets';
+import castle from 'lucide-static/icons/castle.svg?raw';
+import swords from 'lucide-static/icons/swords.svg?raw';
+
+// Class emblems are resized at build time (shown at 36px, so 72px covers 2x screens).
+const emblems = import.meta.glob<{ default: ImageMetadata }>('../../assets/daevanion/class/*.webp', { eager: true });
+const emblem = (c: string) => emblems[`../../assets/daevanion/class/${c}.webp`].default;
+
+const classes = Object.keys(data.classes);
+// Board groups follow the game's board order; each group spends its own crystal pool.
+const groups = [
+  { pool: 'c', label: 'Daevanion crystals', boards: ['Nezekan', 'Zikel', 'Vaizel', 'Triniel'] },
+  { pool: 'q', label: 'Conquest crystals', boards: ['Ariel'] },
+  { pool: 'a', label: 'Battle crystals', boards: ['Azphel'] },
+];
+---
+<Base title="Daevanion Optimizer" description="The best Daevanion route for your class, crystals and PvE or PvP focus, for AION 2 Global.">
+  <h1 class="page-title">Daevanion Optimizer</h1>
+
+  <div class="opt">
+    <section class="panel" id="setup" aria-label="Setup">
+      <header class="panel-head"><h2>Setup</h2></header>
+
+      <h3 class="mini">Class</h3>
+      <div class="classes" id="classes" role="radiogroup" aria-label="Class">
+        {classes.map((c) => (
+          <button type="button" role="radio" aria-checked="false" data-cls={c}>
+            <Image src={emblem(c)} alt="" width={72} height={72} loading="eager" />
+            <span>{c}</span>
+          </button>
+        ))}
+      </div>
+
+      <h3 class="mini">Focus</h3>
+      <div class="modes" id="mode" role="radiogroup" aria-label="Focus">
+        <button type="button" role="radio" aria-checked="true" data-mode="pve"><span class="ico" set:html={castle} /><strong>PvE</strong><small>Skips useless orange tiles</small></button>
+        <button type="button" role="radio" aria-checked="false" data-mode="pvp"><span class="ico" set:html={swords} /><strong>PvP</strong><small>Takes every orange tile</small></button>
+      </div>
+
+      <h3 class="mini">Boards and crystals</h3>
+      <div class="pools">
+        {groups.map((g) => (
+          <div class="pool">
+            <label for={`pool-${g.pool}`}>{g.label}</label>
+            <input id={`pool-${g.pool}`} class="num" type="number" min="0" step="1" inputmode="numeric" data-pool={g.pool} />
+            {g.boards.length > 1 ? (
+              <div class="togs" role="group" aria-label={`${g.label} boards`}>
+                {g.boards.map((n) => <button type="button" class="tog" aria-pressed="true" data-board={n}>{n}</button>)}
+              </div>
+            ) : (
+              <span class="only">{g.boards[0]} board</span>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <h3 class="mini">Must-have skills</h3>
+      <div id="skills"></div>
+
+      <h3 class="mini">Scoring order</h3>
+      <ol class="order" id="order"></ol>
+    </section>
+
+    <section class="panel" id="route" aria-label="Route">
+      <header class="panel-head"><h2>Route</h2><span class="status" id="status" role="status" aria-live="polite"></span></header>
+      <div class="tabs" id="tabs" role="group" aria-label="Boards in this result"></div>
+      <div class="route-body">
+        <div class="board" id="board"></div>
+        <div class="sum" id="sum"></div>
+      </div>
+      <div id="gains"></div>
+      <ul class="legend" id="legend" aria-label="Legend">
+        <li style="--h:5"><i></i>Offense</li>
+        <li style="--h:285"><i></i>Accuracy and crit</li>
+        <li style="--h:170"><i></i>Defense and HP</li>
+        <li style="--h:220"><i></i>Speed and other</li>
+        <li class="orange"><i></i>Orange reward</li>
+        <li class="active"><i></i>Active skill</li>
+        <li class="passive"><i></i>Passive skill</li>
+        <li class="off"><i></i>Not taken</li>
+      </ul>
+    </section>
+  </div>
+  <div id="tip" hidden></div>
+
+  <p class="meta sources">Boards, tiles, costs and skills: Global client data via questlog.gg. Crystal names are the data's point types and are not checked in game. Skill and class icons are from questlog.gg.</p>
+</Base>
+
+<style is:global>
+  main { max-width: 1500px; }
+  .opt { display: grid; grid-template-columns: 440px minmax(0, 1fr); align-items: start; gap: 20px; }
+  .opt > .panel + .panel { margin-top: 0; }
+  .opt .panel-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+  .opt .mini { margin: 20px 0 8px; }
+  .opt .mini:first-of-type { margin-top: 0; }
+  .opt .status { color: var(--muted); font-size: 0.84rem; font-variant-numeric: tabular-nums; }
+  .opt .status.ok { color: var(--ok); }
+  .opt .status.bad { color: var(--warn); }
+  @media (max-width: 1100px) { .opt { grid-template-columns: minmax(0, 1fr); } }
+
+  /* Setup */
+  .classes { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+  .classes button { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 2px 7px; background: var(--panel); border: 1px solid var(--line); border-radius: 3px; color: var(--muted); font: inherit; font-size: 0.74rem; cursor: pointer; transition: border-color 0.15s, color 0.15s, background 0.15s; }
+  .classes img { width: 36px; height: 36px; object-fit: contain; opacity: 0.7; transition: opacity 0.15s; }
+  .classes button:hover, .classes button:focus-visible { border-color: color-mix(in srgb, var(--accent) 55%, transparent); color: var(--text); outline: none; }
+  .classes button[aria-checked='true'] { border-color: var(--accent); background: linear-gradient(180deg, var(--accent-soft), var(--panel)); color: var(--text); box-shadow: 0 0 20px -10px var(--accent); }
+  .classes button[aria-checked='true'] img { opacity: 1; }
+  .modes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .modes button { display: grid; grid-template-columns: auto 1fr; column-gap: 12px; align-items: center; padding: 10px 14px; text-align: left; background: var(--panel); border: 1px solid var(--line); border-radius: 3px; color: var(--muted); font: inherit; cursor: pointer; transition: border-color 0.15s, color 0.15s, background 0.15s, box-shadow 0.15s; }
+  .modes .ico { grid-row: 1 / 3; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--line); transition: color 0.15s, background 0.15s, border-color 0.15s; }
+  .modes .ico svg { width: 18px; height: 18px; }
+  .modes strong { font-size: 1.05rem; line-height: 1.2; }
+  .modes small { font-size: 0.74rem; line-height: 1.3; }
+  .modes button:hover, .modes button:focus-visible { border-color: color-mix(in srgb, var(--accent) 55%, transparent); color: var(--text); outline: none; }
+  .modes button[aria-checked='true'] { color: var(--text); border-color: var(--accent); background: radial-gradient(120% 140% at 0% 0%, var(--accent-soft), var(--panel) 70%); box-shadow: 0 0 20px -10px var(--accent); }
+  .modes button[aria-checked='true'] .ico { color: var(--accent); background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent) 40%, transparent); }
+  @media (max-width: 480px) { .modes small { display: none; } .modes strong { grid-row: 1 / 3; } }
+  .pools { display: grid; gap: 18px; }
+  .pool { display: grid; grid-template-columns: 8.5em 6.5em minmax(0, 1fr); align-items: center; gap: 10px 10px; }
+  .pool label { color: var(--muted); font-size: 0.86rem; }
+  .num { width: 100%; padding: 5px 8px; background: var(--bg); border: 1px solid var(--line); border-radius: 3px; color: var(--text); font: inherit; font-variant-numeric: tabular-nums; transition: border-color 0.15s; }
+  .num:focus-visible { border-color: var(--accent); outline: none; }
+  .togs { grid-column: 1 / -1; order: -1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+  .tog { min-width: 0; padding: 3px 4px; text-align: center; font-size: 0.82rem; font-weight: 600; line-height: 1.5; background: var(--panel); border: 1px solid var(--line); border-radius: 3px; color: var(--muted); font: inherit; cursor: pointer; opacity: 0.6; transition: border-color 0.15s, color 0.15s, background 0.15s, box-shadow 0.15s, opacity 0.15s; }
+  .tog:hover, .tog:focus-visible { opacity: 1; border-color: color-mix(in srgb, var(--accent) 55%, transparent); color: var(--text); outline: none; }
+  .tog[aria-pressed='true'] { opacity: 1; color: var(--text); border-color: color-mix(in srgb, var(--accent) 70%, transparent); background: radial-gradient(120% 140% at 0% 0%, var(--accent-soft), var(--panel) 75%); box-shadow: 0 0 16px -10px var(--accent); }
+  .pool .only { padding: 4px 0; color: var(--muted); font-size: 0.84rem; }
+  @media (max-width: 480px) { .pool { grid-template-columns: minmax(0, 1fr) 6.5em; } .pool .only { grid-column: 1 / -1; } .togs { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+  /* Skills */
+  .bd { display: inline-grid; place-items: center; width: 26px; height: 26px; flex: none; border-radius: 3px; font-size: 0.66rem; font-style: normal; font-weight: 700; color: #fff; }
+  img.sk { width: 26px; height: 26px; flex: none; border-radius: 3px; object-fit: cover; }
+  .picked { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 3px; }
+  .picked li { display: flex; align-items: center; gap: 8px; padding: 3px 4px 3px 8px; border-left: 3px solid hsl(var(--h) 75% 58% / 0.5); background: linear-gradient(90deg, hsl(var(--h) 75% 55% / 0.14), transparent 80%); font-size: 0.86rem; }
+  .picked li:first-child { border-left-color: hsl(var(--h) 75% 58%); font-weight: 600; }
+  .picked li b { width: 1.1em; color: hsl(var(--h) 80% 65%); font-size: 0.78rem; font-variant-numeric: tabular-nums; }
+  .picked li .nm { flex: 1; min-width: 0; }
+  .picked li .ac { display: flex; gap: 2px; }
+  .ib { display: grid; place-items: center; width: 26px; height: 26px; padding: 0; background: transparent; border: 1px solid transparent; border-radius: 3px; color: var(--muted); cursor: pointer; transition: color 0.15s, border-color 0.15s; }
+  .ib svg { width: 14px; height: 14px; }
+  .ib:hover, .ib:focus-visible { color: var(--text); border-color: var(--accent); outline: none; }
+  #skills h4 { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; color: var(--muted); font-size: 0.74rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+  #skills h4::before { content: ''; width: 10px; height: 10px; border-radius: 3px; border: 2px solid hsl(var(--h) 80% 60%); }
+  :root[data-theme='light'] .picked li b { color: hsl(var(--h) 80% 32%); }
+  #skills .kind + .kind { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); }
+  #skills .kind[data-kind='active'] { --h: 210; }
+  #skills .kind[data-kind='passive'] { --h: 140; }
+  .chipset { display: flex; flex-wrap: wrap; gap: 5px; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; padding: 2px 9px 2px 3px; background: var(--panel); border: 1px solid var(--line); border-radius: 3px; color: var(--text); font: inherit; font-size: 0.8rem; cursor: pointer; transition: border-color 0.15s; }
+  .chip img.sk, .chip .bd { width: 22px; height: 22px; }
+  .chip:hover, .chip:focus-visible { border-color: hsl(var(--h) 75% 58%); outline: none; }
+  .order { list-style: none; counter-reset: o; margin: 0; padding: 0; display: grid; gap: 6px; }
+  .order li { counter-increment: o; position: relative; padding-left: 26px; font-size: 0.86rem; line-height: 1.4; }
+  .order li::before { content: counter(o, decimal-leading-zero); position: absolute; left: 0; top: 0.12em; color: var(--accent); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; font-variant-numeric: tabular-nums; }
+  .order li small { display: block; color: var(--muted); font-size: 0.76rem; }
+  .order li.note::before { content: ''; }
+  .order li.note { color: var(--muted); font-size: 0.8rem; }
+
+  /* Route */
+  .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+  .tabs button { padding: 5px 12px; background: var(--panel); border: 1px solid var(--line); border-radius: 3px; color: var(--muted); font: inherit; font-size: 0.86rem; cursor: pointer; transition: border-color 0.15s, color 0.15s, background 0.15s; }
+  .tabs button small { margin-left: 6px; font-size: 0.74rem; font-variant-numeric: tabular-nums; opacity: 0.8; }
+  .tabs button:hover, .tabs button:focus-visible { border-color: color-mix(in srgb, var(--accent) 55%, transparent); color: var(--text); outline: none; }
+  .tabs button[aria-pressed='true'] { border-color: var(--accent); background: var(--accent-soft); color: var(--text); }
+  .route-body { display: flex; flex-wrap: wrap; gap: 20px 28px; align-items: flex-start; }
+  .board { flex: 1 1 380px; max-width: 640px; display: grid; grid-template-columns: repeat(15, minmax(0, 1fr)); gap: var(--gap); --gap: 6px; --link: 3px; }
+  .board:empty { display: none; }
+  .t { --h: 220; --s: 38%; position: relative; aspect-ratio: 1; display: grid; place-items: center; border-radius: 3px; border: 1px solid hsl(var(--h) var(--s) 60% / 0.3); background: hsl(var(--h) var(--s) 55% / 0.08); color: var(--muted); font-size: 0.7rem; font-weight: 600; font-variant-numeric: tabular-nums; opacity: 0.35; }
+  .t.on { opacity: 1; color: var(--text); border-color: hsl(var(--h) var(--s) 65% / 0.85); background: linear-gradient(135deg, hsl(var(--h) var(--s) 58% / 0.42), hsl(var(--h) var(--s) 58% / 0.18)); box-shadow: 0 0 12px -4px hsl(var(--h) var(--s) 60% / 0.7); }
+  /* Plain stat tiles: the page's panel surface with a faint tint of the icon colour. */
+  .t.stat { --s: 95%; opacity: 0.3; background: color-mix(in srgb, hsl(var(--h) var(--s) 60%) 8%, var(--panel)); color: hsl(var(--h) var(--s) 68%); border-color: var(--line); }
+  .t.stat.on { opacity: 1; background: linear-gradient(160deg, color-mix(in srgb, hsl(var(--h) var(--s) 60%) 22%, var(--panel)), color-mix(in srgb, hsl(var(--h) var(--s) 60%) 8%, var(--panel))); border-color: hsl(var(--h) var(--s) 62%); box-shadow: 0 0 12px -3px hsl(var(--h) var(--s) 62% / 0.85); }
+  :root[data-theme='light'] .t.stat { color: hsl(var(--h) var(--s) 36%); }
+  :root[data-theme='light'] .t.stat.on { border-color: hsl(var(--h) var(--s) 38% / 0.7); box-shadow: 0 0 10px -4px hsl(var(--h) var(--s) 38% / 0.7); }
+  .t.o { --h: 38; --s: 90%; border-width: 2px; border-color: color-mix(in srgb, var(--warn) 60%, transparent); }
+  .t.o.on { border-color: var(--warn); box-shadow: 0 0 14px -3px var(--warn); }
+  .t .ic { display: grid; width: 62%; height: 62%; }
+  .t .ic svg { width: 100%; height: 100%; }
+  .t > i { position: absolute; right: 2px; bottom: 0; font-style: normal; font-size: 0.58rem; line-height: 1.1; opacity: 0.85; }
+  /* Skill art fills the whole tile; the coloured outline says active (blue) or passive (green). */
+  .t.skill { padding: 0; overflow: hidden; border-width: 2px; }
+  .t.skill.act { --h: 210; --s: 90%; }
+  .t.skill.pas { --h: 140; --s: 75%; }
+  .t.skill img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .t.start { --h: 45; --s: 70%; opacity: 1; }
+  .t.start::before { content: '★'; color: var(--text); font-size: 0.9rem; }
+  /* Route lines: a taken tile reaches the taken tile to its right and below it, so the path reads as one connected line. */
+  .t.on.r::after, .t.on.d::after { content: ''; position: absolute; background: var(--text); box-shadow: 0 0 6px color-mix(in srgb, var(--text) 60%, transparent); }
+  .t.on.r::after { left: 100%; top: calc(50% - var(--link) / 2); width: var(--gap); height: var(--link); }
+  .t.on.d::after { top: 100%; left: calc(50% - var(--link) / 2); height: var(--gap); width: var(--link); }
+  .t.void { visibility: hidden; }
+  @media (max-width: 480px) { .board { --gap: 3px; --link: 2px; } .t { font-size: 0.56rem; } }
+  .sum { flex: 0 1 300px; min-width: min(100%, 240px); }
+  .sum .saving { margin: 0; }
+  .sum .saving td { white-space: nowrap; }
+  .gains { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr)); gap: 4px 16px; font-size: 0.84rem; }
+  .gains li { display: flex; align-items: center; gap: 8px; padding: 2px 0; border-bottom: 1px solid var(--line); }
+  .gains li span { flex: 1; min-width: 0; }
+  .gains li b { font-variant-numeric: tabular-nums; }
+  .gains img.sk, .gains .bd { width: 22px; height: 22px; }
+  #gains .mini { margin-top: 20px; }
+  .legend { list-style: none; display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 14px 0 0; padding: 0; color: var(--muted); font-size: 0.76rem; }
+  .legend li { --h: 220; --s: 95%; display: inline-flex; align-items: center; gap: 6px; }
+  .legend i { width: 12px; height: 12px; border-radius: 3px; border: 1px solid hsl(var(--h) var(--s) 65% / 0.85); background: hsl(var(--h) var(--s) 58% / 0.35); }
+  .legend li:not(.orange):not(.active):not(.passive):not(.off) i { border: 0; border-radius: 50%; background: hsl(var(--h) var(--s) 68%); }
+  .legend .orange i { border: 2px solid var(--warn); background: none; }
+  .legend .active { --h: 210; --s: 80%; }
+  .legend .passive { --h: 140; --s: 60%; }
+  .legend .off i { border-color: var(--line); background: none; opacity: 0.6; }
+  .empty { color: var(--muted); }
+
+  #tip { position: fixed; z-index: 50; max-width: min(300px, calc(100vw - 16px)); pointer-events: none; }
+  #tip[hidden] { display: none; }
+  #tip small { display: block; color: var(--muted); }
+</style>
+
+<script>
+  import data from '../../data/daevanion.json';
+  import { STAT_RANK, isIgnoredOrange, isSkill, prep, solve, verify, weigh, Stale } from '../../scripts/daevanion-solver';
+  import swords from 'lucide-static/icons/swords.svg?raw';
+  import crosshair from 'lucide-static/icons/crosshair.svg?raw';
+  import sparkles from 'lucide-static/icons/sparkles.svg?raw';
+  import target from 'lucide-static/icons/target.svg?raw';
+  import wind from 'lucide-static/icons/wind.svg?raw';
+  import shield from 'lucide-static/icons/shield.svg?raw';
+  import shieldHalf from 'lucide-static/icons/shield-half.svg?raw';
+  import shieldAlert from 'lucide-static/icons/shield-alert.svg?raw';
+  import shieldCheck from 'lucide-static/icons/shield-check.svg?raw';
+  import flame from 'lucide-static/icons/flame.svg?raw';
+  import skull from 'lucide-static/icons/skull.svg?raw';
+  import repeat from 'lucide-static/icons/repeat.svg?raw';
+  import ban from 'lucide-static/icons/ban.svg?raw';
+  import heart from 'lucide-static/icons/heart.svg?raw';
+  import droplet from 'lucide-static/icons/droplet.svg?raw';
+  import zap from 'lucide-static/icons/zap.svg?raw';
+  import timer from 'lucide-static/icons/timer.svg?raw';
+  import type { Board, GameData, Mode, Pool } from '../../scripts/daevanion-solver';
+
+  const D = data as unknown as GameData;
+  const STORE = 'a2codex-daevanion-v1';
+  // Wait after the last change before solving, so typing a number does not start a solve per keystroke (ms).
+  const SOLVE_DELAY = 120;
+  const DEFAULT_POOLS: Record<Pool, number> = { c: 400, q: 0, a: 0 };
+  // Stat names where the game data's label is not the one players use.
+  const LABELS: Record<string, string> = { fixingdamage: 'Attack Bonus', critical: 'Critical Hit', hpmax: 'Max HP', defense: 'Defense', criticalresist: 'Critical Hit Resist', mpmax: 'Max MP', pvpadddamage: 'PvP Attack', pvpcritical: 'PvP Critical Hit', pvpdamagedefense: 'PvP Defense', pvpcriticalresist: 'PvP Critical Hit Resist', pvpaccuracy: 'PvP Accuracy', pvpevasion: 'PvP Evasion', abnormalaccuracy: 'Status Effect Chance', abnormalresistance: 'Status Effect Resist', pvpamplifydamage: 'PvP Damage Boost', pvpdecreasedamage: 'PvP Damage Tolerance' };
+  const ICON = {
+    up: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>',
+    down: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>',
+    x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>',
+  };
+  const ORDER: Record<Mode, [string, string?][]> = {
+    pve: [
+      ['Your must-have active skills, in order'],
+      ['Orange rewards', 'Multi-Hit Resist on Triniel and Critical Damage Tolerance on Vaizel score nothing'],
+      ['Your must-have passive skills, in order'],
+      ['Attack Bonus'],
+      ['Critical Hit'],
+      ['All other skills', 'passives, then actives'],
+      ['Max HP, Defense, Critical Hit Resist, Max MP', 'weighted together, in this order'],
+    ],
+    pvp: [
+      ['Your must-have active skills, in order'],
+      ['Every orange reward'],
+      ['Your must-have passive skills, in order'],
+      ['Attack Bonus'],
+      ['Critical Hit'],
+      ['All other skills', 'passives, then actives'],
+      ['Max HP, then Defense, Critical Hit Resist, Max MP', 'each fully before the next'],
+    ],
+  };
+  const ORDER_NOTE = 'Ariel and Azphel score their orange rewards first (Damage Boost, then Damage Tolerance), then their own stats in a fixed order.';
+
+  interface Saved { cls: string; mode: Mode; boards: string[]; pools: Record<string, Record<Pool, number>>; skills: Record<string, string[]> }
+  interface Result { cls: string; mode: Mode; B: Board[]; S: Uint8Array[]; pools: Record<Pool, number>; must: string[]; ms: number }
+
+  const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+  const label = (k: string) => (isSkill(k) ? k.slice(2) : LABELS[k] ?? D.lab[k] ?? k);
+  // Muted tile tint by what the stat does; orange rewards and skills keep stronger colours of their own.
+  const HUES: [number, string[]][] = [
+    [5, ['fixingdamage', 'pvpadddamage', 'pveadddamage', 'bossnpcadddamage', 'amplifyalldamage', 'pvpamplifydamage', 'pveamplifydamage', 'bossnpcamplifydamage']],
+    [285, ['critical', 'pvpcritical', 'amplifycriticaldamage', 'accuracy', 'pvpaccuracy', 'pveaccuracy', 'abnormalaccuracy', 'additionalhitrate']],
+    [170, ['hpmax', 'defense', 'pvpdamagedefense', 'pvedamagedefense', 'bossnpcdefense', 'decreasedamage', 'pvpdecreasedamage', 'pvedecreasedamage', 'bossnpcdecreasedamage', 'criticalresist', 'pvpcriticalresist', 'decreasecriticaldamage', 'additionalhitresistrate', 'abnormalresistance', 'evasion', 'pvpevasion', 'pveevasion']],
+  ];
+  const hueOf = (k: string) => HUES.find(([, ks]) => ks.includes(k))?.[0] ?? 220;
+  const fmt = (k: string, v: number) => (D.pct.includes(k) ? (v / 100).toFixed(1) + '%' : String(v));
+  // Icon per stat, so a tile can be read without the tooltip. Unlisted stats get no icon.
+  const STAT_ICON: Record<string, string> = {
+    fixingdamage: swords, pvpadddamage: swords, pveadddamage: swords, bossnpcadddamage: skull,
+    amplifyalldamage: flame, pvpamplifydamage: flame, pveamplifydamage: flame, bossnpcamplifydamage: skull,
+    critical: crosshair, pvpcritical: crosshair, amplifycriticaldamage: sparkles,
+    accuracy: target, pvpaccuracy: target, pveaccuracy: target, abnormalaccuracy: sparkles, additionalhitrate: repeat,
+    evasion: wind, pvpevasion: wind, pveevasion: wind,
+    defense: shield, pvpdamagedefense: shield, pvedamagedefense: shield, bossnpcdefense: shield,
+    decreasedamage: shieldHalf, pvpdecreasedamage: shieldHalf, pvedecreasedamage: shieldHalf, bossnpcdecreasedamage: shieldHalf,
+    criticalresist: shieldAlert, pvpcriticalresist: shieldAlert, decreasecriticaldamage: shieldAlert,
+    abnormalresistance: shieldCheck, additionalhitresistrate: ban,
+    hpmax: heart, mpmax: droplet, combatspeed: zap, cooltimedecrease: timer,
+  };
+
+  document.addEventListener('astro:page-load', () => {
+    if (!document.getElementById('setup')) return;
+    const ac = new AbortController();
+    const { signal } = ac;
+    document.addEventListener('astro:before-swap', () => ac.abort(), { once: true });
+    const $ = <T extends HTMLElement>(s: string) => document.querySelector<T>(s)!;
+
+    const read = (): Partial<Saved> => { try { return JSON.parse(localStorage.getItem(STORE) || '{}') || {}; } catch { return {}; } };
+    const saved = read();
+    const state: Saved = {
+      cls: saved.cls && D.classes[saved.cls] ? saved.cls : 'Gladiator',
+      mode: saved.mode === 'pvp' ? 'pvp' : 'pve',
+      boards: Array.isArray(saved.boards) ? saved.boards : ['Nezekan', 'Zikel', 'Vaizel', 'Triniel'],
+      // Crystal budgets are per class. Earlier versions saved one set for everyone; it moves to the class that was open.
+      pools: typeof (saved.pools as any)?.c === 'number' ? { [saved.cls ?? 'Gladiator']: { ...DEFAULT_POOLS, ...(saved.pools as any) } } : saved.pools ?? {},
+      skills: saved.skills ?? {},
+    };
+    const persist = () => { try { localStorage.setItem(STORE, JSON.stringify(state)); } catch {} };
+
+    // Boards of the current class, with node weights set by weigh() on each solve.
+    let all: Board[] = [];
+    const poolsOf = () => (state.pools[state.cls] ??= { ...DEFAULT_POOLS });
+    const mustOf = () => (state.skills[state.cls] ??= []);
+    const skillKeys = () => {
+      const ks = new Set<string>();
+      for (const b of all) for (const o of b.N) for (const [k] of o.e) if (isSkill(k)) ks.add(k);
+      return [...ks].sort((a, b) => label(a).localeCompare(label(b)));
+    };
+
+    // Icons made by the script start without a src; hydrate() gives each one eager or lazy loading by where it sits on screen, then sets it.
+    const hydrate = () => document.querySelectorAll<HTMLImageElement>('img[data-src]').forEach((img) => {
+      img.loading = img.getBoundingClientRect().top < innerHeight ? 'eager' : 'lazy';
+      img.src = img.dataset.src!;
+      img.removeAttribute('data-src');
+    });
+    function badge(k: string) {
+      const name = label(k), id = D.icons[`${state.cls}|${name}`];
+      if (id) return `<img class="sk" data-src="/daevanion/skill/${id}.webp" alt="" width="26" height="26" decoding="async">`;
+      let h = 0;
+      for (const c of name) h = (h * 31 + c.charCodeAt(0)) % 360;
+      return `<i class="bd" style="background:hsl(${h} 50% 42%)">${esc(name.split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase())}</i>`;
+    }
+
+    // ----- Setup -----
+    function drawSetup() {
+      document.querySelectorAll<HTMLElement>('#classes button').forEach((b) => b.setAttribute('aria-checked', String(b.dataset.cls === state.cls)));
+      document.querySelectorAll<HTMLElement>('#mode button').forEach((b) => b.setAttribute('aria-checked', String(b.dataset.mode === state.mode)));
+      document.querySelectorAll<HTMLElement>('[data-board]').forEach((b) => b.setAttribute('aria-pressed', String(state.boards.includes(b.dataset.board!))));
+      document.querySelectorAll<HTMLInputElement>('input[data-pool]').forEach((i) => { i.value = String(poolsOf()[i.dataset.pool as Pool]); });
+      $('#order').innerHTML = ORDER[state.mode].map(([t, s]) => `<li>${t}${s ? `<small>${s}</small>` : ''}</li>`).join('') + `<li class="note">${ORDER_NOTE}</li>`;
+    }
+    function drawSkills() {
+      const must = mustOf(), ks = skillKeys();
+      const btn = (a: string, name: string, svg: string) => `<button type="button" class="ib" data-a="${a}" aria-label="${a === 'x' ? 'Remove' : 'Move ' + a} ${esc(name)}" title="${a === 'x' ? 'Remove' : 'Move ' + a}">${svg}</button>`;
+      // Actives and passives are scored in separate tiers, so each gets its own ordered list.
+      const group = (title: string, kind: string) => {
+        const picked = must.filter((k) => D.skc[label(k)] === kind), list = ks.filter((k) => D.skc[label(k)] === kind && !must.includes(k));
+        if (!picked.length && !list.length) return '';
+        const rows = picked.map((k, i) => `<li data-k="${esc(k)}"><b>${i + 1}</b>${badge(k)}<span class="nm">${esc(label(k))}</span><span class="ac">${btn('up', label(k), ICON.up)}${btn('down', label(k), ICON.down)}${btn('x', label(k), ICON.x)}</span></li>`).join('');
+        return `<div class="kind" data-kind="${kind}"><h4>${title}</h4>${rows ? `<ol class="picked">${rows}</ol>` : ''}${list.length ? `<div class="chipset">${list.map((k) => `<button type="button" class="chip" data-add="${esc(k)}">${badge(k)}${esc(label(k))}</button>`).join('')}</div>` : ''}</div>`;
+      };
+      $('#skills').innerHTML = group('Active', 'active') + group('Passive', 'passive');
+      hydrate();
+    }
+
+    // ----- Solve -----
+    let run = 0, timer = 0, result: Result | null = null, cur = 0;
+    const statusEl = $('#status');
+    const setStatus = (text: string, cls = '') => { statusEl.textContent = text; statusEl.className = 'status ' + cls; };
+    function schedule() {
+      clearTimeout(timer);
+      run++;                                   // aborts a solve still in flight
+      setStatus('Calculating…');
+      timer = window.setTimeout(optimize, SOLVE_DELAY);
+    }
+    const included = (b: Board) => (b.p === 'c' ? state.boards.includes(b.n) : poolsOf()[b.p] > 0);
+    async function optimize() {
+      const id = ++run, stale = () => id !== run;
+      const B = all.filter(included);
+      if (!B.length) { result = null; drawRoute(); setStatus('No board selected'); return; }
+      const must = mustOf().slice(), pools = { ...poolsOf() };
+      try {
+        const T = weigh(all, state.mode, must, D);
+        const t0 = performance.now();
+        const S = await solve(B, pools, T, stale);
+        if (stale()) return;
+        verify(B, S, pools);
+        result = { cls: state.cls, mode: state.mode, B, S, pools, must, ms: performance.now() - t0 };
+        cur = Math.min(cur, B.length - 1);
+        drawRoute();
+        setStatus(`Optimal · ${(result.ms / 1000).toFixed(2)} s`, 'ok');
+      } catch (err) {
+        if (err instanceof Stale) return;
+        console.error(err);
+        result = null;
+        drawRoute();
+        setStatus('Could not verify a route', 'bad');
+      }
+    }
+
+    // ----- Route -----
+    function drawRoute() {
+      const tabs = $('#tabs'), board = $('#board');
+      if (!result) { for (const id of ['#tabs', '#board', '#sum', '#gains']) $(id).innerHTML = ''; return; }
+      const { B, S, mode } = result;
+      const pts = (i: number) => B[i].N.reduce((s, o, j) => s + (S[i][j] ? o.cost : 0), 0);
+      tabs.innerHTML = B.map((b, i) => `<button type="button" data-i="${i}" aria-pressed="${i === cur}">${b.n}<small>${pts(i)} pt</small></button>`).join('');
+      const b = B[cur], s = S[cur];
+      let h = '';
+      for (let r = 1; r <= 15; r++) for (let c = 1; c <= 15; c++) {
+        const o = b.idx[r * 20 + c];
+        if (!o) { h += '<div class="t void" aria-hidden="true"></div>'; continue; }
+        const on = !!s[o.j], k0 = o.e[0]?.[0] ?? '';
+        const taken = (rr: number, cc: number) => { const n = b.idx[rr * 20 + cc]; return !!n && !!s[n.j]; };
+        const text = o.cost ? o.e.map(([k, v]) => (isSkill(k) ? '+1 ' : '+' + fmt(k, v) + ' ') + label(k)).join(', ') + ` (${o.cost} pt)` : 'Start';
+        const ignored = isIgnoredOrange(b, o, mode);
+        const sk = o.cost && isSkill(k0), id = sk ? D.icons[`${state.cls}|${label(k0)}`] : '';
+        const cls = ['t', !o.cost ? 'start' : '', o.cost && o.cost < 4 && !sk ? 'stat' : '', o.cost === 4 ? 'o' : '', sk ? 'skill ' + (D.skc[label(k0)] === 'active' ? 'act' : 'pas') : '', on ? 'on' : '', on && taken(r, c + 1) ? 'r' : '', on && taken(r + 1, c) ? 'd' : ''].filter(Boolean).join(' ');
+        const inner = !o.cost ? '' : sk ? (id ? `<img data-src="/daevanion/skill/${id}.webp" alt="" decoding="async">` : esc(label(k0)[0])) : `<span class="ic">${STAT_ICON[k0] ?? ''}</span><i>${o.cost}</i>`;
+        const tip = esc(text) + (ignored ? '<small>Scores nothing in PvE</small>' : '') + (on ? '<small>Taken</small>' : '');
+        h += `<div class="${cls}"${sk || o.cost === 4 || !o.cost ? '' : ` style="--h:${hueOf(k0)}"`} role="img" aria-label="${esc(text)}${on ? ', taken' : ''}" data-t="${tip}">${inner}</div>`;
+      }
+      board.innerHTML = h;
+      board.setAttribute('aria-label', `${b.n} board, ${s.reduce((n, x) => n + x, 0)} of ${b.N.length} tiles taken`);
+
+      // Totals over every board in the result.
+      const A: Record<string, number> = {};
+      B.forEach((bb, i) => bb.N.forEach((o, j) => { if (S[i][j]) for (const [k, v] of o.e) A[k] = (A[k] || 0) + v; }));
+      const rank = (k: string) => { const i = STAT_RANK.indexOf(k); return i < 0 ? 999 : i; };
+      const stats = Object.keys(A).filter((k) => !isSkill(k)).sort((a, b2) => rank(a) - rank(b2) || label(a).localeCompare(label(b2)));
+      // Must-have skills first, as listed in Setup (actives, then passives), then the rest by levels gained and name.
+      const isActive = (k: string) => D.skc[label(k)] === 'active';
+      const prio = [...result.must.filter(isActive), ...result.must.filter((k) => !isActive(k))];
+      const pr = (k: string) => { const i = prio.indexOf(k); return i < 0 ? prio.length : i; };
+      const skills = Object.keys(A).filter(isSkill).sort((a, b2) => pr(a) - pr(b2) || A[b2] - A[a] || label(a).localeCompare(label(b2)));
+      $('#sum').innerHTML = stats.length ? `<table class="saving"><caption>Stat totals</caption><tbody>${stats.map((k) => `<tr><th>${esc(label(k))}</th><td>+${fmt(k, A[k])}</td></tr>`).join('')}</tbody></table>` : '';
+      $('#gains').innerHTML = skills.length ? `<h3 class="mini">Skill levels</h3><ul class="gains">${skills.map((k) => `<li>${badge(k)}<span>${esc(label(k))}</span><b>+${A[k]}</b></li>`).join('')}</ul>` : '';
+      hydrate();
+    }
+
+    // ----- Tooltip -----
+    const tip = $('#tip');
+    const TIP_GAP = { x: 12, y: 16, edge: 8 };
+    const hideTip = () => { tip.hidden = true; };
+    const showTip = (e: MouseEvent) => {
+      const t = (e.target as HTMLElement).closest<HTMLElement>('[data-t]');
+      if (!t) { hideTip(); return; }
+      tip.innerHTML = t.dataset.t!;
+      tip.hidden = false;
+      tip.style.left = Math.max(TIP_GAP.edge, Math.min(e.clientX + TIP_GAP.x, innerWidth - tip.offsetWidth - TIP_GAP.edge)) + 'px';
+      tip.style.top = Math.max(TIP_GAP.edge, Math.min(e.clientY + TIP_GAP.y, innerHeight - tip.offsetHeight - TIP_GAP.edge)) + 'px';
+    };
+    const boardEl = $('#board');
+    boardEl.addEventListener('mousemove', showTip, { signal });
+    boardEl.addEventListener('click', showTip, { signal });
+    boardEl.addEventListener('mouseleave', hideTip, { signal });
+    document.addEventListener('pointerdown', (e) => { if (!(e.target as HTMLElement).closest('#board')) hideTip(); }, { signal });
+    window.addEventListener('scroll', hideTip, { passive: true, signal });
+
+    // ----- Events -----
+    function loadClass() {
+      all = D.classes[state.cls].map(prep);
+      const valid = new Set(skillKeys());
+      state.skills[state.cls] = mustOf().filter((k) => valid.has(k));
+      cur = 0;
+      drawSetup();
+      drawSkills();
+    }
+    const change = () => { persist(); schedule(); };
+    $('#classes').addEventListener('click', (e) => {
+      const b = (e.target as HTMLElement).closest<HTMLElement>('button[data-cls]');
+      if (!b || b.dataset.cls === state.cls) return;
+      state.cls = b.dataset.cls!;
+      loadClass();
+      change();
+    }, { signal });
+    $('#mode').addEventListener('click', (e) => {
+      const b = (e.target as HTMLElement).closest<HTMLElement>('button[data-mode]');
+      if (!b || b.dataset.mode === state.mode) return;
+      state.mode = b.dataset.mode as Mode;
+      drawSetup();
+      change();
+    }, { signal });
+    document.querySelectorAll<HTMLElement>('[data-board]').forEach((b) => b.addEventListener('click', () => {
+      const n = b.dataset.board!;
+      state.boards = state.boards.includes(n) ? state.boards.filter((x) => x !== n) : [...state.boards, n];
+      drawSetup();
+      change();
+    }, { signal }));
+    document.querySelectorAll<HTMLInputElement>('input[data-pool]').forEach((i) => i.addEventListener('input', () => {
+      const n = Math.floor(Number(i.value));
+      poolsOf()[i.dataset.pool as Pool] = Number.isFinite(n) && n > 0 ? n : 0;
+      change();
+    }, { signal }));
+    $('#skills').addEventListener('click', (e) => {
+      const t = e.target as HTMLElement, add = t.closest<HTMLElement>('button[data-add]'), mv = t.closest<HTMLElement>('button[data-a]');
+      const must = mustOf();
+      if (add) must.push(add.dataset.add!);
+      else if (mv) {
+        const k = mv.closest('li')!.dataset.k!, i = must.indexOf(k);
+        if (mv.dataset.a === 'x') must.splice(i, 1);
+        else {
+          // Move within the same skill type: swap with the neighbouring pick of that type.
+          const same = must.filter((x) => D.skc[label(x)] === D.skc[label(k)]), j = same.indexOf(k) + (mv.dataset.a === 'up' ? -1 : 1);
+          if (j < 0 || j >= same.length) return;
+          const o = must.indexOf(same[j]);
+          [must[i], must[o]] = [must[o], must[i]];
+        }
+      } else return;
+      drawSkills();
+      change();
+    }, { signal });
+    $('#tabs').addEventListener('click', (e) => {
+      const b = (e.target as HTMLElement).closest<HTMLElement>('button[data-i]');
+      if (!b) return;
+      cur = +b.dataset.i!;
+      drawRoute();
+    }, { signal });
+    // A page switch aborts a solve still in flight.
+    signal.addEventListener('abort', () => { run++; clearTimeout(timer); });
+
+    loadClass();
+    schedule();
+  });
+</script>

@@ -86,14 +86,14 @@ Clean, modern cheatsheet site for the **AION 2 Global** server. Hosted free on G
 - Never invent numbers. If a value can't be confirmed for Global, leave it out.
 - No Confirmed / Community pick badges anywhere (owner does not want them). Still only publish what is checked against Global data; community-sourced items may stay, but without badges. Dashed tags on the Stats page mark community-sourced tags.
 - Before saying a source exists on Global (slot, system, stat), check it against Global client data: `mise exec -- node scripts/global-sources.mjs`. Community guides are KR-based and name things that do not exist on Global (e.g. a Brooch slot). Source ranking is in `docs/data-sources.md`.
-- Images: use own screenshots or link out. Do not hotlink or copy third-party site assets (e.g. questlog.gg, metabot.gg); linking to their pages is fine.
+- Images: use own screenshots or link out. Do not hotlink or copy third-party site assets (e.g. questlog.gg, metabot.gg); linking to their pages is fine. Owner-approved exceptions (one-off): the Arcana Unique card art and the Daevanion class/skill icons, copied from questlog.gg/metabot.gg into `src/assets/` and `public/`.
 
 ## Planned pages (approved)
 Navigation is one flat list (no Character/Menu groups) in in-game order and uses its exact names (see `src/data/nav.ts`):
 - Character > **Stats** (stats reference), **Gear** (Gear BiS, stat lines/BiS lines, enhancement order; the owner's name, replaces the in-game "Enhancement"), **Genus Insight** (Genus BiS, `genus/`; replaces a separate Pets page), **Arcana** (Arcana BiS)
-- Menu > **Daevanion** (node routes), **Skills** (class pages)
-Do not invent menu names; if a page needs a new one, copy the in-game label.
-Build order: scaffold, Stats (done), Gear (done), Genus Insight (done), Arcana (done), Daevanion, Class pages last. Later ideas: Abyss shop, weekly checklist, calculators.
+- **Daevanion Optimizer** (`daevanion/`, the owner's name; a tool, not a cheatsheet: class, boards, crystals, PvE/PvP switch, must-have skills in, best route out)
+Do not invent menu names; if a page needs a new one, copy the in-game label. The Skills / class pages were dropped by the owner (not planned).
+Build order: scaffold, Stats (done), Gear (done), Genus Insight (done), Arcana (done), Daevanion Optimizer (done). Later ideas: Abyss shop, weekly checklist, calculators.
 When a page ships, the "Get it from" tags on the Stats page link to it automatically (flip `ready` in `nav.ts`; mapping in `TAG_PAGE` in `stats.astro`).
 
 ## Start of every session
