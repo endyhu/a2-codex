@@ -120,8 +120,82 @@ const hueOf = (n: string) =>
   .saving th:first-child { text-align: left; }
   .saving thead th { color: var(--muted); font-size: 0.74rem; font-weight: 600; }
   .saving tbody th { font-weight: 600; }
-  .sources { margin-top: 18px; }
+  .sources { text-align: right; margin-top: 16px; }
+  .panel { scroll-margin-top: 16px; }
+  @keyframes glow { 0% { box-shadow: 0 0 0 0 transparent, 0 0 40px 0 transparent; } 15% { box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 60%, transparent), 0 0 40px 0 color-mix(in srgb, var(--accent) 40%, transparent); } 100% { box-shadow: 0 0 0 0 transparent, 0 0 40px 0 transparent; } }
+  .panel.flash { animation: glow 2.3s ease-out; }
+  .panel.flash-out { animation: none; box-shadow: 0 0 0 0 transparent, 0 0 40px 0 transparent; transition: box-shadow 0.6s ease-out; }
+  @media (prefers-reduced-motion: reduce) { .panel.flash { animation: none; } }
 </style>
+
+
+<script>
+  // Same section glow as the Gear page: arriving, clicking a section link and scrolling to the next section light the card up for a moment.
+  document.addEventListener('astro:page-load', () => {
+    const sections = ['best-lines', 'rolling-order'].map((id) => document.getElementById(id)!).filter(Boolean);
+    if (sections.length < 2) return;
+    const ac = new AbortController();
+    const { signal } = ac;
+    document.addEventListener('astro:before-swap', () => ac.abort(), { once: true });
+    const ids = sections.map((el) => el.id);
+    const side = [...document.querySelectorAll<HTMLAnchorElement>('#side .child')];
+    let pinned: string | null = ids.includes(location.hash.slice(1)) ? location.hash.slice(1) : null;
+    let lastNatural: string | null = null;
+    const fadeOut = (el: Element) => {
+      if (!el.classList.contains('flash')) return;
+      el.classList.remove('flash');
+      el.classList.add('flash-out');
+      setTimeout(() => el.classList.remove('flash-out'), 750);
+    };
+    const flash = (el: HTMLElement, handover = false) => {
+      if (handover) document.querySelectorAll('.flash').forEach((o) => { if (o !== el) fadeOut(o); });
+      el.classList.remove('flash', 'flash-out');
+      void el.offsetWidth;
+      el.classList.add('flash');
+      setTimeout(() => el.classList.remove('flash'), 2500);
+    };
+    const mark = () => {
+      // The trigger line sits at 30% of the screen at the top and slides to the bottom edge at the end of the page, so the short last card can become active.
+      const max = document.documentElement.scrollHeight - innerHeight;
+      const p = max > 0 ? Math.min(1, scrollY / max) : 1;
+      const base = innerHeight * 0.3;
+      const line = base + (innerHeight - base) * p;
+      let current: HTMLElement | undefined;
+      for (const el of sections) if (el.getBoundingClientRect().top <= line) current = el;
+      const natural = current?.id ?? null;
+      if (natural && lastNatural !== null && natural !== lastNatural && !pinned) flash(document.getElementById(natural)!);
+      lastNatural = natural;
+      const id = pinned ?? natural;
+      side.forEach((a) => a.classList.toggle('on', a.dataset.hash === id));
+    };
+    const unpin = () => { if (pinned) { pinned = null; mark(); } };
+    // After a link jump, start the glow once the scroll has stopped (no scroll event for 150ms), at the latest after 3s.
+    const glow = (id: string) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      let timer = 0, moving = false;
+      const finish = () => { removeEventListener('scroll', bump); clearTimeout(timer); clearTimeout(cap); if (!el.classList.contains('flash')) flash(el, true); };
+      const bump = () => { moving = true; clearTimeout(timer); timer = window.setTimeout(finish, 150); };
+      const cap = window.setTimeout(finish, 3000);
+      addEventListener('scroll', bump, { passive: true, signal });
+      timer = window.setTimeout(() => { if (!moving) finish(); }, 400);
+    };
+    document.addEventListener('click', (e) => {
+      const a = (e.target as Element).closest<HTMLAnchorElement>('a[href*="#"]');
+      const hash = a ? new URL(a.href).hash.slice(1) : '';
+      if (a && ids.includes(hash) && new URL(a.href).pathname === location.pathname) { pinned = hash; mark(); glow(hash); }
+    }, { signal });
+    if (pinned) glow(pinned);
+    addEventListener('wheel', unpin, { passive: true, signal });
+    addEventListener('touchmove', unpin, { passive: true, signal });
+    addEventListener('keydown', (e) => { if (['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '].includes(e.key)) unpin(); }, { signal });
+    addEventListener('pointerdown', (e) => { if (!(e.target as Element).closest('a')) unpin(); }, { signal });
+    addEventListener('scroll', mark, { passive: true, signal });
+    mark();
+    // Arriving on the page (no other section targeted) lights up the first card, like a link to it would.
+    if (!pinned || pinned === 'best-lines') flash(document.getElementById('best-lines')!);
+  });
+</script>
 
 <style is:global>
   main { max-width: 1500px; }

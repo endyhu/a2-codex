@@ -29,9 +29,9 @@
 - **Open questions:** the Bible says 100% Soul Binding unlocks an extra stat line (Philosopher's Stone), metabot says an extra Manastone slot; the page follows metabot. The Bible lists different Potential values than the page (owner's numbers kept). No Heroic or Mythic gear in the Global client, so no Heroic content.
 
 ## Genus Insight page (`src/pages/genus/index.astro`), finished
-- **Layout:** "Best lines": slot 4 per board (Cogni, Fera, Natura, Varian, Special), then the slots that are the same on every board (1/5 Attack, 3/6/9 Accuracy and Crit, 7, 2/8 defensive). "Rolling order": three rules (lock nothing early, use presets, slot 4 first) and a cost-per-roll table. Data inline in the frontmatter; slot-card styles are copied from Gear (scoped); no page script.
+- **Layout:** "Best lines": slot 4 per board (Cogni, Fera, Natura, Varian, Special), then the slots that are the same on every board (1/5 Attack, 3/6/9 Accuracy and Crit, 7, 2/8 defensive). "Rolling order": three rules (lock nothing early, use presets, slot 4 first) and a cost-per-roll table. Data inline in the frontmatter; slot-card styles are copied from Gear (scoped). Same page width (1500px), right-aligned sources line and section glow as Gear (a trimmed copy of its script: arriving, link click, scrolling to the next card; sidebar sub-links highlight).
 - **Sources:** slot layout, picks and roll costs from a Global-focused community video guide (Season 1); board names from the Aion 2 Bible. The Bible (KR) has Smite on lines 3 and 9 and Damage Tolerance on line 6; the video and the Global guides disagree, so the page follows the video (Double Chance in slot 4 of Special). Genus lines are not in any client-data site, so no roll chances.
-- **Not done:** per-class notes, Owned Effects (no numbers found), in-game check of slot meanings, wide-screen (1920/3440) check (only a phone-width view was seen), sidebar sub-link highlight on scroll.
+- **Not done:** per-class notes, Owned Effects (no numbers found), in-game check of slot meanings, wide-screen (1920/3440) check (only a phone-width view was seen).
 
 ## Shared styling
 See `docs/styling.md` for the full recipes (tokens, hover/glow, icons).
