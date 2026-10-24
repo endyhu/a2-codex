@@ -55,7 +55,7 @@ const grades: [string, string, string][] = [['Common', '2', '900'], ['Rare', '3'
     <header class="panel-head"><h2>Best cards</h2></header>
     <div class="arc-cards">
       {cards.map((c) => (
-        <article class="arc" data-key={c.art} tabindex="0" style={`--h:${c.hue}`}>
+        <div class="arc" data-key={c.art} tabindex="0" style={`--h:${c.hue}`}>
           <Image src={card(c.art)} alt="" width={256} height={256} loading="eager" />
           <header><strong>{c.name}</strong>{c.top && <span class="pick-tag">Top 3</span>}{c.alt && <span class="pick-tag alt">{c.alt}</span>}</header>
           <dl>
@@ -64,7 +64,7 @@ const grades: [string, string, string][] = [['Common', '2', '900'], ['Rare', '3'
             <dt>Rolls</dt>
             <dd><b>{c.rolls}</b><small>{c.rollsNote}</small></dd>
           </dl>
-        </article>
+        </div>
       ))}
     </div>
     <p class="meta note">Top three by value: Chalice (Combat Speed), Bell (Attack) and Mirror (Double Chance). Parchment and Compass can come from either set; keep two Primal Vigor cards for its 2-card bonus.</p>
@@ -79,15 +79,15 @@ const grades: [string, string, string][] = [['Common', '2', '900'], ['Rare', '3'
             <strong>{s.name}</strong>
             <dl><dt>2 cards</dt><dd>{s.two}</dd><dt>4 cards</dt><dd>{s.four}</dd></dl>
           </header>
-          <ul>
+          <div role="list">
             {s.rows.map((r) => (
-              <li class={r.pick ? 'pick' : ''} data-key={`${r.art}_u_${s.art}`} tabindex="0" style={`--h:${r.hue}`}>
+              <div role="listitem" class={r.pick ? 'pick' : ''} data-key={`${r.art}_u_${s.art}`} tabindex="0" style={`--h:${r.hue}`}>
                 <Image src={card(`${r.art}_u_${s.art}`)} alt="" width={112} height={112} loading="lazy" />
                 <span class="t"><small>{r.slot} of {s.name === 'Primal Vigor' ? 'Vigor' : 'Magic'}</small><b>{r.stat}</b><em>{r.effects}</em></span>
                 {r.pick && <span class="pick-tag">In setup</span>}
-              </li>
+              </div>
             ))}
-          </ul>
+          </div>
         </article>
       ))}
     </div>
@@ -149,18 +149,18 @@ const grades: [string, string, string][] = [['Common', '2', '900'], ['Rare', '3'
   .set > header dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 12px; margin: 6px 0 0; font-size: 0.82rem; }
   .set dt { color: var(--accent); font-size: 0.66rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; align-self: center; white-space: nowrap; }
   .set dd { margin: 0; color: var(--muted); }
-  .set ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
-  .set li { --c: hsl(var(--h) 75% 64%); display: flex; align-items: center; gap: 10px; padding: 4px 10px 4px 4px; border-left: 3px solid hsl(var(--h) 70% 55% / 0.55); background: linear-gradient(90deg, hsl(var(--h) 60% 50% / 0.1), transparent 70%); }
-  :root[data-theme='light'] .set li { --c: hsl(var(--h) 85% 34%); }
-  .set li.pick { border-left-color: var(--c); background: linear-gradient(90deg, hsl(var(--h) 70% 55% / 0.26), transparent 85%); box-shadow: 0 0 16px -8px hsl(var(--h) 80% 55% / 0.6); }
-  .arc, .set li { outline: none; transition: border-color 0.15s, box-shadow 0.15s, background 0.15s; }
+  .set [role="list"] { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+  .set [role="listitem"] { --c: hsl(var(--h) 75% 64%); display: flex; align-items: center; gap: 10px; padding: 4px 10px 4px 4px; border-left: 3px solid hsl(var(--h) 70% 55% / 0.55); background: linear-gradient(90deg, hsl(var(--h) 60% 50% / 0.1), transparent 70%); }
+  :root[data-theme='light'] .set [role="listitem"] { --c: hsl(var(--h) 85% 34%); }
+  .set [role="listitem"].pick { border-left-color: var(--c); background: linear-gradient(90deg, hsl(var(--h) 70% 55% / 0.26), transparent 85%); box-shadow: 0 0 16px -8px hsl(var(--h) 80% 55% / 0.6); }
+  .arc, .set [role="listitem"] { outline: none; transition: border-color 0.15s, box-shadow 0.15s, background 0.15s; }
   .arc.hl { border-color: hsl(var(--h) 70% 55% / 0.8); box-shadow: 0 0 22px -6px hsl(var(--h) 80% 55% / 0.6); }
-  .set li.hl { border-left-color: var(--c); background: linear-gradient(90deg, hsl(var(--h) 70% 55% / 0.32), transparent 85%); box-shadow: 0 0 22px -6px hsl(var(--h) 80% 55% / 0.6); }
-  .set li img { flex: none; width: 52px; height: 52px; border-radius: 3px; object-fit: cover; }
-  .set li .t { flex: 1; min-width: 0; display: grid; }
-  .set li small { color: var(--muted); font-size: 0.7rem; }
-  .set li b { font-size: 0.88rem; }
-  .set li em { font-style: normal; color: var(--muted); font-size: 0.76rem; line-height: 1.3; }
+  .set [role="listitem"].hl { border-left-color: var(--c); background: linear-gradient(90deg, hsl(var(--h) 70% 55% / 0.32), transparent 85%); box-shadow: 0 0 22px -6px hsl(var(--h) 80% 55% / 0.6); }
+  .set [role="listitem"] img { flex: none; width: 52px; height: 52px; border-radius: 3px; object-fit: cover; }
+  .set [role="listitem"] .t { flex: 1; min-width: 0; display: grid; }
+  .set [role="listitem"] small { color: var(--muted); font-size: 0.7rem; }
+  .set [role="listitem"] b { font-size: 0.88rem; }
+  .set [role="listitem"] em { font-style: normal; color: var(--muted); font-size: 0.76rem; line-height: 1.3; }
   @media (max-width: 600px) { .arc img { aspect-ratio: 16 / 7; } }
   .note { margin: 14px 0 0; }
   .up { display: grid; gap: 24px; }

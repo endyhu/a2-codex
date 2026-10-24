@@ -161,9 +161,9 @@ const rows = ranked.map((s) => ({ ...s, gets: tagsFor(s) }));
       <span></span><span>Stat</span>
       <div class="what"><span>What it does</span><span>Notes</span><span>Get it from</span></div>
     </div>
-    <ol class="sub-grid">
+    <div class="sub-grid" role="list">
       {rows.map((s, i) => (
-        <li class="stat-row" tabindex="0" data-from={s.from?.join(',')}>
+        <div class="stat-row" role="listitem" tabindex="0" data-from={s.from?.join(',')}>
           <span class="rank">{i + 1}</span>
           <div class="who">
             <strong>{s.name}</strong>
@@ -191,9 +191,9 @@ const rows = ranked.map((s) => ({ ...s, gets: tagsFor(s) }));
               </div>
             )}
           </div>
-        </li>
+        </div>
       ))}
-    </ol>
+    </div>
     </section>
   </div>
 
