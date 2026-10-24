@@ -1,0 +1,117 @@
+---
+import Base from '../../layouts/Base.astro';
+import swords from 'lucide-static/icons/swords.svg?raw';
+import target from 'lucide-static/icons/target.svg?raw';
+import shield from 'lucide-static/icons/shield.svg?raw';
+import crosshair from 'lucide-static/icons/crosshair.svg?raw';
+import dices from 'lucide-static/icons/dices.svg?raw';
+import brain from 'lucide-static/icons/brain.svg?raw';
+import flame from 'lucide-static/icons/flame.svg?raw';
+import leaf from 'lucide-static/icons/leaf.svg?raw';
+import sparkles from 'lucide-static/icons/sparkles.svg?raw';
+import star from 'lucide-static/icons/star.svg?raw';
+
+// Slot layout and picks are from a Global-focused Genus Insight video guide (community creator, Season 1), cross-read with the Aion 2 Bible's board list.
+// The Bible is KR-based (Smite on lines 3 and 9); the Global guides and the video agree on Double Chance in slot 4 of the Special board, so that is used.
+// Pet Genus Insight is not in any client-data site (docs/data-sources.md), so there are no roll chances here.
+type Line = { name: string; note?: string };
+type Card = { title: string; icon: string; lines: Line[]; ordered?: boolean; rest?: string };
+const boards: Card[] = [
+  { title: 'Cogni', icon: brain, ordered: true, lines: [{ name: 'PvE Damage Boost' }, { name: 'Damage Boost', note: 'same value in PvE' }, { name: 'Critical Damage Boost', note: '2.8% or more, and a class that crits constantly' }] },
+  { title: 'Fera', icon: flame, ordered: true, lines: [{ name: 'PvE Damage Boost' }, { name: 'Damage Boost' }, { name: 'Weapon Damage Boost', note: 'equipment Attack only' }] },
+  { title: 'Natura', icon: leaf, ordered: true, lines: [{ name: 'PvE Damage Boost' }], rest: 'Multi-hit Chance and Perfect Chance are bait lines' },
+  { title: 'Varian', icon: crosshair, ordered: true, lines: [{ name: 'Front / Back Attack Damage Boost', note: 'positional classes' }, { name: 'PvE Damage Boost' }] },
+  { title: 'Special', icon: star, ordered: true, lines: [{ name: 'Double Chance' }, { name: 'Front / Back Attack Damage Boost', note: 'positional class, very high roll' }] },
+];
+const slots: Card[] = [
+  { title: 'Slots 1 and 5', icon: swords, lines: [{ name: 'Attack Bonus' }, { name: 'Max Attack' }, { name: 'PvE Attack' }, { name: 'Boss Attack' }, { name: 'Back Attack', note: 'Assassin' }] },
+  { title: 'Slots 3, 6 and 9', icon: target, ordered: true, lines: [{ name: 'Accuracy Bonus', note: 'Unique or better' }, { name: 'PvE Accuracy', note: 'Unique or better' }, { name: 'Critical Hit', note: 'Heroic only' }] },
+  { title: 'Slot 7', icon: dices, ordered: true, lines: [{ name: 'Accuracy Bonus', note: 'Heroic' }, { name: 'Critical Hit', note: 'Heroic' }] },
+  { title: 'Slots 2 and 8', icon: shield, lines: [{ name: 'HP Increase' }, { name: 'Defense Bonus' }, { name: 'Back Defense' }, { name: 'Critical Hit Resist' }], rest: 'Second preset only' },
+];
+const rules: [string, string][] = [
+  ['Lock nothing early', 'Leveling a board re-rolls all its lines, and every locked line makes each roll dearer. Do not lock before level 9. If unsure, take it to level 10 first; lines roll better there.'],
+  ['Use presets', 'You can keep three. Fill all five boards with a good offensive preset first, Unique (gold) lines are fine. Min-max Heroic (orange) and defensive lines in a second one.'],
+  ['Slot 4 first', 'Slot 4 is the best line on every board. Roll it while few lines are locked; PvE Damage Boost goes up to 4%, so 3.6% is excellent and 1.6% is weak. Then fill the offensive slots.'],
+];
+// Cost of one roll by number of locked lines (video guide, Global).
+const costs: [string, string, string][] = [['0', '36', '9,000'], ['5', '172', '43,000'], ['7', '300', '']];
+const hueOf = (n: string) =>
+  /Speed/.test(n) ? 195 : /Accuracy|Critical Hit$/.test(n) ? 280 : /Tolerance|Resist|Defense|HP/.test(n) ? 150 : /^(Attack Bonus|Max Attack|PvE Attack|Boss Attack|Back Attack)$/.test(n) ? 38 : 8;
+---
+<Base title="Genus Insight" description="Best Genus Insight lines per slot and the order to roll them, for AION 2 Global.">
+  <h1 class="page-title">Genus Insight</h1>
+
+  <section class="panel" id="best-lines" aria-label="Best lines">
+    <header class="panel-head"><h2>Best lines</h2></header>
+    <h3 class="mini">Slot 4, by board</h3>
+    <div class="cards">
+      {boards.map((c) => (
+        <article class="slot-card">
+          <header><span class="ico" set:html={c.icon} /><strong>{c.title}</strong></header>
+          <ol>
+            {c.lines.map((l, i) => <li class={i === 0 ? 'top' : ''} style={`--h:${hueOf(l.name)}`}><b>{i + 1}</b>{l.name}{l.note && <small>{l.note}</small>}</li>)}
+            {c.rest && <li class="rest">{c.rest}</li>}
+          </ol>
+        </article>
+      ))}
+    </div>
+    <h3 class="mini">The other slots, the same on every board</h3>
+    <div class="cards">
+      {slots.map((c) => (
+        <article class="slot-card">
+          <header><span class="ico" set:html={c.icon} /><strong>{c.title}</strong></header>
+          <ol>
+            {c.lines.map((l, i) => <li class={c.ordered && i === 0 ? 'top' : ''} style={`--h:${hueOf(l.name)}`}>{c.ordered && <b>{i + 1}</b>}{l.name}{l.note && <small>{l.note}</small>}</li>)}
+            {c.rest && <li class="rest">{c.rest}</li>}
+          </ol>
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <section class="panel" id="rolling-order" aria-label="Rolling order">
+    <header class="panel-head"><h2>Rolling order</h2></header>
+    <ol class="flow">
+      {rules.map(([t, d], i) => <li><b>{String(i + 1).padStart(2, '0')}</b><strong>{t}</strong><span>{d}</span></li>)}
+    </ol>
+    <table class="saving" aria-label="Cost per roll">
+      <caption>Cost of one roll by locked lines</caption>
+      <thead><tr><th>Locked lines</th><th>Crystals</th><th>Kinah</th></tr></thead>
+      <tbody>{costs.map(([n, c, k]) => <tr><th>{n}</th><td>{c}</td><td>{k || '–'}</td></tr>)}</tbody>
+    </table>
+  </section>
+
+  <p class="meta sources">Slot layout, picks and roll costs: a Global Genus Insight video guide by a community creator (Season 1). Board names: <a href="https://www.aion2bible.com">Aion 2 Bible</a>. Genus Insight lines are not in the Global client data, so roll chances are not shown.</p>
+</Base>
+
+<style>
+  .panel + .panel { margin-top: 28px; }
+  .mini { margin: 18px 0 10px; color: var(--muted); font-size: 0.74rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+  .mini:first-of-type { margin-top: 0; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); gap: 12px; }
+  .slot-card { background: var(--panel); border: 1px solid var(--line); border-radius: 3px; padding: 10px 12px 12px; }
+  .slot-card header { display: flex; align-items: center; gap: 10px; padding-bottom: 9px; margin-bottom: 6px; border-bottom: 1px solid var(--line); }
+  .slot-card .ico { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 8px; color: var(--accent); background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent); }
+  .slot-card .ico :global(svg) { width: 17px; height: 17px; }
+  .slot-card ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; }
+  .slot-card li { --c: hsl(var(--h) 75% 64%); display: flex; align-items: baseline; gap: 8px; padding: 4px 8px; border-left: 3px solid hsl(var(--h) 70% 55% / 0.55); background: linear-gradient(90deg, hsl(var(--h) 60% 50% / 0.1), transparent 70%); font-size: 0.86rem; }
+  :global(:root[data-theme='light']) .slot-card li { --c: hsl(var(--h) 85% 34%); background: linear-gradient(90deg, hsl(var(--h) 90% 50% / 0.12), transparent 70%); border-left-color: hsl(var(--h) 80% 42% / 0.7); }
+  .slot-card li b { width: 1.1em; color: var(--c); font-variant-numeric: tabular-nums; font-size: 0.78rem; }
+  .slot-card li.top { font-weight: 600; border-left-color: var(--c); background: linear-gradient(90deg, hsl(var(--h) 70% 55% / 0.26), transparent 85%); box-shadow: 0 0 16px -8px hsl(var(--h) 80% 55% / 0.6); }
+  .slot-card li small { color: var(--muted); font-size: 0.72rem; font-weight: 400; margin-left: auto; text-align: right; }
+  .slot-card li.rest { border-left-style: dashed; border-left-color: var(--line); background: none; color: var(--muted); font-size: 0.8rem; }
+  .flow { list-style: none; margin: 0 0 22px; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: 14px; }
+  .flow li { padding-top: 10px; border-top: 2px solid color-mix(in srgb, var(--accent) 45%, var(--line)); }
+  .flow li:first-child { border-top-color: var(--accent); }
+  .flow b { display: block; margin-bottom: 2px; color: var(--accent); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; font-variant-numeric: tabular-nums; }
+  .flow strong { display: block; }
+  .flow span { display: block; margin-top: 4px; color: var(--muted); font-size: 0.84rem; line-height: 1.4; }
+  .saving { width: 100%; max-width: 420px; border-collapse: collapse; font-size: 0.88rem; font-variant-numeric: tabular-nums; }
+  .saving caption { text-align: left; padding: 0 0 6px; color: var(--muted); font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.04em; }
+  .saving th, .saving td { padding: 6px 10px; text-align: right; border-bottom: 1px solid var(--line); }
+  .saving th:first-child { text-align: left; }
+  .saving thead th { color: var(--muted); font-size: 0.74rem; font-weight: 600; }
+  .saving tbody th { font-size: 0.88rem; color: var(--text); text-transform: none; letter-spacing: 0; }
+  .sources { margin-top: 18px; }
+</style>
