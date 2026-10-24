@@ -3,7 +3,7 @@
 **Live:** https://a2codex.prezenith.com (GitHub Pages, deploys on push to `main`).
 **Done:** repo + mise (Node 24), project rules in CLAUDE.md, Astro scaffold (dark/light theme, `Base` layout), GitHub Pages workflow, DNS, **Stats page**, **Gear page**, finished (see below).
 **Nav/home:** one flat sidebar list, home cards use the panel look; Pets and Genus are one entry, Genus Insight (`genus/`); Arcana icon is a custom two-card SVG in `nav.ts`.
-**Next:** Arcana, then Genus Insight (Pets and Genus are one page), Daevanion, Class pages. To publish a page, create `src/pages/<href>index.astro` and set `ready: true` in `src/data/nav.ts`. Money-saving tips go inside each category page, not a separate page.
+**Next:** Arcana, Daevanion, Class pages. Genus Insight is done (see below). To publish a page, create `src/pages/<href>index.astro` and set `ready: true` in `src/data/nav.ts`. Money-saving tips go inside each category page, not a separate page.
 
 ## Stats page (`src/pages/stats.astro`), finished
 - **Layout:** left, a wheel like the in-game Stat Info window (6 primary stats inside 10 Daevanion stats, 5 per side in the game's order), fixed to the screen and centred on desktop. Right, "Most important stats": 15 ranked rows with the official description, a plain-language note, which wheel stats raise it (coloured chips) and where to get it (GEAR / OTHER tags). Stacks on narrow screens.
@@ -27,6 +27,11 @@
 - **Known gaps:** roll chances come from metabot item pages (same on both top tiers and all weapon types); skill-line chances not shown. Rune left out (only unconfirmed Bible numbers). Synch, Amplify and Potential Stones and per-roll Manastone costs are not verified in Global data. Per-diamond Amplify stats and per-roll Manastone Kinah costs are not published anywhere checked.
 - **Not done:** per-class weapon picks, specific item names per slot, phone-width check of the new step bar and rail.
 - **Open questions:** the Bible says 100% Soul Binding unlocks an extra stat line (Philosopher's Stone), metabot says an extra Manastone slot; the page follows metabot. The Bible lists different Potential values than the page (owner's numbers kept). No Heroic or Mythic gear in the Global client, so no Heroic content.
+
+## Genus Insight page (`src/pages/genus/index.astro`), finished
+- **Layout:** "Best lines": slot 4 per board (Cogni, Fera, Natura, Varian, Special), then the slots that are the same on every board (1/5 Attack, 3/6/9 Accuracy and Crit, 7, 2/8 defensive). "Rolling order": three rules (lock nothing early, use presets, slot 4 first) and a cost-per-roll table. Data inline in the frontmatter; slot-card styles are copied from Gear (scoped); no page script.
+- **Sources:** slot layout, picks and roll costs from a Global-focused community video guide (Season 1); board names from the Aion 2 Bible. The Bible (KR) has Smite on lines 3 and 9 and Damage Tolerance on line 6; the video and the Global guides disagree, so the page follows the video (Double Chance in slot 4 of Special). Genus lines are not in any client-data site, so no roll chances.
+- **Not done:** per-class notes, Owned Effects (no numbers found), in-game check of slot meanings, wide-screen (1920/3440) check (only a phone-width view was seen), sidebar sub-link highlight on scroll.
 
 ## Shared styling
 See `docs/styling.md` for the full recipes (tokens, hover/glow, icons).

@@ -92,7 +92,7 @@ Navigation is one flat list (no Character/Menu groups) in in-game order and uses
 - Character > **Stats** (stats reference), **Gear** (Gear BiS, stat lines/BiS lines, enhancement order; the owner's name, replaces the in-game "Enhancement"), **Genus Insight** (pet Genus BiS, `genus/`; replaces a separate Pets page), **Arcana** (Arcana BiS)
 - Menu > **Daevanion** (node routes), **Skills** (class pages)
 Do not invent menu names; if a page needs a new one, copy the in-game label.
-Build order: scaffold, Stats (done), Gear (done), Arcana, Genus Insight, Daevanion, Class pages last. Later ideas: Abyss shop, weekly checklist, calculators.
+Build order: scaffold, Stats (done), Gear (done), Genus Insight (done), Arcana, Daevanion, Class pages last. Later ideas: Abyss shop, weekly checklist, calculators.
 When a page ships, the "Get it from" tags on the Stats page link to it automatically (flip `ready` in `nav.ts`; mapping in `TAG_PAGE` in `stats.astro`).
 
 ## Start of every session
