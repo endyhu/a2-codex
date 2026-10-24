@@ -36,6 +36,7 @@
 - **Theme:** the incoming page's `<html>` says dark, so `astro:after-swap` re-applies the saved theme; the `color-scheme` meta follows the theme.
 - **Section links on the current page** get `data-astro-reload` on each page load so the browser does the smooth scroll (the router would jump instantly); a `hashchange` handler copies router state onto that history entry so Back still swaps pages correctly.
 - **Testing:** the router waits for a painted frame, so it stalls while the preview pane is hidden (call `show_pane` first). Use real clicks (`computer`) to judge transitions. `Transition was skipped` console errors only came from hidden-pane or scripted tests.
+- **Update banner:** `astro.config.mjs` bakes a build id into the pages (`__BUILD_ID__`) and writes `dist/version.json`. Base checks it on tab focus and every 5 minutes (`no-store`); when it differs, the persisted `#update` bar ("New version available", Reload) appears. Not shown in dev (no version file).
 
 ## How to test the layout (the browser pane is narrow)
 - Desktop and ultrawide: load the page in an iframe sized 1280, 1920 or 3440 wide and scale it down with CSS transform, then measure with JS. Check phone width at about 360.

@@ -71,6 +71,10 @@ const isActive = (href: string) => path === `${base}${href}`;
         <footer>Global server. Fan-made, not affiliated with NCSOFT. AION 2 is a trademark of its owner.</footer>
       </div>
     </div>
+    <div id="update" transition:persist hidden>
+      New version available
+      <button type="button" id="update-reload">Reload</button>
+    </div>
     <button id="to-top" type="button" aria-label="Back to top" title="Back to top" set:html={arrowUp} />
     <script>
       // Runs once; the router swaps the page body, so buttons are found again on each page and clicks are delegated.
@@ -100,9 +104,21 @@ const isActive = (href: string) => path === `${base}${href}`;
       let jumpedFrom: unknown = null;
       document.addEventListener('click', (e) => { if ((e.target as Element).closest('a[data-astro-reload]')) jumpedFrom = history.state; }, { capture: true });
       addEventListener('hashchange', () => { if (!history.state && jumpedFrom) history.replaceState(jumpedFrom, ''); });
+      // Open tabs never see a new deploy on their own: compare the baked-in build id with the live one.
+      declare const __BUILD_ID__: string;
+      const checkVersion = async () => {
+        try {
+          const res = await fetch(`${import.meta.env.BASE_URL}version.json`, { cache: 'no-store' });
+          if (res.ok && (await res.json()).id !== __BUILD_ID__) document.getElementById('update')!.hidden = false;
+        } catch {}
+      };
+      document.addEventListener('visibilitychange', () => { if (!document.hidden) checkVersion(); });
+      setInterval(checkVersion, 5 * 60 * 1000);
+      checkVersion();
       document.addEventListener('click', (e) => {
         const t = e.target as Element;
-        if (t.closest('#to-top')) scrollTo({ top: 0 });
+        if (t.closest('#update-reload')) location.reload();
+        else if (t.closest('#to-top')) scrollTo({ top: 0 });
         else if (t.closest('#theme')) {
           const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
           setTheme(next);
