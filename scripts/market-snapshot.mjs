@@ -1,4 +1,5 @@
 // Builds public/market.json: the cheapest listed unit price of every item on every server, from aion2.exchange's public API.
+// Item volume (items[i][4]): Kinah traded in the API's rolling sales window (units sold x average price). Only the API's default server has sales statistics, so that one server stands in for how much an item matters on every server.
 // API: https://aion2.exchange/api/openapi.json (read-only market data, collected hourly there). robots.txt allows /.
 // Usage: mise exec -- node scripts/market-snapshot.mjs
 // One /api/items call per server (all items in one page), sequential with a pause, retries on 5xx. Writes only if enough servers answered.
@@ -24,23 +25,26 @@ const get = async (path) => {
   }
 };
 
-const { servers } = await get('/servers');
+const { servers, default: defaultServer } = await get('/servers');
 const live = servers.filter((s) => s.has_data);
 const items = new Map(); // key -> [key, name, section, category]
 const prices = {}; // key -> [serverId, price, listings, ...]
 const updated = {}; // serverId -> latest captured_at
+const traded = {}; // key -> Kinah traded on the API's default server
 let ok = 0;
 
 for (const s of live) {
   try {
     const { items: list } = await get(`/items?server=${s.server_id}&limit=1000&sort=key`);
     for (const it of list) {
+      if (s.server_id === defaultServer) traded[it.item_key] = Math.round((it.units_sold ?? 0) * (it.sold_avg_price ?? 0));
       if (!it.listed || it.price == null || !it.name) continue;
       if (!items.has(it.item_key)) items.set(it.item_key, [it.item_key, it.name, it.category.section_id, it.category.name]);
       (prices[it.item_key] ??= []).push(s.server_id, it.price, it.listings);
       if (!updated[s.server_id] || it.captured_at > updated[s.server_id]) updated[s.server_id] = it.captured_at;
     }
     ok++;
+    console.log(`${ok}/${live.length} ${s.name} ${s.server_id}`);
   } catch (e) {
     console.warn(`skipped server ${s.server_id} ${s.name}: ${e.message}`);
   }
@@ -54,7 +58,7 @@ if (ok < live.length * MIN_SERVERS) {
 const out = {
   generated: new Date().toISOString(),
   servers: live.filter((s) => updated[s.server_id]).map((s) => [s.server_id, s.name, s.region, s.region_name, s.faction, updated[s.server_id]]),
-  items: [...items.values()].sort((a, b) => a[1].localeCompare(b[1])),
+  items: [...items.values()].map((i) => [...i, traded[i[0]] ?? 0]).sort((a, b) => a[1].localeCompare(b[1])),
   prices,
 };
 writeFileSync(new URL('../public/market.json', import.meta.url), JSON.stringify(out));
