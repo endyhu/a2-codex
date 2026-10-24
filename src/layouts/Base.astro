@@ -108,12 +108,29 @@ const isActive = (href: string) => path === `${base}${href}`;
           if (res.ok && (await res.json()).id !== __BUILD_ID__) document.getElementById('update')!.hidden = false;
         } catch {}
       };
+      // After updating, other pages may still sit in the HTTP cache as the old build; their old script would raise the bar again.
+      // Once an update was seen, refresh each page's cache entry before the router loads it.
+      const refreshed = new Set<string>();
+      document.addEventListener('astro:before-preparation', (e) => {
+        let updating = false;
+        try { updating = !!sessionStorage.getItem('updating'); } catch {}
+        const url = e.to.href;
+        if (!updating || refreshed.has(url)) return;
+        const load = e.loader;
+        e.loader = async () => {
+          try { await fetch(url, { cache: 'reload' }); refreshed.add(url); } catch {}
+          await load();
+        };
+      });
       document.addEventListener('visibilitychange', () => { if (!document.hidden) checkVersion(); });
       setInterval(checkVersion, 5 * 60 * 1000);
       checkVersion();
       document.addEventListener('click', (e) => {
         const t = e.target as Element;
-        if (t.closest('#update-reload')) location.reload();
+        if (t.closest('#update-reload')) {
+          try { sessionStorage.setItem('updating', '1'); } catch {}
+          fetch(location.href, { cache: 'reload' }).catch(() => {}).finally(() => location.reload());
+        }
         else if (t.closest('#to-top')) scrollTo({ top: 0 });
         else if (t.closest('#theme')) {
           const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
