@@ -27,7 +27,7 @@
   color-scheme: light;
 }
 * { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; }
+html { -webkit-text-size-adjust: 100%; scrollbar-gutter: stable; }
 body {
   margin: 0;
   background: var(--bg);
@@ -120,6 +120,16 @@ td:first-child { font-weight: 600; }
 
 @media (prefers-reduced-motion: no-preference) {
   html { scroll-behavior: smooth; }
+}
+
+/* Page switches (Astro router, Base.astro): the sidebar (phone: top bar) stays still and only the content crossfades. */
+aside { view-transition-name: side; }
+.topbar { view-transition-name: topbar; }
+::view-transition-group(root), ::view-transition-group(side), ::view-transition-group(topbar),
+::view-transition-old(side), ::view-transition-new(side), ::view-transition-old(topbar), ::view-transition-new(topbar) { animation: none; }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: 0.12s; }
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none; }
 }
 
 #to-top { position: fixed; right: 20px; bottom: 20px; z-index: 20; display: grid; place-items: center; width: 42px; height: 42px; border-radius: 50%; border: 1px solid color-mix(in srgb, var(--accent) 60%, transparent); background: var(--panel); color: var(--accent); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35); cursor: pointer; opacity: 0; pointer-events: none; transform: translateY(8px); transition: opacity 0.2s, transform 0.2s, background 0.15s; }

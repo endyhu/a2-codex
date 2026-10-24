@@ -4,6 +4,7 @@ import { nav, homeIcon } from '../data/nav';
 import sun from 'lucide-static/icons/sun.svg?raw';
 import moon from 'lucide-static/icons/moon.svg?raw';
 import arrowUp from 'lucide-static/icons/arrow-up.svg?raw';
+import { ClientRouter } from 'astro:transitions';
 
 interface Props { title: string; description?: string }
 const { title, description = 'Clear gearing cheatsheets for AION 2 Global.' } = Astro.props;
@@ -16,6 +17,7 @@ const isActive = (href: string) => path === `${base}${href}`;
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
     <title>{title === 'AION 2 Codex' ? title : `${title} · AION 2 Codex`}</title>
     <meta name="description" content={description} />
     <link rel="icon" href={`${base}favicon.svg`} type="image/svg+xml" />
@@ -23,8 +25,10 @@ const isActive = (href: string) => path === `${base}${href}`;
       try {
         const t = localStorage.getItem('theme');
         if (t) document.documentElement.dataset.theme = t;
+        if (t === 'light') document.querySelector('meta[name="color-scheme"]').content = 'light';
       } catch {}
     </script>
+    <ClientRouter />
   </head>
   <body>
     <div class="shell">
@@ -68,30 +72,46 @@ const isActive = (href: string) => path === `${base}${href}`;
       </div>
     </div>
     <button id="to-top" type="button" aria-label="Back to top" title="Back to top" set:html={arrowUp} />
-    <script is:inline>
+    <script>
+      // Runs once; the router swaps the page body, so buttons are found again on each page and clicks are delegated.
       const root = document.documentElement;
-      const toTop = document.getElementById('to-top');
-      const showTop = () => toTop.classList.toggle('show', scrollY > 700);
-      addEventListener('scroll', showTop, { passive: true });
-      showTop();
-      toTop.addEventListener('click', () => scrollTo({ top: 0 }));
-      const themeBtn = document.getElementById('theme');
+      const setTheme = (t: string) => {
+        root.dataset.theme = t;
+        document.querySelector<HTMLMetaElement>('meta[name="color-scheme"]')!.content = t;
+      };
+      const showTop = () => document.getElementById('to-top')!.classList.toggle('show', scrollY > 700);
       const labelTheme = () => {
+        const themeBtn = document.getElementById('theme')!;
         const label = root.dataset.theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme';
         themeBtn.setAttribute('aria-label', label);
         themeBtn.title = label;
       };
-      labelTheme();
-      themeBtn.addEventListener('click', () => {
-        const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
-        root.dataset.theme = next;
-        labelTheme();
-        try { localStorage.setItem('theme', next); } catch {}
+      addEventListener('scroll', showTop, { passive: true });
+      // The incoming page's <html> says dark: put the saved theme back before it is shown.
+      document.addEventListener('astro:after-swap', () => {
+        try { const t = localStorage.getItem('theme'); if (t) setTheme(t); } catch {}
       });
-      const menu = document.getElementById('menu');
-      menu.addEventListener('click', () => {
-        const open = document.body.classList.toggle('menu-open');
-        menu.setAttribute('aria-expanded', String(open));
+      // Links to a section of the current page are left to the browser so they keep the smooth scroll (the router jumps instantly).
+      const markSectionLinks = () =>
+        document.querySelectorAll<HTMLAnchorElement>('a[href*="#"]').forEach((a) => a.toggleAttribute('data-astro-reload', a.pathname === location.pathname));
+      document.addEventListener('astro:page-load', () => { showTop(); labelTheme(); markSectionLinks(); });
+      // The browser's section jump leaves a history entry without router state, so Back to it would not swap the page in.
+      // Copy the previous entry's state onto it, as the router does for its own section jumps.
+      let jumpedFrom: unknown = null;
+      document.addEventListener('click', (e) => { if ((e.target as Element).closest('a[data-astro-reload]')) jumpedFrom = history.state; }, { capture: true });
+      addEventListener('hashchange', () => { if (!history.state && jumpedFrom) history.replaceState(jumpedFrom, ''); });
+      document.addEventListener('click', (e) => {
+        const t = e.target as Element;
+        if (t.closest('#to-top')) scrollTo({ top: 0 });
+        else if (t.closest('#theme')) {
+          const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+          setTheme(next);
+          labelTheme();
+          try { localStorage.setItem('theme', next); } catch {}
+        } else if (t.closest('#menu')) {
+          const open = document.body.classList.toggle('menu-open');
+          document.getElementById('menu')!.setAttribute('aria-expanded', String(open));
+        }
       });
     </script>
   </body>

@@ -203,95 +203,102 @@ const rows = ranked.map((s) => ({ ...s, gets: tagsFor(s) }));
 </Base>
 
 <script>
-  const tip = document.getElementById('tip')!;
-  const wheel = document.querySelector('.wheel')!;
-  // The tooltip opens above the anchor point, toward the outside: up-left on the left half of the wheel,
-  // up-right on the right half. It flips below the point when there is no room above.
-  const place = (x: number, y: number) => {
-    const w = tip.offsetWidth;
-    const h = tip.offsetHeight;
-    const wr = wheel.getBoundingClientRect();
-    const left = x < wr.left + wr.width / 2 - 8 ? x - 14 - w : x + 14;
-    tip.style.left = `${Math.max(8, Math.min(left, innerWidth - w - 8))}px`;
-    tip.style.top = `${y - 12 - h < 8 ? y + 24 : y - 12 - h}px`;
-  };
-  // Mouse: the tooltip trails the pointer. Keyboard and touch: anchored to the element's top centre.
-  const show = (el: HTMLElement, e?: MouseEvent) => {
-    tip.innerHTML = `<strong>${el.dataset.title}</strong><span>${el.dataset.text}</span>`;
-    tip.hidden = false;
-    if (e) return place(e.clientX, e.clientY);
-    const r = el.getBoundingClientRect();
-    place(r.left + r.width / 2, r.top);
-  };
-  const hide = () => (tip.hidden = true);
-  // Wheel stats and ranked rows light each other up: a row lists the wheel stats that raise it.
-  const nodeEls = [...document.querySelectorAll<HTMLElement>('.node')];
-  const rowEls = [...document.querySelectorAll<HTMLElement>('.stat-row')];
-  const fromOf = (row: HTMLElement) => (row.dataset.from ?? '').split(',').filter(Boolean);
-  const clearLinks = () => [...nodeEls, ...rowEls].forEach((x) => x.classList.remove('hl'));
-  // A row glows in the colour of the wheel stat that raises it; a hovered row uses its first source's colour.
-  const hueOf = (name: string) => nodeEls.find((n) => n.dataset.name === name)?.dataset.hue;
-  const setHues = (r: HTMLElement, a: string, b = a) => {
-    r.style.setProperty('--hl', a);
-    r.style.setProperty('--hl2', b);
-  };
-  const linkNode = (n: HTMLElement) =>
+  // The router swaps pages in place: set up on every visit, drop window and document listeners on leaving.
+  document.addEventListener('astro:page-load', () => {
+    if (!document.querySelector('.wheel')) return;
+    const ac = new AbortController();
+    const { signal } = ac;
+    document.addEventListener('astro:before-swap', () => ac.abort(), { once: true });
+    const tip = document.getElementById('tip')!;
+    const wheel = document.querySelector('.wheel')!;
+    // The tooltip opens above the anchor point, toward the outside: up-left on the left half of the wheel,
+    // up-right on the right half. It flips below the point when there is no room above.
+    const place = (x: number, y: number) => {
+      const w = tip.offsetWidth;
+      const h = tip.offsetHeight;
+      const wr = wheel.getBoundingClientRect();
+      const left = x < wr.left + wr.width / 2 - 8 ? x - 14 - w : x + 14;
+      tip.style.left = `${Math.max(8, Math.min(left, innerWidth - w - 8))}px`;
+      tip.style.top = `${y - 12 - h < 8 ? y + 24 : y - 12 - h}px`;
+    };
+    // Mouse: the tooltip trails the pointer. Keyboard and touch: anchored to the element's top centre.
+    const show = (el: HTMLElement, e?: MouseEvent) => {
+      tip.innerHTML = `<strong>${el.dataset.title}</strong><span>${el.dataset.text}</span>`;
+      tip.hidden = false;
+      if (e) return place(e.clientX, e.clientY);
+      const r = el.getBoundingClientRect();
+      place(r.left + r.width / 2, r.top);
+    };
+    const hide = () => (tip.hidden = true);
+    // Wheel stats and ranked rows light each other up: a row lists the wheel stats that raise it.
+    const nodeEls = [...document.querySelectorAll<HTMLElement>('.node')];
+    const rowEls = [...document.querySelectorAll<HTMLElement>('.stat-row')];
+    const fromOf = (row: HTMLElement) => (row.dataset.from ?? '').split(',').filter(Boolean);
+    const clearLinks = () => [...nodeEls, ...rowEls].forEach((x) => x.classList.remove('hl'));
+    // A row glows in the colour of the wheel stat that raises it; a hovered row uses its first source's colour.
+    const hueOf = (name: string) => nodeEls.find((n) => n.dataset.name === name)?.dataset.hue;
+    const setHues = (r: HTMLElement, a: string, b = a) => {
+      r.style.setProperty('--hl', a);
+      r.style.setProperty('--hl2', b);
+    };
+    const linkNode = (n: HTMLElement) =>
+      rowEls.forEach((r) => {
+        const on = fromOf(r).includes(n.dataset.name!);
+        r.classList.toggle('hl', on);
+        if (on) setHues(r, n.dataset.hue!);
+      });
+    // A row with two sources glows as a gradient between their colours.
+    const linkRow = (r: HTMLElement) => {
+      const names = fromOf(r);
+      const hues = names.map(hueOf).filter((h): h is string => !!h);
+      r.classList.add('hl');
+      setHues(r, hues[0] ?? '250', hues[1] ?? hues[0] ?? '250');
+      nodeEls.forEach((n) => n.classList.toggle('hl', names.includes(n.dataset.name!)));
+    };
+    const hideAll = () => { hide(); clearLinks(); };
+    document.querySelectorAll<HTMLElement>('.tip-src').forEach((el) => {
+      el.addEventListener('mouseenter', (e) => { show(el, e); linkNode(el); });
+      el.addEventListener('mousemove', (e) => place(e.clientX, e.clientY));
+      el.addEventListener('focus', () => { show(el); linkNode(el); });
+      el.addEventListener('click', (e) => { e.stopPropagation(); if (tip.hidden) show(el); linkNode(el); });
+      el.addEventListener('mouseleave', hideAll);
+      el.addEventListener('blur', hideAll);
+    });
     rowEls.forEach((r) => {
-      const on = fromOf(r).includes(n.dataset.name!);
-      r.classList.toggle('hl', on);
-      if (on) setHues(r, n.dataset.hue!);
+      r.addEventListener('mouseenter', () => linkRow(r));
+      r.addEventListener('focus', () => linkRow(r));
+      r.addEventListener('click', (e) => { e.stopPropagation(); linkRow(r); });
+      r.addEventListener('mouseleave', clearLinks);
+      r.addEventListener('blur', clearLinks);
     });
-  // A row with two sources glows as a gradient between their colours.
-  const linkRow = (r: HTMLElement) => {
-    const names = fromOf(r);
-    const hues = names.map(hueOf).filter((h): h is string => !!h);
-    r.classList.add('hl');
-    setHues(r, hues[0] ?? '250', hues[1] ?? hues[0] ?? '250');
-    nodeEls.forEach((n) => n.classList.toggle('hl', names.includes(n.dataset.name!)));
-  };
-  const hideAll = () => { hide(); clearLinks(); };
-  document.querySelectorAll<HTMLElement>('.tip-src').forEach((el) => {
-    el.addEventListener('mouseenter', (e) => { show(el, e); linkNode(el); });
-    el.addEventListener('mousemove', (e) => place(e.clientX, e.clientY));
-    el.addEventListener('focus', () => { show(el); linkNode(el); });
-    el.addEventListener('click', (e) => { e.stopPropagation(); if (tip.hidden) show(el); linkNode(el); });
-    el.addEventListener('mouseleave', hideAll);
-    el.addEventListener('blur', hideAll);
-  });
-  rowEls.forEach((r) => {
-    r.addEventListener('mouseenter', () => linkRow(r));
-    r.addEventListener('focus', () => linkRow(r));
-    r.addEventListener('click', (e) => { e.stopPropagation(); linkRow(r); });
-    r.addEventListener('mouseleave', clearLinks);
-    r.addEventListener('blur', clearLinks);
-  });
-  document.addEventListener('click', hideAll);
+    document.addEventListener('click', hideAll, { signal });
 
-  // "+N" popup: hover and focus are handled in CSS; a tap toggles it for touch screens, and a tap elsewhere closes it.
-  const wraps = document.querySelectorAll<HTMLElement>('.more-wrap');
-  const closeWrap = (w: HTMLElement) => {
-    w.classList.remove('open');
-    const b = w.querySelector<HTMLButtonElement>('.more')!;
-    b.setAttribute('aria-expanded', 'false');
-    b.blur();
-  };
-  const closeWraps = () => wraps.forEach(closeWrap);
-  wraps.forEach((w) => {
-    const b = w.querySelector<HTMLButtonElement>('.more')!;
-    b.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const open = !w.classList.contains('open');
-      closeWraps();
-      w.classList.toggle('open', open);
-      b.setAttribute('aria-expanded', String(open));
-      if (!open) b.blur(); // tapping again closes at once
+    // "+N" popup: hover and focus are handled in CSS; a tap toggles it for touch screens, and a tap elsewhere closes it.
+    const wraps = document.querySelectorAll<HTMLElement>('.more-wrap');
+    const closeWrap = (w: HTMLElement) => {
+      w.classList.remove('open');
+      const b = w.querySelector<HTMLButtonElement>('.more')!;
+      b.setAttribute('aria-expanded', 'false');
+      b.blur();
+    };
+    const closeWraps = () => wraps.forEach(closeWrap);
+    wraps.forEach((w) => {
+      const b = w.querySelector<HTMLButtonElement>('.more')!;
+      b.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const open = !w.classList.contains('open');
+        closeWraps();
+        w.classList.toggle('open', open);
+        b.setAttribute('aria-expanded', String(open));
+        if (!open) b.blur(); // tapping again closes at once
+      });
+      // No pointerleave handling: hover alone closes itself in CSS when the mouse leaves, while a click pins the popup
+      // open until the next press outside it (or a second click on the chip).
     });
-    // No pointerleave handling: hover alone closes itself in CSS when the mouse leaves, while a click pins the popup
-    // open until the next press outside it (or a second click on the chip).
-  });
-  // pointerdown, not click: rows and wheel stats stop click propagation, and iOS skips clicks on non-interactive areas.
-  document.addEventListener('pointerdown', (e) => {
-    if (!(e.target as Element).closest('.more-wrap')) closeWraps();
+    // pointerdown, not click: rows and wheel stats stop click propagation, and iOS skips clicks on non-interactive areas.
+    document.addEventListener('pointerdown', (e) => {
+      if (!(e.target as Element).closest('.more-wrap')) closeWraps();
+    }, { signal });
   });
 </script>
 

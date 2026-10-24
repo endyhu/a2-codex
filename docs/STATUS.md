@@ -30,6 +30,13 @@
 ## Shared styling
 `src/styles/global.css` holds the chrome every page uses: `.panel`, `.panel-head`, `.page-title` and the tooltip look (`#tip` on Stats, `[data-tip]` hover tips on Gear). Put new shared styles there, not in a page.
 
+## Page switches (Astro `ClientRouter` in `Base.astro`)
+- Full page loads showed a blank frame in Vivaldi/Chromium on every click, so the site uses Astro's client-side router: it fetches the next page and swaps it in, no reload. The sidebar (phone: top bar) has its own `view-transition-name` and stays still; the content crossfades in 0.12s and the browser's own 250ms page-group animation is off (off entirely for reduced motion); a switch takes about 160ms on the built site. The dev server renders Stats and Gear on each request (about 300ms), so judge speed with the `astro-preview` launch config (built site, port 4322) after `npm run build`. `scrollbar-gutter: stable` keeps the layout from shifting sideways between short and long pages.
+- **Page scripts** run inside `document.addEventListener('astro:page-load', ...)`, return early when their page's element is missing, and pass `{ signal }` to every window/document listener (aborted on `astro:before-swap`). New pages with scripts must follow the same pattern. Base's own script runs once and uses delegated clicks.
+- **Theme:** the incoming page's `<html>` says dark, so `astro:after-swap` re-applies the saved theme; the `color-scheme` meta follows the theme.
+- **Section links on the current page** get `data-astro-reload` on each page load so the browser does the smooth scroll (the router would jump instantly); a `hashchange` handler copies router state onto that history entry so Back still swaps pages correctly.
+- **Testing:** the router waits for a painted frame, so it stalls while the preview pane is hidden (call `show_pane` first). Use real clicks (`computer`) to judge transitions. `Transition was skipped` console errors only came from hidden-pane or scripted tests.
+
 ## How to test the layout (the browser pane is narrow)
 - Desktop and ultrawide: load the page in an iframe sized 1280, 1920 or 3440 wide and scale it down with CSS transform, then measure with JS. Check phone width at about 360.
 - Call `show_pane` (preview) before taking screenshots, or they time out.
