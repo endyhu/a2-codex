@@ -14,7 +14,7 @@ import star from 'lucide-static/icons/star.svg?raw';
 // Slot layout and picks are from a Global-focused Genus Insight video guide (community creator, Season 1), cross-read with the Aion 2 Bible's board list.
 // The Bible is KR-based (Smite on lines 3 and 9); the Global guides and the video agree on Double Chance in slot 4 of the Special board, so that is used.
 // Pet Genus Insight is not in any client-data site (docs/data-sources.md), so there are no roll chances here.
-type Line = { name: string; note?: string };
+type Line = { name: string; note?: string; rank?: number };
 type Card = { title: string; icon: string; lines: Line[]; ordered?: boolean; rest?: string };
 const boards: Card[] = [
   { title: 'Cogni', icon: brain, ordered: true, lines: [{ name: 'PvE Damage Boost' }, { name: 'Damage Boost', note: 'same value in PvE' }, { name: 'Critical Damage Boost', note: '2.8% or more, and a class that crits constantly' }] },
@@ -24,7 +24,7 @@ const boards: Card[] = [
   { title: 'Special', icon: star, ordered: true, lines: [{ name: 'Double Chance' }, { name: 'Front / Back Attack Damage Boost', note: 'positional class, very high roll' }] },
 ];
 const slots: Card[] = [
-  { title: 'Slots 1 and 5', icon: swords, lines: [{ name: 'Attack Bonus' }, { name: 'Max Attack' }, { name: 'PvE Attack' }, { name: 'Boss Attack' }, { name: 'Front / Back Attack', note: 'positional classes' }] },
+  { title: 'Slots 1 and 5', icon: swords, ordered: true, lines: [{ name: 'PvE Attack', rank: 1 }, { name: 'Boss Attack', rank: 1 }, { name: 'Front / Back Attack', note: 'positional classes', rank: 2 }, { name: 'Attack Bonus', rank: 3 }, { name: 'Max Attack', rank: 4 }] },
   { title: 'Slots 3, 6 and 9', icon: target, ordered: true, lines: [{ name: 'Accuracy Bonus', note: 'Unique or better' }, { name: 'PvE Accuracy', note: 'Unique or better' }, { name: 'Critical Hit', note: 'Heroic only' }] },
   { title: 'Slot 7', icon: dices, ordered: true, lines: [{ name: 'Accuracy Bonus', note: 'Heroic' }, { name: 'Critical Hit', note: 'Heroic' }] },
   { title: 'Slots 2 and 8', icon: shield, lines: [{ name: 'HP Increase' }, { name: 'Defense Bonus' }, { name: 'Back Defense' }, { name: 'Critical Hit Resist' }], rest: 'Second preset only' },
@@ -62,7 +62,7 @@ const hueOf = (n: string) =>
         <article class="slot-card">
           <header><span class="ico" set:html={c.icon} /><strong>{c.title}</strong></header>
           <ol>
-            {c.lines.map((l, i) => <li class={c.ordered && i === 0 ? 'top' : ''} style={`--h:${hueOf(l.name)}`}>{c.ordered ? <b>{i + 1}</b> : <b class="dot" />}<span class="t">{l.name}{l.note && <small>{l.note}</small>}</span></li>)}
+            {c.lines.map((l, i) => <li class={c.ordered && (l.rank ?? i + 1) === 1 ? 'top' : ''} style={`--h:${hueOf(l.name)}`}>{c.ordered ? <b>{l.rank ?? i + 1}</b> : <b class="dot" />}<span class="t">{l.name}{l.note && <small>{l.note}</small>}</span></li>)}
             {c.rest && <li class="rest">{c.rest}</li>}
           </ol>
         </article>
