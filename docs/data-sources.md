@@ -7,7 +7,7 @@
 - "Genus" in the stat data means creature types (Cogni, Fera, Natura, Varian). Check how the Genus *board* system is named in-game before writing the Genus page.
 - Caps: earlier sources disagreed (Critical Hit 50% vs 80%, Evasion 30% vs 50%). As of 2026-10-23 aion2data and metabot both state Critical Hit 50%, Evasion 30%, Cooldown 60%, MP Cost 60%, Move Speed 150%; aion2data also Immunity 50%. Those are published on the Stats page; an in-game check is still worth doing. Only publish a cap once confirmed.
 
-## Arcana (Metabot, Global client): 5 slots (Bell, Chalice, Compass, Mirror, Parchment), ~40 cards, 2 sets, cards max level 5. Unconfirmed endgame recipes.
+## Arcana (metabot.gg/en/aion-2/arcana, Global client): 5 slots (Bell, Chalice, Compass, Mirror, Parchment), 2 sets (Primal Vigor, Magic Armor), 40 cards (4 grades each), max level 2 to 5 by grade. Feed values, Transmute costs and card art (Unique only, public/arcana) are from there; Transmute with 2 fixed lines (15 crystals, 5M Kinah) is an in-game check. The Bible has a 10-card chapter that is not Global.
 
 ## Community PVE guide (Google Doc, link out only)
 https://docs.google.com/document/d/11u4wLCG1WfL-xSka2Aze0rI9vYRa7mq3N3Gp1bt0AWY

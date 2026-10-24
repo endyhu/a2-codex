@@ -1,0 +1,192 @@
+---
+import Base from '../../layouts/Base.astro';
+
+// Global has 5 cards (Chalice, Parchment, Compass, Bell, Mirror) in 2 sets (metabot.gg, Global client data); the Bible's 10-card chapter is for later.
+// Picks and priority are from the Aion 2 Bible's 5-card setup; stat names follow the Stats page. Card art: Unique icons (metabot.gg, from the Global client).
+type Card = { slot: string; name: string; art: string; stat: string; effects: string; hue: number; rolls: string; rollsNote: string; top?: boolean; alt?: string };
+const cards: Card[] = [
+  { slot: 'Chalice', name: 'Chalice of Vigor', art: 'grail_u_pveset2', stat: 'Time [Siel]', effects: 'Combat Speed, Double Resist', hue: 195, rolls: 'Any Active or Passive Skill', rollsNote: '22 per class, the hardest card to perfect', top: true },
+  { slot: 'Bell', name: 'Bell of Magic', art: 'bell_u_defenceset2', stat: 'Destruction [Zikel]', effects: 'Attack, Perfect Resist', hue: 10, rolls: 'Half of your Passive Skills', rollsNote: '5 per class', top: true },
+  { slot: 'Mirror', name: 'Mirror of Magic', art: 'mirror_u_defenceset2', stat: 'Wisdom [Lumiel]', effects: 'MP Cost reduction, Double Chance', hue: 48, rolls: 'The other half of your Passive Skills', rollsNote: '5 per class', top: true },
+  { slot: 'Parchment', name: 'Parchment of Vigor', art: 'parchment_u_pveset2', stat: 'Life [Yustiel]', effects: 'HP, Regeneration', hue: 130, rolls: 'Half of your Active Skills', rollsNote: '6 per class', alt: 'Either set' },
+  { slot: 'Compass', name: 'Compass of Magic', art: 'compass_u_defenceset2', stat: 'Death [Triniel]', effects: 'Critical Hit, Regeneration Penetration', hue: 280, rolls: 'The other half of your Active Skills', rollsNote: '6 per class', alt: 'Either set' },
+];
+// Every Unique card by set (metabot.gg); `pick` marks the cards in the setup above. Stat effects follow the Stats page.
+type Row = { slot: string; art: string; stat: string; effects: string; hue: number; pick?: boolean };
+const sets: { name: string; art: string; two: string; four: string; rows: Row[] }[] = [
+  { name: 'Primal Vigor', art: 'pveset2', two: '+60 PvE Attack at 70% HP or more', four: '+150 PvE Attack at 70% HP or more', rows: [
+    { slot: 'Chalice', art: 'grail', stat: 'Time [Siel]', effects: 'Combat Speed, Double Resist', hue: 195, pick: true },
+    { slot: 'Parchment', art: 'parchment', stat: 'Life [Yustiel]', effects: 'HP, Regeneration', hue: 130, pick: true },
+    { slot: 'Compass', art: 'compass', stat: 'Freedom [Vaizel]', effects: 'Accuracy, Evasion', hue: 175 },
+    { slot: 'Bell', art: 'bell', stat: 'Justice [Nezekan]', effects: 'Defense, Perfect Chance', hue: 215 },
+    { slot: 'Mirror', art: 'mirror', stat: 'Illusion [Kaisinel]', effects: 'Cooldown reduction, Endurance Penetration', hue: 300 },
+  ] },
+  { name: 'Magic Armor', art: 'defenceset2', two: 'Restores 1,500 MP at 20% MP or less (30s cooldown)', four: '+1,000 PvE Defense at 50% MP or more', rows: [
+    { slot: 'Chalice', art: 'grail', stat: 'Space [Israphel]', effects: 'Move Speed, Block', hue: 245 },
+    { slot: 'Parchment', art: 'parchment', stat: 'Destiny [Marchutan]', effects: 'MP, Endurance', hue: 330 },
+    { slot: 'Compass', art: 'compass', stat: 'Death [Triniel]', effects: 'Critical Hit, Regeneration Penetration', hue: 280, pick: true },
+    { slot: 'Bell', art: 'bell', stat: 'Destruction [Zikel]', effects: 'Attack, Perfect Resist', hue: 10, pick: true },
+    { slot: 'Mirror', art: 'mirror', stat: 'Wisdom [Lumiel]', effects: 'MP Cost reduction, Double Chance', hue: 48, pick: true },
+  ] },
+];
+const steps: [string, string][] = [
+  ['Farm Transcendence', 'Cards and Training Arcana drop from Transcendence stages; the stage sets the grade. Check the rewards under Main Menu, Transcendence.'],
+  ['Level the card you wear', 'Smash cards into it, or feed it Training Arcana. Each level adds +1 to a random skill line on the card, or a small random stat if it has no skill lines. Feeding the same type of card gives bonus experience.'],
+  ['Transmute the lines you want', 'Pick the set and get a Unique card, then fix lines yourself. Craft the Chalice first: it has the most possible lines, so it is the hardest to roll by luck.'],
+  ['Reuse leveled cards', 'An enhanced card gives more EXP when fed to another one than a +0 card does (the table shows +0 cards). Worth doing when the new card has better lines.'],
+];
+// Experience each item gives when fed to a card, and Kinah per item (metabot.gg). "To max" = 93,000 EXP for a Unique card / EXP, rounded up, using only that item.
+// Cards are +0 unless noted; enhanced cards give more. The extra EXP for feeding the same card type has no published number.
+const feed: [string, number, number][] = [
+  ['Lesser Training Arcana', 200, 2000], ['Intermediate Training Arcana', 600, 2000], ['Superior Training Arcana', 1500, 2000], ['Ultimate Training Arcana', 3000, 2000], ['Exalted Training Arcana', 5000, 2000],
+  ['Common card', 200, 5000], ['Rare card', 400, 5000], ['Epic card', 800, 5000], ['Unique card', 2000, 5000],
+];
+const grades: [string, string, string][] = [['Common', '2', '900'], ['Rare', '3', '4,200'], ['Epic', '4', '18,000'], ['Unique', '5', '93,000']];
+---
+<Base title="Arcana" description="Best Arcana card per slot, set bonuses and how to upgrade them, for AION 2 Global.">
+  <h1 class="page-title">Arcana</h1>
+
+  <section class="panel" id="best-cards" aria-label="Best cards">
+    <header class="panel-head"><h2>Best cards</h2></header>
+    <div class="arc-cards">
+      {cards.map((c) => (
+        <article class="arc" data-key={c.art} tabindex="0" style={`--h:${c.hue}`}>
+          <img src={`/arcana/icon_arcana_card_${c.art}.webp`} alt="" width="256" height="256" loading="lazy" decoding="async" />
+          <header><strong>{c.name}</strong>{c.top && <span class="pick-tag">Top 3</span>}{c.alt && <span class="pick-tag alt">{c.alt}</span>}</header>
+          <dl>
+            <dt>Stat</dt>
+            <dd><b>{c.stat}</b><small>{c.effects}</small></dd>
+            <dt>Rolls</dt>
+            <dd><b>{c.rolls}</b><small>{c.rollsNote}</small></dd>
+          </dl>
+        </article>
+      ))}
+    </div>
+    <p class="meta note">Top three by value: Chalice (Combat Speed), Bell (Attack) and Mirror (Double Chance). Parchment and Compass can come from either set; keep two Primal Vigor cards for its 2-card bonus.</p>
+  </section>
+
+  <section class="panel" id="sets" aria-label="Sets">
+    <header class="panel-head"><h2>Sets</h2></header>
+    <div class="sets">
+      {sets.map((s) => (
+        <article class="set">
+          <header>
+            <strong>{s.name}</strong>
+            <dl><dt>2 cards</dt><dd>{s.two}</dd><dt>4 cards</dt><dd>{s.four}</dd></dl>
+          </header>
+          <ul>
+            {s.rows.map((r) => (
+              <li class={r.pick ? 'pick' : ''} data-key={`${r.art}_u_${s.art}`} tabindex="0" style={`--h:${r.hue}`}>
+                <img src={`/arcana/icon_arcana_card_${r.art}_u_${s.art}.webp`} alt="" width="56" height="56" loading="lazy" decoding="async" />
+                <span class="t"><small>{r.slot} of {s.name === 'Primal Vigor' ? 'Vigor' : 'Magic'}</small><b>{r.stat}</b><em>{r.effects}</em></span>
+                {r.pick && <span class="pick-tag">In setup</span>}
+              </li>
+            ))}
+          </ul>
+        </article>
+      ))}
+    </div>
+    <p class="meta note">Both set bonuses are worth less than the stats on the cards, so choose cards by stat first.</p>
+  </section>
+
+  <section class="panel" id="upgrading" aria-label="Upgrading">
+    <header class="panel-head"><h2>Upgrading</h2></header>
+    <div class="up">
+      <ol class="flow">
+        {steps.map(([t, d], i) => <li><b>{String(i + 1).padStart(2, '0')}</b><strong>{t}</strong><span>{d}</span></li>)}
+      </ol>
+      <div class="tables">
+        <table class="saving" aria-label="Items to max a Unique card">
+          <caption>Max a Unique card (93,000 EXP) using only one kind of item</caption>
+          <thead><tr><th>Item</th><th>EXP each</th><th>Kinah each</th><th>Items</th><th>Total Kinah</th></tr></thead>
+          <tbody>{feed.map(([n, e, k]) => <tr><th>{n}</th><td>{e.toLocaleString('en-US')}</td><td>{k.toLocaleString('en-US')}</td><td>{Math.ceil(93000 / e)}</td><td>{(Math.ceil(93000 / e) * k).toLocaleString('en-US')}</td></tr>)}</tbody>
+        </table>
+        <div class="side">
+          <table class="saving" aria-label="Card levels">
+            <caption>Experience to max level</caption>
+            <thead><tr><th>Grade</th><th>Max level</th><th>Total EXP</th></tr></thead>
+            <tbody>{grades.map(([g, l, e]) => <tr><th>{g}</th><td>{l}</td><td>{e}</td></tr>)}</tbody>
+          </table>
+          <table class="saving" aria-label="Transmute cost">
+            <caption>Transmute (Unique card)</caption>
+            <thead><tr><th>What</th><th>Mysterious Crystal (Bound)</th><th>Kinah</th></tr></thead>
+            <tbody>
+              <tr><th>Card of your set</th><td>5</td><td>2,000,000</td></tr>
+              <tr><th>With 2 lines fixed</th><td>15</td><td>5,000,000</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <p class="meta sources">Cards, sets, experience and feed values: <a href="https://metabot.gg/en/aion-2/arcana">metabot.gg</a> (Global client data). Transmute costs: in-game. Picks and priorities: <a href="https://www.aion2bible.com">Aion 2 Bible</a>. Card art is from the Global client.</p>
+</Base>
+
+<style>
+  .arc-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); gap: 12px; }
+  .arc { --c: hsl(var(--h) 75% 64%); display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--line); border-radius: 3px; overflow: hidden; }
+  :root[data-theme='light'] .arc { --c: hsl(var(--h) 85% 34%); }
+  .arc img { display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: cover; object-position: center 35%; border-bottom: 2px solid hsl(var(--h) 70% 55% / 0.7); }
+  .arc header { display: flex; align-items: center; gap: 10px; padding: 10px 12px 8px; }
+  .arc header strong { white-space: nowrap; }
+  .pick-tag { margin-left: auto; color: var(--accent); font-size: 0.66rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; white-space: nowrap; opacity: 0.9; }
+  .pick-tag.alt { color: var(--muted); }
+  .arc dl { display: grid; gap: 3px; margin: 0; padding: 0 12px 12px; }
+  .arc dt { margin-top: 6px; color: var(--muted); font-size: 0.66rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
+  .arc dd { margin: 0; padding: 4px 8px; border-left: 3px solid hsl(var(--h) 70% 55% / 0.55); background: linear-gradient(90deg, hsl(var(--h) 60% 50% / 0.1), transparent 70%); font-size: 0.86rem; }
+  .arc dd b { display: block; font-weight: 600; }
+  .arc dd small { display: block; color: var(--muted); font-size: 0.72rem; line-height: 1.3; }
+  .sets { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  @media (max-width: 900px) { .sets { grid-template-columns: minmax(0, 1fr); } }
+  .set { background: var(--panel); border: 1px solid var(--line); border-radius: 3px; padding: 10px 12px 12px; }
+  .set > header { padding-bottom: 10px; margin-bottom: 8px; border-bottom: 1px solid var(--line); }
+  .set > header dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 12px; margin: 6px 0 0; font-size: 0.82rem; }
+  .set dt { color: var(--accent); font-size: 0.66rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; align-self: center; white-space: nowrap; }
+  .set dd { margin: 0; color: var(--muted); }
+  .set ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+  .set li { --c: hsl(var(--h) 75% 64%); display: flex; align-items: center; gap: 10px; padding: 4px 10px 4px 4px; border-left: 3px solid hsl(var(--h) 70% 55% / 0.55); background: linear-gradient(90deg, hsl(var(--h) 60% 50% / 0.1), transparent 70%); }
+  :root[data-theme='light'] .set li { --c: hsl(var(--h) 85% 34%); }
+  .set li.pick { border-left-color: var(--c); background: linear-gradient(90deg, hsl(var(--h) 70% 55% / 0.26), transparent 85%); box-shadow: 0 0 16px -8px hsl(var(--h) 80% 55% / 0.6); }
+  .arc, .set li { outline: none; transition: border-color 0.15s, box-shadow 0.15s, background 0.15s; }
+  .arc.hl { border-color: hsl(var(--h) 70% 55% / 0.8); box-shadow: 0 0 22px -6px hsl(var(--h) 80% 55% / 0.6); }
+  .set li.hl { border-left-color: var(--c); background: linear-gradient(90deg, hsl(var(--h) 70% 55% / 0.32), transparent 85%); box-shadow: 0 0 22px -6px hsl(var(--h) 80% 55% / 0.6); }
+  .set li img { flex: none; width: 52px; height: 52px; border-radius: 3px; object-fit: cover; }
+  .set li .t { flex: 1; min-width: 0; display: grid; }
+  .set li small { color: var(--muted); font-size: 0.7rem; }
+  .set li b { font-size: 0.88rem; }
+  .set li em { font-style: normal; color: var(--muted); font-size: 0.76rem; line-height: 1.3; }
+  @media (max-width: 600px) { .arc img { aspect-ratio: 16 / 7; } }
+  .note { margin: 14px 0 0; }
+  .up { display: grid; gap: 24px; }
+  .tables { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); align-items: start; gap: 20px 40px; }
+  .side { display: grid; gap: 20px; }
+  @media (max-width: 1100px) { .tables { grid-template-columns: minmax(0, 1fr); } }
+  .flow { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: 14px; }
+  .flow li { padding-top: 10px; border-top: 2px solid color-mix(in srgb, var(--accent) 45%, var(--line)); }
+  .flow li:first-child { border-top-color: var(--accent); }
+  .flow b { display: block; margin-bottom: 2px; color: var(--accent); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; font-variant-numeric: tabular-nums; }
+  .flow strong { display: block; }
+  .flow span { display: block; margin-top: 4px; color: var(--muted); font-size: 0.84rem; line-height: 1.4; }
+</style>
+
+<script>
+  import { sectionGlow } from '../../scripts/section-glow';
+  document.addEventListener('astro:page-load', () => {
+    if (!document.getElementById('upgrading')) return;
+    const { signal } = sectionGlow(['best-cards', 'sets', 'upgrading']);
+    // Hovering or focusing a card lights the same card in the other panel.
+    const items = [...document.querySelectorAll<HTMLElement>('[data-key]')];
+    const light = (key: string | null, on: boolean) => items.forEach((e) => e.dataset.key === key && e.classList.toggle('hl', on));
+    for (const e of items) {
+      for (const [on, off] of [['pointerenter', 'pointerleave'], ['focus', 'blur']]) {
+        e.addEventListener(on, () => light(e.dataset.key ?? null, true), { signal });
+        e.addEventListener(off, () => light(e.dataset.key ?? null, false), { signal });
+      }
+    }
+  });
+</script>
+
+<style is:global>
+  main { max-width: 1500px; }
+</style>

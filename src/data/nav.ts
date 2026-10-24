@@ -26,7 +26,8 @@ export const nav: NavItem[] = [
     children: [['Best stat lines', 'best-lines'], ['Enhance', 'step-enhance'], ['Amplify', 'step-amplify'], ['Soul Binding', 'step-soul-binding'], ['Manastones', 'step-manastones'], ['Theostone', 'step-theostone'], ['Potential', 'step-potential']].map(([label, hash]) => ({ label, hash })) },
   { label: 'Genus Insight', href: 'genus/', icon: paw, ready: true, text: 'Best line per slot and the order to roll them.',
     children: [['Best lines', 'best-lines'], ['Rolling order', 'rolling-order']].map(([label, hash]) => ({ label, hash })) },
-  { label: 'Arcana', href: 'arcana/', icon: card, ready: false, text: 'Best card per slot and best set.' },
+  { label: 'Arcana', href: 'arcana/', icon: card, ready: true, text: 'Best card per slot and best set.',
+    children: [['Best cards', 'best-cards'], ['Sets', 'sets'], ['Upgrading', 'upgrading']].map(([label, hash]) => ({ label, hash })) },
   { label: 'Daevanion', href: 'daevanion/', icon: hexagon, ready: false, text: 'Best node route per class.' },
   { label: 'Skills', href: 'skills/', icon: swords, ready: false, text: 'Every pick for your class in one place.' },
 ];
