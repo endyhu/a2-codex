@@ -3,7 +3,7 @@
 **Live:** https://a2codex.prezenith.com (GitHub Pages, deploys on push to `main`).
 **Done:** repo + mise (Node 24), project rules in CLAUDE.md, Astro scaffold (dark/light theme, `Base` layout), GitHub Pages workflow, DNS, **Stats page**, **Gear page**, finished (see below).
 **Nav/home:** one flat sidebar list, home cards use the panel look; Pets and Genus are one entry, Genus Insight (`genus/`); Arcana icon is a custom two-card SVG in `nav.ts`.
-**Next:** Arcana, Daevanion, Class pages. Genus Insight is done (see below). To publish a page, create `src/pages/<href>index.astro` and set `ready: true` in `src/data/nav.ts`. Money-saving tips go inside each category page, not a separate page.
+**Next:** first, move the styles and scripts Gear and Genus Insight duplicate (slot cards, `.path` steps, `.saving` tables, `.sources`, section glow and sidebar highlight script) into shared files so new pages inherit them; then Arcana, Daevanion, Class pages. Genus Insight is done (see below). To publish a page, create `src/pages/<href>index.astro` and set `ready: true` in `src/data/nav.ts`. Money-saving tips go inside each category page, not a separate page.
 
 ## Stats page (`src/pages/stats.astro`), finished
 - **Layout:** left, a wheel like the in-game Stat Info window (6 primary stats inside 10 Daevanion stats, 5 per side in the game's order), fixed to the screen and centred on desktop. Right, "Most important stats": 15 ranked rows with the official description, a plain-language note, which wheel stats raise it (coloured chips) and where to get it (GEAR / OTHER tags). Stacks on narrow screens.
