@@ -37,7 +37,7 @@ Ranked by credibility. A fact on the site needs a source from tier 1 or 2; tier 
 4. **Official NCSOFT news / patch notes** (aion2data.com/news and /patches mirror them) for what is live, since the client data can contain content that is not released yet.
 
 ### What is not in any client-data site
-- **Pet Genus Insight** line rolls: only in community guides. The Global ones agree on the useful rolls (gameplay.tips 2 Oct 2026, odealo.com 14 Oct 2026): Special Line 4 Double Chance, Varian Line 4 Front/Back Attack Damage Boost, Fera Line 4 Weapon Damage Boost, Cogni Line 4 Critical Damage Boost, Natura Line 4 Multi-hit Chance or Perfect Chance, Lines 1 and 5 Max Attack then Attack Bonus, Lines 3/6/9 Critical Hit or Accuracy, Line 7 Damage Tolerance or Endurance. They do not list the full roll pools. Shown as dashed tags.
+- **Genus Insight** line rolls: only in community guides. The Global ones agree on the useful rolls (gameplay.tips 2 Oct 2026, odealo.com 14 Oct 2026): Special Line 4 Double Chance, Varian Line 4 Front/Back Attack Damage Boost, Fera Line 4 Weapon Damage Boost, Cogni Line 4 Critical Damage Boost, Natura Line 4 Multi-hit Chance or Perfect Chance, Lines 1 and 5 Max Attack then Attack Bonus, Lines 3/6/9 Critical Hit or Accuracy, Line 7 Damage Tolerance or Endurance. They do not list the full roll pools. Shown as dashed tags.
 - **Whether Wings are live on Global**: the client data lists 28 wings but the Aion 2 Bible said they were not at launch. Shown as dashed tags until confirmed.
 - **Attack Bonus** has no gear or Manastone source in the client data; it only appears on Titles and wings and in the guides' Daevanion notes.
 

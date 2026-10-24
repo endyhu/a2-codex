@@ -2,7 +2,7 @@
 
 **Live:** https://a2codex.prezenith.com (GitHub Pages, deploys on push to `main`).
 **Done:** repo + mise (Node 24), project rules in CLAUDE.md, Astro scaffold (dark/light theme, `Base` layout), GitHub Pages workflow, DNS, **Stats page**, **Gear page**, finished (see below).
-**Nav/home:** one flat sidebar list, home cards use the panel look; Pets and Genus are one entry, Genus Insight (`genus/`); Arcana icon is a custom two-card SVG in `nav.ts`.
+**Nav/home:** one flat sidebar list, home cards use the panel look; Genus Insight is the entry (`genus/`); Arcana icon is a custom two-card SVG in `nav.ts`.
 **Next:** Arcana, Daevanion, Class pages. Gear and Genus Insight now share their slot cards, `.path` steps, `.saving` tables, `.sources`, section glow and sidebar highlight (see Shared styling). To publish a page, create `src/pages/<href>index.astro` and set `ready: true` in `src/data/nav.ts`. Money-saving tips go inside each category page, not a separate page.
 
 ## Stats page (`src/pages/stats.astro`), finished

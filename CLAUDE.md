@@ -90,7 +90,7 @@ Clean, modern cheatsheet site for the **AION 2 Global** server. Hosted free on G
 
 ## Planned pages (approved)
 Navigation is one flat list (no Character/Menu groups) in in-game order and uses its exact names (see `src/data/nav.ts`):
-- Character > **Stats** (stats reference), **Gear** (Gear BiS, stat lines/BiS lines, enhancement order; the owner's name, replaces the in-game "Enhancement"), **Genus Insight** (pet Genus BiS, `genus/`; replaces a separate Pets page), **Arcana** (Arcana BiS)
+- Character > **Stats** (stats reference), **Gear** (Gear BiS, stat lines/BiS lines, enhancement order; the owner's name, replaces the in-game "Enhancement"), **Genus Insight** (Genus BiS, `genus/`; replaces a separate Pets page), **Arcana** (Arcana BiS)
 - Menu > **Daevanion** (node routes), **Skills** (class pages)
 Do not invent menu names; if a page needs a new one, copy the in-game label.
 Build order: scaffold, Stats (done), Gear (done), Genus Insight (done), Arcana, Daevanion, Class pages last. Later ideas: Abyss shop, weekly checklist, calculators.
