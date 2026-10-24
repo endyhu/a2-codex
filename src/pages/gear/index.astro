@@ -319,8 +319,9 @@ const order: Step[] = [
   .trick-notes li::before { content: none !important; }
   .enh-text { min-width: 0; }
   .enh-text p { margin: 0 0 8px; }
-  .ladder { flex: 0 0 auto; display: grid; gap: 4px; }
-  .rung { display: grid; grid-template-columns: 5.2em 1fr 3em 5.5em; align-items: center; gap: 10px; padding: 5px 10px; border: 1px solid var(--line); border-radius: 3px; background: var(--panel); }
+  .ladder { flex: 0 0 auto; display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .rung { display: grid; grid-template-columns: 5.2em minmax(0, 1fr) 3em 5.5em; align-items: center; gap: 10px; padding: 5px 10px; border: 1px solid var(--line); border-radius: 3px; background: var(--panel); }
+  @media (max-width: 400px) { .rung { grid-template-columns: 4em minmax(0, 1fr) 2.6em 4.2em; gap: 6px; padding: 5px 6px; } }
   .rung .lvl { font-weight: 700; font-variant-numeric: tabular-nums; }
   .rung:first-child .lvl { color: var(--ok); }
   .rung .bar { height: 8px; border-radius: 2px; background: color-mix(in srgb, var(--accent) 14%, transparent); overflow: hidden; }
