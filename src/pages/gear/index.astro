@@ -7,7 +7,7 @@ import shirt from 'lucide-static/icons/shirt.svg?raw';
 import cloak from 'lucide-static/icons/ghost.svg?raw';
 import hand from 'lucide-static/icons/hand.svg?raw';
 import footprints from 'lucide-static/icons/footprints.svg?raw';
-import gem from 'lucide-static/icons/gem.svg?raw';
+import { legsIcon as legs, necklaceIcon as necklace } from '../../data/icons';
 import ear from 'lucide-static/icons/ear.svg?raw';
 import ring from 'lucide-static/icons/circle-dot.svg?raw';
 import play from 'lucide-static/icons/play.svg?raw';
@@ -28,10 +28,10 @@ const lines: Row[] = [
   { slot: 'Top', icon: shirt, lines: [['Damage Boost', 3], ['Perfect Chance', 1.2], ['Attack', 4]], skills: 'Passive skills' },
   { slot: 'Cloak', icon: cloak, lines: [['Double Chance', 1.2], ['Attack Increase', 1.2], ['Attack', 4]], skills: 'Passive skills' },
   { slot: 'Gloves', icon: hand, lines: [['Combat Speed', 3], ['Perfect Chance', 1.2], ['Attack', 4]], skills: 'Passive skills' },
-  { slot: 'Legs', icon: footprints, lines: [['Attack Increase', 1.2], ['Perfect Chance', 1.2], ['Damage Tolerance', 3], ['Attack', 4]], skills: 'Passive skills' },
+  { slot: 'Legs', icon: legs, lines: [['Attack Increase', 1.2], ['Perfect Chance', 1.2], ['Damage Tolerance', 3], ['Attack', 4]], skills: 'Passive skills' },
   { slot: 'Shoes', icon: footprints, lines: [['Perfect Chance', 1.2], ['Move Speed', 3], ['Attack', 4]], skills: 'Passive skills' },
   { slot: 'Earrings', icon: ear, lines: [['Attack', 6], ['Accuracy', 6]], skills: 'Passive skills' },
-  { slot: 'Necklace', icon: gem, lines: [['Attack', 6], ['Accuracy', 6]], skills: 'Passive skills' },
+  { slot: 'Necklace', icon: necklace, lines: [['Attack', 6], ['Accuracy', 6]], skills: 'Passive skills' },
   { slot: 'Ring', icon: ring, lines: [['Might', 2], ['Precision', 2], ['Attack', 6]], skills: 'Active skills' },
 ];
 // Tint per stat family: damage multipliers red, Attack amber, speed cyan, attributes violet, survivability green.
