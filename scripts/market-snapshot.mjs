@@ -1,4 +1,5 @@
 // Builds public/market.json: the cheapest listed unit price of every item on every server, from aion2.exchange's public API.
+// Last known prices (last[key] = [serverId, price, hours since epoch, ...]) cover items with no listing right now.
 // Item volume (items[i][4]): Kinah traded in the API's rolling sales window (units sold x average price). Only the API's default server has sales statistics, so that one server stands in for how much an item matters on every server.
 // API: https://aion2.exchange/api/openapi.json (read-only market data, collected hourly there). robots.txt allows /.
 // Usage: mise exec -- node scripts/market-snapshot.mjs
@@ -30,11 +31,11 @@ const get = async (path) => {
 };
 
 const { servers, default: defaultServer } = await get('/servers');
-// Temporary speed-up: only Europe launch servers. Remove the extra conditions to fetch every server again (the Market page shows its Servers filter and other regions automatically).
-const wanted = (s) => s.region === 'EU' && !early(s);
+const wanted = () => true; // narrow this (e.g. to Europe launch servers) for a quick test run; the pages adapt to whatever servers are in the file
 const live = servers.filter((s) => s.has_data && (wanted(s) || s.server_id === defaultServer)); // the default server is always fetched: it is the only one with sales stats
 const items = new Map(); // key -> [key, name, section, category]
 const prices = {}; // key -> [serverId, price, listings, ...]
+const lastRaw = []; // [key, serverId, price, hours since epoch] for items with no listing right now
 const updated = {}; // serverId -> latest captured_at
 const traded = {}; // key -> Kinah traded on the API's default server
 let ok = 0;
@@ -48,6 +49,7 @@ const worker = async () => {
       const { items: list } = await get(`/items?server=${s.server_id}&limit=1000&sort=key`);
       for (const it of list) {
         if (s.server_id === defaultServer) traded[it.item_key] = Math.round((it.units_sold ?? 0) * (it.sold_avg_price ?? 0));
+        if (wanted(s) && !it.listed && it.last_price != null && it.last_seen_at && it.name) lastRaw.push([it.item_key, s.server_id, it.last_price, Math.floor(Date.parse(it.last_seen_at) / 3.6e6)]);
         if (!wanted(s) || !it.listed || it.price == null || !it.name) continue;
         if (!items.has(it.item_key)) items.set(it.item_key, [it.item_key, it.name, it.category.section_id, it.category.name]);
         (prices[it.item_key] ??= []).push(s.server_id, it.price, it.listings);
@@ -76,11 +78,16 @@ if (ok < live.length * MIN_SERVERS) {
   console.error(`only ${ok}/${live.length} servers answered, keeping the old file`);
   process.exit(1);
 }
+// Last known price (price, hours since epoch) per item and server, only for items that are listed somewhere and were seen within MAX_AGE_DAYS.
+const MAX_AGE_DAYS = 60, nowH = Math.floor(Date.now() / 3.6e6);
+const last = {};
+for (const [key, server, price, h] of lastRaw) if (items.has(key) && nowH - h <= MAX_AGE_DAYS * 24) (last[key] ??= []).push(server, price, h);
 const out = {
   generated: new Date().toISOString(),
   servers: live.filter((s) => wanted(s) && updated[s.server_id]).map((s) => [s.server_id, s.name, s.region, s.region_name, s.faction, updated[s.server_id], early(s) ? 1 : 0]),
   items: [...items.values()].map((i) => [...i, traded[i[0]] ?? 0]).sort((a, b) => a[1].localeCompare(b[1])),
   prices,
+  last,
 };
 writeFileSync(new URL('../public/market.json', import.meta.url), JSON.stringify(out));
-console.log(`${out.servers.length} servers, ${out.items.length} items, ${Object.keys(prices).length} priced`);
+console.log(`${out.servers.length} servers, ${out.items.length} items, ${Object.keys(prices).length} priced, ${Object.keys(last).length} with last prices`);

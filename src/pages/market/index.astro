@@ -31,8 +31,6 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
         {sections.map(([v, l, ic]) => <button type="button" class="tog" role="radio" aria-checked="false" data-v={v}><span class="ico" set:html={ic} />{l}</button>)}
       </div>
 
-      <h3 class="mini">Listings per server</h3>
-      <div class="togs seg" id="minl" role="radiogroup" aria-label="Minimum listings per server">{[["1", "Any"], ["3", "3+"], ["5", "5+"], ["10", "10+"]].map(([v, l]) => <button type="button" class="tog" role="radio" aria-checked="false" data-v={v}>{l}</button>)}</div>
     </section>
 
     <section class="panel" id="prices" aria-label="Prices">
@@ -51,7 +49,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
         <tbody id="rows"></tbody>
       </table>
       </div>
-      <p class="empty" id="empty" hidden>No item is listed on two or more of these servers.</p>
+      <p class="empty" id="empty" hidden>No item matches these filters.</p>
     </section>
   </div>
 
@@ -75,7 +73,6 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
   .mkt .wrap .tog[aria-checked='true'] .ico { color: var(--accent); }
   #launch[hidden] { display: none; }
   #faction, #launch { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  #minl { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .mkt .tog { min-width: 0; padding: 5px 4px; text-align: center; font-size: 0.82rem; font-weight: 600; line-height: 1.4; background: var(--panel); border: 1px solid var(--line); border-radius: 3px; color: var(--muted); cursor: pointer; transition: border-color 0.15s, color 0.15s; }
   .mkt .tog:hover, .mkt .tog:focus-visible { border-color: color-mix(in srgb, var(--accent) 55%, transparent); color: var(--text); outline: none; }
   .mkt .tog[aria-checked='true'] { color: var(--text); border-color: color-mix(in srgb, var(--accent) 70%, transparent); background: radial-gradient(120% 140% at 0% 0%, var(--accent-soft), var(--panel) 70%); }
@@ -140,6 +137,8 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
   .mk .sr .up { text-align: right; color: var(--muted); font-size: 0.76rem; }
   .mk .sr.hi .up { color: var(--warn); }
   @media (max-width: 480px) { .mk .sr { grid-template-columns: 1.4em minmax(0, 1fr) auto 4em; gap: 6px; padding: 5px 4px; } .mk .sr .ls, .mk .sr small { display: none; } .mk .sr .up { text-align: right; } }
+  .mk td.old b { opacity: 0.6; }
+  .mk td.old small { font-style: italic; }
   .mkt .empty { color: var(--muted); margin: 14px 0; }
   @media (max-width: 1100px) { .mkt { grid-template-columns: minmax(0, 1fr); } .mkt > .panel:first-child { position: static; } }
   @media (max-width: 600px) {
@@ -151,15 +150,17 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
 </style>
 
 <script>
+  import { guessRegion } from '../../scripts/region';
   type Server = [number, string, string, string, string, string, number];
-  type Market = { generated: string; servers: Server[]; items: [number, string, string, string, number][]; prices: Record<string, number[]> };
-  type Saved = { region: string; faction: string; launch: string; section: string; minl: number };
-  type Row = { key: number; name: string; cat: string; vol: number; me: number; list: { s: Server; price: number; n: number }[]; min: number; max: number; spread: number };
+  type Market = { generated: string; servers: Server[]; items: [number, string, string, string, number][]; prices: Record<string, number[]>; last?: Record<string, number[]> };
+  type Saved = { region: string; faction: string; launch: string; section: string };
+  type Row = { key: number; name: string; cat: string; vol: number; me: number; list: { s: Server; price: number; n: number }[]; min: number; max: number; spread: number; old?: { price: number; h: number; s?: Server } };
   const STORE = 'a2codex-market-v1';
   const nf = new Intl.NumberFormat('en-US');
   const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
   let cache: Promise<Market> | null = null;
   const load = () => (cache ??= fetch('/market.json').then((r) => { if (!r.ok) throw new Error(String(r.status)); return r.json(); }).catch((e) => { cache = null; throw e; }));
+  const ageText = (h: number) => (h < 48 ? `${Math.max(1, h)} h ago` : `${Math.round(h / 24)} d ago`);
   const kin = (n: number) => (n >= 1e9 ? `${+(n / 1e9).toFixed(1)}B` : n >= 1e6 ? `${+(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `${Math.round(n / 1e3)}K` : String(n));
   const pct = (x: number) => (x >= 100 ? '9,999%+' : `${x >= 0.1 ? Math.round(x * 100) : (x * 100).toFixed(1)}%`);
   const ago = (iso: string) => {
@@ -178,12 +179,13 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
 
     let saved: Partial<Saved> = {};
     try { saved = JSON.parse(localStorage.getItem(STORE) || '{}') || {}; } catch {}
-    const state = { server: 0, region: saved.region || '', faction: saved.faction || 'all', launch: saved.launch || 'launch', section: saved.section || 'all', minl: [1, 3, 5, 10].reduce((a, v) => (v <= (saved.minl || 3) ? v : a), 1), q: '', sort: 'vol', dir: -1};
+    const state = { server: 0, region: saved.region || '', faction: saved.faction || 'all', launch: saved.launch || 'launch', section: saved.section || 'all', q: '', sort: 'vol', dir: -1};
     const open = new Set<number>();
     let data: Market, rows: Row[] = [], regionsEl = () => {};
 
     const checked = (id: string, v: string) => document.querySelectorAll<HTMLElement>(`#${id} [data-v]`).forEach((b) => b.setAttribute('aria-checked', String(b.dataset.v === v)));
-    const persist = () => { try { localStorage.setItem(STORE, JSON.stringify({ region: state.region, faction: state.faction, launch: state.launch, section: state.section, minl: state.minl })); } catch {} };
+    let noEA = false; // no Early Access server in the data: the launch choice is not saved
+    const persist = () => { try { localStorage.setItem(STORE, JSON.stringify({ region: state.region, faction: state.faction, launch: noEA ? (saved.launch || 'launch') : state.launch, section: state.section })); } catch {} };
 
     const pick = (s: Server) => s[2] === state.region && (state.faction === 'all' || s[4] === state.faction) && (state.launch === 'all' || (state.launch === 'ea') === !!s[6]);
     const compute = () => {
@@ -196,13 +198,25 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
         const p = data.prices[it[0]], list: Row['list'] = [];
         for (let i = 0; i < p.length; i += 3) {
           const s = want.get(p[i]);
-          if (s && p[i + 2] >= state.minl) list.push({ s, price: p[i + 1], n: p[i + 2] });
+          if (s) list.push({ s, price: p[i + 1], n: p[i + 2] });
         }
-        if (list.length < 2) continue;
         list.sort((a, b) => a.price - b.price || a.s[1].localeCompare(b.s[1]));
-        const min = list[0].price, max = list[list.length - 1].price;
         const me = state.server ? list.findIndex((e) => e.s[0] === state.server) : -1;
-        if (state.server && me < 0) continue;
+        // No current listing here (on the chosen server, or anywhere in the selection): use the last price seen, if any.
+        if (state.server ? me < 0 : !list.length) {
+          const l = data.last?.[it[0]] ?? [];
+          let at = -1;
+          for (let i = 0; i < l.length; i += 3) {
+            const s = want.get(l[i]);
+            if (state.server ? l[i] === state.server : s && (at < 0 || l[i + 2] > l[at + 2])) at = i;
+          }
+          if (at < 0) continue;
+          const old = { price: l[at + 1], h: Math.max(1, Math.round(Date.now() / 3.6e6 - l[at + 2])), s: state.server ? undefined : want.get(l[at]) };
+          const lo = list[0];
+          rows.push({ key: it[0], name: it[1], cat: it[3], vol: it[4], list, me: state.server ? -2 : -3, min: old.price, max: lo ? lo.price : old.price, spread: lo ? (old.price - lo.price) / lo.price : 0, old });
+          continue;
+        }
+        const min = list[0].price, max = list[list.length - 1].price;
         const here = me >= 0 ? list[me].price : 0;
         rows.push(me >= 0
           ? { key: it[0], name: it[1], cat: it[3], vol: it[4], list, me, min: here, max: min, spread: (here - min) / min }
@@ -220,12 +234,17 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
       empty.hidden = !!rows.length;
       rowsEl.innerHTML = rows.map((r) => {
         const lo = r.list[0], hi = r.list[r.list.length - 1], isOpen = open.has(r.key);
-        const head = `<tr class="mrow" data-k="${r.key}" data-open="${isOpen}"><th scope="row"><button type="button" class="nb" aria-expanded="${isOpen}"><b>${esc(r.name)}</b><small>${esc(r.cat)} · ${r.list.length} servers${r.vol ? ` · ${kin(r.vol)} traded` : ''}</small></button></th>` +
-          (r.me >= 0
-            ? `<td><b>${nf.format(r.min)}</b><small>${r.me + 1} of ${r.list.length}</small></td><td><b>${nf.format(lo.price)}</b><small>${r.me === 0 ? 'this server' : sv(lo, both)}</small></td>`
-            : `<td><b>${nf.format(lo.price)}</b><small>${sv(lo, both)}</small></td><td><b>${nf.format(hi.price)}</b><small>${sv(hi, both)}</small></td>`) +
-          (r.me >= 0 ? `<td class="diff${r.me === 0 ? ' best' : ' over'}">${r.me === 0 ? 'Cheapest' : '+' + pct(r.spread)}<small>${r.me === 0 ? '' : nf.format(r.min - lo.price)}</small></td></tr>` : `<td class="diff">${pct(r.spread)}<small>${nf.format(hi.price - lo.price)}</small></td></tr>`);
-        if (!isOpen) return head;
+        const none = '<td class="na">—</td>';
+        const loCell = lo ? `<td><b>${nf.format(lo.price)}</b><small>${sv(lo, both)} · ${lo.n} listed</small></td>` : none;
+        const oldCell = r.old ? `<td class="old"><b>${nf.format(r.old.price)}</b><small>last price · ${ageText(r.old.h)}${r.old.s ? ' · ' + esc(r.old.s[1]) : ''}</small></td>` : none;
+        const cells = r.me === -3 ? oldCell + none + none
+          : r.me === -2 ? oldCell + loCell + (lo ? `<td class="diff${r.spread < 0 ? ' best' : ' over'}">${r.spread < 0 ? '−' : '+'}${pct(Math.abs(r.spread))}<small>${nf.format(Math.abs(r.min - lo.price))}</small></td>` : none)
+          : r.me >= 0 ? `<td><b>${nf.format(r.min)}</b><small>${r.me + 1} of ${r.list.length} · ${r.list[r.me].n} listed</small></td><td><b>${nf.format(lo.price)}</b><small>${r.me === 0 ? 'this server' : sv(lo, both)} · ${lo.n} listed</small></td><td class="diff${r.me === 0 ? ' best' : ' over'}">${r.me === 0 ? 'Cheapest' : '+' + pct(r.spread)}<small>${r.me === 0 ? '' : nf.format(r.min - lo.price)}</small></td>`
+          : r.list.length === 1 ? loCell + '<td class="na"><small>only one server</small></td>' + none
+          : loCell + `<td><b>${nf.format(hi.price)}</b><small>${sv(hi, both)} · ${hi.n} listed</small></td><td class="diff">${pct(r.spread)}<small>${nf.format(hi.price - lo.price)}</small></td>`;
+        const where = r.me === -3 ? 'no listing now' : `${r.list.length} ${r.list.length === 1 ? 'server' : 'servers'} · ${nf.format(r.list.reduce((t, e) => t + e.n, 0))} listed`;
+        const head = `<tr class="mrow" data-k="${r.key}" data-open="${isOpen}"><th scope="row"><button type="button" class="nb" aria-expanded="${isOpen}"><b>${esc(r.name)}</b><small>${esc(r.cat)} · ${where}${r.vol ? ` · ${kin(r.vol)} traded` : ''}</small></button></th>` + cells + '</tr>';
+        if (!isOpen || !r.list.length) return head;
         const list = r.list.map((e, i) => `<div class="sr${i === 0 ? " lo" : i === r.list.length - 1 ? " hi" : ""}${i === r.me ? " me" : ""}" style="--w:${Math.max(8, Math.round((e.price / hi.price) * 100))}%;--h:${e.s[4] === "Elyos" ? 200 : 290}"><b class="rk">${i + 1}</b><span class="nm"><i class="dot" title="${e.s[4]}"></i><span>${esc(e.s[1])}</span></span><span class="pr">${nf.format(e.price)}</span><span class="ls">${e.n} listed</span><span class="up">${i === 0 ? "" : `+${Math.round(((e.price - lo.price) / lo.price) * 100)}%`}</span></div>`).join("");
         return head + `<tr class="detail"><td colspan="4"><div class="sv">${list}</div></td></tr>`;
       }).join('');
@@ -248,10 +267,10 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
     serverEl.addEventListener('change', () => { state.server = Number(serverEl.value); refresh(); }, { signal });
     const refresh = () => { compute(); render(); $('#scroll').scrollTop = 0; };
 
-    document.querySelectorAll<HTMLElement>('#faction, #launch, #section, #minl').forEach((g) => g.addEventListener('click', (e) => {
+    document.querySelectorAll<HTMLElement>('#faction, #launch, #section').forEach((g) => g.addEventListener('click', (e) => {
       const b = (e.target as HTMLElement).closest<HTMLElement>('[data-v]');
       if (!b) return;
-      if (g.id === 'minl') state.minl = Number(b.dataset.v); else state[g.id as 'faction' | 'launch' | 'section'] = b.dataset.v!;
+      state[g.id as 'faction' | 'launch' | 'section'] = b.dataset.v!;
       if (g.id === 'launch') { regionsEl(); checked('region', state.region); }
       checked(g.id, b.dataset.v!); persist(); syncServers(); refresh();
     }, { signal }));
@@ -279,15 +298,14 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
     };
     rowsEl.addEventListener('click', (e) => toggle(e.target as Element), { signal });
 
-    checked('minl', String(state.minl));
     checked('faction', state.faction); checked('launch', state.launch); checked('section', state.section);
     load().then((d) => {
       if (signal.aborted) return;
       data = d;
       const regions = [...new Map(d.servers.map((s) => [s[2], s[3]])).entries()];
-      if (!regions.some(([c]) => c === state.region)) state.region = regions.some(([c]) => c === 'EU') ? 'EU' : regions[0][0];
+      if (!regions.some(([c]) => c === state.region)) state.region = guessRegion(regions.map(([c]) => c));
       regionsEl = () => $('#region').innerHTML = regions.map(([c, n]) => `<button type="button" class="tog" role="radio" aria-checked="false" data-v="${esc(c)}">${esc(n.replace('North America', 'NA'))}<small>${d.servers.filter((s) => s[2] === c && (state.launch === 'all' || (state.launch === 'ea') === !!s[6])).length} servers</small></button>`).join('');
-      if (!d.servers.some((s) => s[6])) { state.launch = 'all'; $('#launch-h').hidden = $('#launch').hidden = true; }
+      if (!d.servers.some((s) => s[6])) { noEA = true; state.launch = 'all'; $('#launch-h').hidden = $('#launch').hidden = true; }
       regionsEl(); checked('region', state.region);
       syncServers(); refresh();
     }).catch(() => { status.textContent = 'Prices could not be loaded'; });
