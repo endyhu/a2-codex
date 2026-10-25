@@ -62,8 +62,9 @@ for (const id of [...used].sort((a, b) => a - b)) {
 }
 
 // Faction of each recipe, from the item pages' recipe rows ("Blacksmithing · Lv. 55 · Asmodian", or "Blacksmithing · Asmodian" when no mastery is needed). A page lists one row for a
-// faction-only item and one row per faction for an item both factions craft; the rows follow the product ids in ascending order
-// (inferred: Elyos is the lower id, e.g. Artisan's Yggdrasil Bow 110440013 Elyos, Artisan's Asvata Bow 110440015 Asmodian).
+// faction-only item and one row per faction for an item both factions craft. The rows are NOT in a fixed faction order, but the
+// header chip of the page ("Item Level 18 · Elyos") is the faction of the lowest product id, so in a same-name pair the lowest id gets the
+// header faction and the other id the opposite one (checked against which factions' servers list each id: 64 of 64 pairs with listings).
 const byHref = new Map();
 for (const r of recipes) (byHref.get(props.items[r.product].href) ?? byHref.set(props.items[r.product].href, []).get(props.items[r.product].href)).push(r);
 const hrefs = [...byHref.keys()];
@@ -72,10 +73,13 @@ await Promise.all(Array.from({ length: 6 }, async () => {
   for (let h; (h = hrefs[next++]); ) {
     const res = await fetch('https://metabot.gg/en/aion-2' + h.replace(/^\/aion-2/, ''), { headers: { 'User-Agent': 'a2codex-snapshot (a2codex.prezenith.com)' } });
     if (!res.ok) { console.warn(`faction: ${h} HTTP ${res.status}`); continue; }
-    const rows = textOf(await res.text()).map((l) => l.match(/^[A-Za-z]+(?: · Lv\. \d+)? · (Elyos|Asmodian)$/)?.[1]).filter(Boolean);
+    const t = textOf(await res.text());
+    const rows = t.map((l) => l.match(/^[A-Za-z]+(?: · Lv\. \d+)? · (Elyos|Asmodian)$/)?.[1]).filter(Boolean);
+    const head = t[t.findIndex((l) => /^Item Level \d+$/.test(l)) + 1];
     const rs = byHref.get(h).sort((a, b) => a.product - b.product);
-    const uniq = [...new Set(rows)];
+    const ids = [...new Set(rs.map((r) => r.product))], uniq = [...new Set(rows)];
     if (uniq.length === 1) rs.forEach((r) => (r.faction = uniq[0]));
+    else if (ids.length === 2 && (head === 'Elyos' || head === 'Asmodian')) rs.forEach((r) => (r.faction = r.product === ids[0] ? head : head === 'Elyos' ? 'Asmodian' : 'Elyos'));
     else if (rows.length === rs.length) rs.forEach((r, i) => (r.faction = rows[i]));
   }
 }));
