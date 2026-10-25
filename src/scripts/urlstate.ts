@@ -8,6 +8,6 @@ export const oneOf = (v: string | null, ok: string[]): string | undefined => (v 
 export const writeUrl = (values: Record<string, string | number | undefined>, defaults: Record<string, string | number> = {}) => {
   const p = new URLSearchParams();
   for (const [k, v] of Object.entries(values)) if (v !== undefined && v !== '' && v !== 0 && v !== defaults[k]) p.set(k, String(v));
-  const qs = p.toString();
+  const qs = p.toString().replace(/%3A/gi, ':').replace(/%2C/gi, ','); // both are legal in a query and keep lists readable
   history.replaceState(history.state, '', location.pathname + (qs ? `?${qs}` : '') + location.hash);
 };

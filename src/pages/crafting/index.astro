@@ -235,7 +235,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
     let saved: Partial<Saved> = {};
     try { saved = JSON.parse(localStorage.getItem(STORE) || '{}') || {}; } catch {}
     const url = readUrl();
-    const state = { region: url.get('r') || saved.region || '', faction: oneOf(url.get('f'), ['all', 'Elyos', 'Asmodian']) ?? (saved.faction || 'all'), launch: oneOf(url.get('l'), ['launch', 'ea', 'all']) ?? (saved.launch || 'launch'), server: Number(url.get('srv')) || saved.server || 0, prof: oneOf(url.get('p'), ['all', 'Blacksmithing', 'Armorsmithing', 'Handicrafting', 'Alchemy', 'Cooking']) ?? (saved.prof || 'all'), sub: url.get('t') || saved.sub || 'all', sel: url.get('k') || saved.sel || '', qty: Math.min(9999, Math.max(1, Number(url.get('n')) || saved.qty || 1)), mast: Math.min(100, Math.max(0, Number(url.get('m')) || saved.mast || 0)), q: '' };
+    const state = { region: url.get('r') || saved.region || '', faction: oneOf(url.get('f'), ['all', 'Elyos', 'Asmodian']) ?? (saved.faction || 'all'), launch: oneOf(url.get('l'), ['launch', 'ea', 'all']) ?? (saved.launch || 'launch'), server: Number(url.get('srv')) || saved.server || 0, prof: oneOf(url.get('p'), ['all', 'Blacksmithing', 'Armorsmithing', 'Handicrafting', 'Alchemy', 'Cooking']) ?? (saved.prof || 'all'), sub: url.get('t') || saved.sub || 'all', sel: url.get('k') || saved.sel || '', qty: Math.min(9999, Math.max(1, Number(url.get('n')) || saved.qty || 1)), mast: Math.min(100, Math.max(0, saved.mast || 0)), q: '' };
     const have = new Map<string, number>();
     // Items with the same name can have different ids (one per faction), so names map to lists of ids.
     let idsByName = new Map<string, number[]>();
@@ -247,7 +247,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
 
     const checked = (id: string, v: string) => document.querySelectorAll<HTMLElement>(`#${id} [data-v]`).forEach((b) => b.setAttribute('aria-checked', String(b.dataset.v === v)));
     let noEA = false; // no Early Access server in the data: the launch choice is not saved
-    const syncUrl = () => writeUrl({ r: state.region, f: state.faction, l: noEA ? undefined : state.launch, srv: state.server, p: state.prof, t: state.sub, k: state.sel, n: state.qty, m: state.mast, h: [...have].filter(([, v]) => v > 0).map(([k, v]) => `${k}:${v}`).join(',') }, { f: 'all', l: 'launch', p: 'all', t: 'all', n: 1 });
+    const syncUrl = () => writeUrl({ r: state.region, f: state.faction, l: noEA ? undefined : state.launch, srv: state.server, p: state.prof, t: state.sub, k: state.sel, n: state.qty, h: [...have].filter(([, v]) => v > 0).map(([k, v]) => `${k}:${v}`).join(',') }, { f: 'all', l: 'launch', p: 'all', t: 'all', n: 1 });
     const persist = () => { syncUrl(); try { localStorage.setItem(STORE, JSON.stringify({ region: state.region, faction: state.faction, launch: noEA ? (saved.launch || 'launch') : state.launch, server: state.server, prof: state.prof, sub: state.sub, sel: state.sel, qty: state.qty, mast: state.mast })); } catch {} };
     const pick = (s: Server) => s[2] === state.region && (state.faction === 'all' || s[4] === state.faction) && (state.launch === 'all' || (state.launch === 'ea') === !!s[6]);
     const name = (id: number) => craft.items[id][0];
