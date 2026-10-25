@@ -45,6 +45,9 @@ Rule of thumb: glows are soft (negative spread, 16-28px, accent only). The stron
 - Owner asks from desktop (incl. ultrawide); choose phone/tablet behaviour yourself. Check 1280, 1920, 3440 and about 360.
 - Stats and Gear use wider layouts with sticky rails; see STATUS.md for their rules.
 
+## Crafting tree (nested rows)
+Rows of crafted components nest: `tr.nest.d1..d4` with one colour per level (`--c1..--c4`: violet, teal, amber, pink), a tinted row, a 3px bar on the name cell for the row's own level, faint dotted bars for ancestor levels and a full-width 1px row line, all drawn as backgrounds on the name cell in the row's inline style (`--pad` and `--step` set the spacing: 10px / 26px, 4px / 11px on phones). Rows of one level join into one bar; do not reuse the class name `.sub` (that is the Crafting item-type row). The Craft / Buy switch (`.mode`) and the have stepper (`.stp`) are small segmented controls in the same 3px style.
+
 ## Content-in-UI rules
 - No Confirmed/Community badges; dashed tags mean community-sourced (Stats only).
 - Nav has two headed groups, Tools then Character (`group` in `src/data/nav.ts`; `.nav-title` in the sidebar, `.group-title` on home); labels are in-game names except the owner's own (Gear, Daevanion, Market).

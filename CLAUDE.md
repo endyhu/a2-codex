@@ -89,11 +89,11 @@ Clean, modern cheatsheet site for the **AION 2 Global** server. Hosted free on G
 - Images: use own screenshots or link out. Do not hotlink or copy third-party site assets (e.g. questlog.gg, metabot.gg); linking to their pages is fine. Owner-approved exceptions (one-off): the Arcana Unique card art and the Daevanion class/skill icons, copied from questlog.gg/metabot.gg into `src/assets/` and `public/`.
 
 ## Planned pages (approved)
-Navigation has two headed groups (owner request): **Tools** first (Daevanion, Market, future tools), then **Character** (Stats, Gear, Genus Insight, Arcana, in in-game order, exact names; see `group` in `src/data/nav.ts`). New tool pages go in Tools:
+Navigation has two headed groups (owner request): **Tools** first (Daevanion, Market, Crafting, future tools), then **Character** (Stats, Gear, Genus Insight, Arcana, in in-game order, exact names; see `group` in `src/data/nav.ts`). New tool pages go in Tools:
 - Character > **Stats** (stats reference), **Gear** (Gear BiS, stat lines/BiS lines, enhancement order; the owner's name, replaces the in-game "Enhancement"), **Genus Insight** (Genus BiS, `genus/`; replaces a separate Pets page), **Arcana** (Arcana BiS)
 - **Daevanion** (`daevanion/`, the owner's name; a tool, not a cheatsheet: class, boards, crystals, PvE/PvP switch, must-have skills in, best route out)
 Do not invent menu names; if a page needs a new one, copy the in-game label. The Skills / class pages were dropped by the owner (not planned).
-Build order: scaffold, Stats (done), Gear (done), Genus Insight (done), Arcana (done), Daevanion (done). **Market** (`market/`, cross-server prices from the aion2.exchange API; done). Later ideas: Abyss shop, weekly checklist, calculators.
+Build order: scaffold, Stats (done), Gear (done), Genus Insight (done), Arcana (done), Daevanion (done). **Market** (`market/`, cross-server prices from the aion2.exchange API; done). **Crafting** (`crafting/`, recipe material cost on your server vs cheapest/most expensive; done). Later ideas: Abyss shop, weekly checklist.
 When a page ships, the "Get it from" tags on the Stats page link to it automatically (flip `ready` in `nav.ts`; mapping in `TAG_PAGE` in `stats.astro`).
 
 ## Start of every session
@@ -107,6 +107,7 @@ Never commit personal info: real names, emails, usernames, character names, loca
 - `docs/styling.md`: shared styling recipes (tokens, shapes, hover/glow, icons). Read it before any UI work; do not guess styles.
 - `docs/data-sources.md`: source policy (what to trust for Global), verified Global terms, how to cross-check sources, game-client findings.
 - `scripts/global-sources.mjs` -> `src/data/stat-sources.json`: where each stat can be obtained, from Global client data. Re-run after patches.
+- `scripts/market-snapshot.mjs` -> `public/market.json` (prices, last prices; the deploy refreshes it) and `scripts/crafting-snapshot.mjs` -> `public/crafting.json` (recipes, factions, item levels, shop prices; about 2 minutes, re-run after patches).
 
 ## Money-saving tips
 There is no separate "save money" page. Put "what not to waste resources on" inside each category page (Gear, Arcana, Genus Insight). The Market page (cross-server price comparison) is its own tool page.
