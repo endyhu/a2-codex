@@ -150,6 +150,8 @@ const groups = [
   #skills .kind[data-kind='passive'] { --h: 140; }
   .chipset { display: flex; flex-wrap: wrap; gap: 5px; }
   .chip { display: inline-flex; align-items: center; gap: 6px; padding: 2px 9px 2px 3px; background: var(--panel); border: 1px solid var(--line); border-radius: 3px; color: var(--text); font: inherit; font-size: 0.8rem; cursor: pointer; transition: border-color 0.15s; }
+  .chip.off { opacity: 0.55; text-decoration: line-through; }
+  .chip.off:hover { opacity: 1; }
   .chip img.sk, .chip .bd { width: 22px; height: 22px; }
   .chip:hover, .chip:focus-visible { border-color: hsl(var(--h) 75% 58%); outline: none; }
   .order { list-style: none; counter-reset: o; margin: 0; padding: 0; display: grid; gap: 6px; }
@@ -258,7 +260,7 @@ const groups = [
       ['Your must-have passive skills, in order'],
       ['Attack Bonus'],
       ['Critical Hit'],
-      ['All other skills', 'passives, then actives'],
+      ['All other skills', 'passives, then actives; ignored skills score nothing'],
       ['Max HP, Defense, Critical Hit Resist, Max MP', 'weighted together, in this order'],
     ],
     pvp: [
@@ -267,13 +269,13 @@ const groups = [
       ['Your must-have passive skills, in order'],
       ['Attack Bonus'],
       ['Critical Hit'],
-      ['All other skills', 'passives, then actives'],
+      ['All other skills', 'passives, then actives; ignored skills score nothing'],
       ['Max HP, then Defense, Critical Hit Resist, Max MP', 'each fully before the next'],
     ],
   };
   const ORDER_NOTE = 'Ariel and Azphel score their orange rewards first (Damage Boost, then Damage Tolerance), then their own stats in a fixed order.';
 
-  interface Saved { cls: string; mode: Mode; boards: string[]; pools: Record<string, Record<Pool, number>>; skills: Record<string, string[]> }
+  interface Saved { cls: string; mode: Mode; boards: string[]; pools: Record<string, Record<Pool, number>>; skills: Record<string, string[]>; ignored: Record<string, string[]> }
   interface Result { cls: string; mode: Mode; B: Board[]; S: Uint8Array[]; pools: Record<Pool, number>; must: string[]; ms: number }
 
   const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
@@ -316,6 +318,7 @@ const groups = [
       // Crystal budgets are per class. Earlier versions saved one set for everyone; it moves to the class that was open.
       pools: typeof (saved.pools as any)?.c === 'number' ? { [saved.cls ?? 'Gladiator']: { ...DEFAULT_POOLS, ...(saved.pools as any) } } : saved.pools ?? {},
       skills: saved.skills ?? {},
+      ignored: saved.ignored ?? {},
     };
     const persist = () => { try { localStorage.setItem(STORE, JSON.stringify(state)); } catch {} };
 
@@ -323,6 +326,7 @@ const groups = [
     let all: Board[] = [];
     const poolsOf = () => (state.pools[state.cls] ??= { ...DEFAULT_POOLS });
     const mustOf = () => (state.skills[state.cls] ??= []);
+    const ignoredOf = () => (state.ignored[state.cls] ??= []);
     const skillKeys = () => {
       const ks = new Set<string>();
       for (const b of all) for (const o of b.N) for (const [k] of o.e) if (isSkill(k)) ks.add(k);
@@ -352,14 +356,15 @@ const groups = [
       $('#order').innerHTML = ORDER[state.mode].map(([t, s]) => `<li>${t}${s ? `<small>${s}</small>` : ''}</li>`).join('') + `<li class="note">${ORDER_NOTE}</li>`;
     }
     function drawSkills() {
-      const must = mustOf(), ks = skillKeys();
+      const must = mustOf(), ign = ignoredOf(), ks = skillKeys();
       const btn = (a: string, name: string, svg: string) => `<button type="button" class="ib" data-a="${a}" aria-label="${a === 'x' ? 'Remove' : 'Move ' + a} ${esc(name)}" title="${a === 'x' ? 'Remove' : 'Move ' + a}">${svg}</button>`;
       // Actives and passives are scored in separate tiers, so each gets its own ordered list.
       const group = (title: string, kind: string) => {
         const picked = must.filter((k) => D.skc[label(k)] === kind), list = ks.filter((k) => D.skc[label(k)] === kind && !must.includes(k));
         if (!picked.length && !list.length) return '';
         const rows = picked.map((k, i) => `<li data-k="${esc(k)}"><b>${i + 1}</b>${badge(k)}<span class="nm">${esc(label(k))}</span><span class="ac">${btn('up', label(k), ICON.up)}${btn('down', label(k), ICON.down)}${btn('x', label(k), ICON.x)}</span></li>`).join('');
-        return `<div class="kind" data-kind="${kind}"><h4>${title}</h4>${rows ? `<ol class="picked">${rows}</ol>` : ''}${list.length ? `<div class="chipset">${list.map((k) => `<button type="button" class="chip" data-add="${esc(k)}">${badge(k)}${esc(label(k))}</button>`).join('')}</div>` : ''}</div>`;
+        const chip = (k: string) => `<button type="button" class="chip${ign.includes(k) ? ' off' : ''}" data-add="${esc(k)}" title="${ign.includes(k) ? 'Ignored, scores nothing. Right-click to use it again' : 'Click to add. Right-click to ignore'}">${badge(k)}${esc(label(k))}</button>`;
+        return `<div class="kind" data-kind="${kind}"><h4>${title}</h4>${rows ? `<ol class="picked">${rows}</ol>` : ''}${list.length ? `<div class="chipset">${list.map(chip).join('')}</div>` : ''}</div>`;
       };
       $('#skills').innerHTML = group('Active', 'active') + group('Passive', 'passive');
       hydrate();
@@ -382,7 +387,7 @@ const groups = [
       if (!B.length) { result = null; drawRoute(); setStatus('No board selected'); return; }
       const must = mustOf().slice(), pools = { ...poolsOf() };
       try {
-        const T = weigh(all, state.mode, must, D);
+        const T = weigh(all, state.mode, must, D, ignoredOf());
         const t0 = performance.now();
         const S = await solve(B, pools, T, stale);
         if (stale()) return;
@@ -464,6 +469,7 @@ const groups = [
       all = D.classes[state.cls].map(prep);
       const valid = new Set(skillKeys());
       state.skills[state.cls] = mustOf().filter((k) => valid.has(k));
+      state.ignored[state.cls] = ignoredOf().filter((k) => valid.has(k) && !mustOf().includes(k));
       cur = 0;
       drawSetup();
       drawSkills();
@@ -494,11 +500,25 @@ const groups = [
       poolsOf()[i.dataset.pool as Pool] = Number.isFinite(n) && n > 0 ? n : 0;
       change();
     }, { signal }));
+    // Right-click (long-press on touch) ignores or un-ignores a skill.
+    $('#skills').addEventListener('contextmenu', (e) => {
+      const chip = (e.target as HTMLElement).closest<HTMLElement>('button[data-add]');
+      if (!chip) return;
+      e.preventDefault();
+      const ign = ignoredOf(), k = chip.dataset.add!, i = ign.indexOf(k);
+      if (i < 0) ign.push(k); else ign.splice(i, 1);
+      drawSkills();
+      change();
+    }, { signal });
     $('#skills').addEventListener('click', (e) => {
       const t = e.target as HTMLElement, add = t.closest<HTMLElement>('button[data-add]'), mv = t.closest<HTMLElement>('button[data-a]');
-      const must = mustOf();
-      if (add) must.push(add.dataset.add!);
-      else if (mv) {
+      const must = mustOf(), ign = ignoredOf();
+      if (add) {
+        // A click adds the skill as a must-have (and un-ignores it).
+        const k = add.dataset.add!, i = ign.indexOf(k);
+        if (i >= 0) ign.splice(i, 1);
+        must.push(k);
+      } else if (mv) {
         const k = mv.closest('li')!.dataset.k!, i = must.indexOf(k);
         if (mv.dataset.a === 'x') must.splice(i, 1);
         else {

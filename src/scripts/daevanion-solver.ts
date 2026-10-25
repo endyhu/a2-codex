@@ -61,7 +61,8 @@ export function prep(b: RawBoard): Board {
 //   · other passives · other actives · remaining stats.
 // PvE scores the remaining standard stats in one soft-weighted tier; PvP gives each its own strict tier and counts every orange.
 // Azphel and Ariel stats always get one strict tier per stat. Each pool is solved on its own, so pools may share tier slots.
-export function weigh(boards: Board[], mode: Mode, mustHave: string[], D: GameData) {
+// Ignored skills score nothing, so they are never a reason to take a tile.
+export function weigh(boards: Board[], mode: Mode, mustHave: string[], D: GameData, ignored: string[] = []) {
   const pvp = mode === 'pvp';
   const AZPHEL_ATTACK = 0, AZPHEL_DEFENSE = 1, ARIEL_ATTACK = 2, ARIEL_DEFENSE = 3, keyStart = 4;
   // The Aion 2 Bible: key actives first, then the important orange tiles; key passives come after.
@@ -94,6 +95,7 @@ export function weigh(boards: Board[], mode: Mode, mustHave: string[], D: GameDa
     }
     for (const [k, x] of o.e) {
       if (isSkill(k)) {
+        if (ignored.includes(k)) continue;
         const active = D.skc[k.slice(2)] === 'active';
         o.w[keyTier[k] ?? (active ? otherActive : otherPassive)] += x;
         continue;
