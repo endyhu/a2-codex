@@ -247,7 +247,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
 
     const checked = (id: string, v: string) => document.querySelectorAll<HTMLElement>(`#${id} [data-v]`).forEach((b) => b.setAttribute('aria-checked', String(b.dataset.v === v)));
     let noEA = false; // no Early Access server in the data: the launch choice is not saved
-    const syncUrl = () => writeUrl({ r: state.region, f: state.faction, l: noEA ? undefined : state.launch, srv: state.server, p: state.prof, t: state.sub, k: state.sel, n: state.qty, m: state.mast }, { f: 'all', l: 'launch', p: 'all', t: 'all', n: 1 });
+    const syncUrl = () => writeUrl({ r: state.region, f: state.faction, l: noEA ? undefined : state.launch, srv: state.server, p: state.prof, t: state.sub, k: state.sel, n: state.qty, m: state.mast, h: [...have].filter(([, v]) => v > 0).map(([k, v]) => `${k}:${v}`).join(',') }, { f: 'all', l: 'launch', p: 'all', t: 'all', n: 1 });
     const persist = () => { syncUrl(); try { localStorage.setItem(STORE, JSON.stringify({ region: state.region, faction: state.faction, launch: noEA ? (saved.launch || 'launch') : state.launch, server: state.server, prof: state.prof, sub: state.sub, sel: state.sel, qty: state.qty, mast: state.mast })); } catch {} };
     const pick = (s: Server) => s[2] === state.region && (state.faction === 'all' || s[4] === state.faction) && (state.launch === 'all' || (state.launch === 'ea') === !!s[6]);
     const name = (id: number) => craft.items[id][0];
@@ -575,7 +575,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
     }, { signal });
     qtyEl.addEventListener('input', () => { const n = Math.floor(Number(qtyEl.value)); if (n >= 1) { state.qty = Math.min(n, 9999); persist(); renderResult(); } }, { signal });
     // The box holds how many you already have (starts at 0); the prices cover the rest.
-    const setHave = (key: string, v: number, total: number) => { have.set(key, Math.min(total, Math.max(0, Math.floor(v) || 0))); };
+    const setHave = (key: string, v: number, total: number) => { have.set(key, Math.min(total, Math.max(0, Math.floor(v) || 0))); syncUrl(); };
     const refocus = (sel: string, id?: string) => {
       const el = rowsEl.querySelector<HTMLElement>(`${sel}[data-k="${id}"]`);
       el?.focus();
@@ -629,6 +629,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
       }
       index();
       if (!keys.includes(state.sel)) state.sel = '';
+      if (state.sel) for (const e of (url.get('h') || '').split(',')) { const [k, v] = e.split(':'), n = Math.floor(Number(v)); if (/^\d+(>\d+)*$/.test(k) && n > 0) have.set(k, n); }
       const regions = [...new Map(m.servers.map((s) => [s[2], s[3]])).entries()];
       if (!regions.some(([code]) => code === state.region)) state.region = guessRegion(regions.map(([code]) => code));
       regionsEl = () => $('#region').innerHTML = regions.map(([code, n]) => `<button type="button" class="tog" role="radio" aria-checked="false" data-v="${esc(code)}">${esc(n.replace('North America', 'NA'))}<small>${m.servers.filter((s) => s[2] === code && (state.launch === 'all' || (state.launch === 'ea') === !!s[6])).length} servers</small></button>`).join('');
