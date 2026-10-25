@@ -58,11 +58,6 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
 
 <style is:global>
   main { max-width: 1500px; }
-  .mkt { display: grid; grid-template-columns: 340px minmax(0, 1fr); align-items: start; gap: 20px; }
-  .mkt > .panel + .panel { margin-top: 0; }
-  .mkt .panel-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
-  .mkt .status { color: var(--muted); font-size: 0.84rem; font-variant-numeric: tabular-nums; }
-  .mkt .togs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
   .mkt .togs.wrap { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
   .mkt .wrap .tog { display: flex; align-items: center; justify-content: flex-start; gap: 9px; padding: 6px 10px; text-align: left; background: var(--panel); border: 1px solid var(--line); border-radius: 3px; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
   .mkt .wrap .tog:hover, .mkt .wrap .tog:focus-visible { background: var(--panel-2); border-color: color-mix(in srgb, var(--accent) 55%, transparent); }
@@ -71,24 +66,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
   .mkt .wrap .ico svg { display: block; width: 15px; height: 15px; }
   .mkt .wrap .tog[aria-checked='true'] { border-color: color-mix(in srgb, var(--accent) 70%, transparent); background: radial-gradient(120% 140% at 0% 0%, var(--accent-soft), var(--panel) 70%); box-shadow: 0 0 14px -8px var(--accent); }
   .mkt .wrap .tog[aria-checked='true'] .ico { color: var(--accent); }
-  #launch[hidden] { display: none; }
-  #faction, #launch { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .mkt .tog { min-width: 0; padding: 5px 4px; text-align: center; font-size: 0.82rem; font-weight: 600; line-height: 1.4; background: var(--panel); border: 1px solid var(--line); border-radius: 3px; color: var(--muted); cursor: pointer; transition: border-color 0.15s, color 0.15s; }
-  .mkt .tog:hover, .mkt .tog:focus-visible { border-color: color-mix(in srgb, var(--accent) 55%, transparent); color: var(--text); outline: none; }
-  .mkt .tog[aria-checked='true'] { color: var(--text); border-color: color-mix(in srgb, var(--accent) 70%, transparent); background: radial-gradient(120% 140% at 0% 0%, var(--accent-soft), var(--panel) 70%); }
-  .mkt .num { width: 100%; padding: 6px 8px; background: var(--bg); border: 1px solid var(--line); border-radius: 3px; color: var(--text); font: inherit; font-variant-numeric: tabular-nums; transition: border-color 0.15s; }
-  .mkt .num:focus-visible { border-color: var(--accent); outline: none; }
-  .mkt .seg { gap: 0; border: 1px solid var(--line); border-radius: 3px; overflow: hidden; }
-  .mkt .seg .tog { border: 0; border-radius: 0; }
-  .mkt .seg .tog + .tog { border-left: 1px solid var(--line); }
-  .mkt .seg .tog[aria-checked='true'] { background: radial-gradient(120% 140% at 0% 0%, var(--accent-soft), var(--panel) 70%); box-shadow: inset 0 -2px 0 var(--accent); }
-  .mkt .dot { display: inline-block; width: 7px; height: 7px; margin-right: 6px; border-radius: 50%; background: hsl(var(--h) 75% 60%); vertical-align: 1px; }
-  .mkt #region .tog { padding: 7px 6px 6px; }
-  .mkt #region .tog small { display: block; margin-top: 1px; color: var(--muted); font-size: 0.7rem; font-weight: 500; }
-  .mkt .mini { margin: 22px 0 8px; }
-  .mkt .mini:first-of-type { margin-top: 0; }
   .mkt .bar { display: flex; gap: 8px; margin-bottom: 10px; }
-  .mkt .bar .search { flex: 1; min-width: 0; }
   .mkt .bar .tog { flex: none; padding: 5px 14px; }
   .mkt .bar .tog[aria-pressed='true'] { color: var(--text); border-color: color-mix(in srgb, var(--accent) 70%, transparent); background: radial-gradient(120% 140% at 0% 0%, var(--accent-soft), var(--panel) 70%); }
 
@@ -96,7 +74,6 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
   .scroll { overflow-y: auto; max-height: calc(100vh - 300px); min-height: 280px; overscroll-behavior: contain; }
   .scroll { padding-right: 4px; }
   .scroll thead th { position: sticky; top: 0; z-index: 1; background: var(--panel); box-shadow: 0 1px 0 var(--line); }
-  .mkt > .panel:first-child { position: sticky; top: 16px; }
   .mk { table-layout: fixed; width: 100%; }
   .mk th:nth-child(2), .mk th:nth-child(3) { width: 22%; }
   .mk th:nth-child(4) { width: 9em; }
@@ -125,7 +102,6 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
   .mk .sr.me { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 70%, transparent); }
   .mk td.diff.best { color: var(--ok); }
   .mk td.diff.over { color: var(--warn); }
-  .mkt select.num { cursor: pointer; }
   .mk .sr.hi::before { background: linear-gradient(90deg, color-mix(in srgb, var(--warn) 5%, transparent), color-mix(in srgb, var(--warn) 22%, transparent)); border-right-color: var(--warn); }
   .mk .sr .rk { color: var(--muted); font-size: 0.74rem; text-align: center; }
   .mk .sr .nm { display: flex; align-items: center; gap: 7px; min-width: 0; font-weight: 600; }
@@ -139,8 +115,6 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
   @media (max-width: 480px) { .mk .sr { grid-template-columns: 1.4em minmax(0, 1fr) auto 4em; gap: 6px; padding: 5px 4px; } .mk .sr .ls, .mk .sr small { display: none; } .mk .sr .up { text-align: right; } }
   .mk td.old b { opacity: 0.6; }
   .mk td.old small { font-style: italic; }
-  .mkt .empty { color: var(--muted); margin: 14px 0; }
-  @media (max-width: 1100px) { .mkt { grid-template-columns: minmax(0, 1fr); } .mkt > .panel:first-child { position: static; } }
   @media (max-width: 600px) {
     .mk { display: table; font-size: 0.78rem; }
     .mk th, .mk td { padding: 6px 4px; }
@@ -151,6 +125,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
 
 <script>
   import { guessRegion } from '../../scripts/region';
+  import { oneOf, readUrl, writeUrl } from '../../scripts/urlstate';
   type Server = [number, string, string, string, string, string, number];
   type Market = { generated: string; servers: Server[]; items: [number, string, string, string, number][]; prices: Record<string, number[]>; last?: Record<string, number[]> };
   type Saved = { region: string; faction: string; launch: string; section: string };
@@ -179,19 +154,22 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
 
     let saved: Partial<Saved> = {};
     try { saved = JSON.parse(localStorage.getItem(STORE) || '{}') || {}; } catch {}
-    const state = { server: 0, region: saved.region || '', faction: saved.faction || 'all', launch: saved.launch || 'launch', section: saved.section || 'all', q: '', sort: 'vol', dir: -1};
+    const url = readUrl();
+    const state = { server: Number(url.get('srv')) || 0, region: url.get('r') || saved.region || '', faction: oneOf(url.get('f'), ['all', 'Elyos', 'Asmodian']) ?? (saved.faction || 'all'), launch: oneOf(url.get('l'), ['launch', 'ea', 'all']) ?? (saved.launch || 'launch'), section: oneOf(url.get('sec'), ['all', 'weapons', 'armor', 'accessories', 'consumables', 'materials', 'skins', 'other']) ?? (saved.section || 'all'), q: url.get('q') || '', sort: 'vol', dir: -1};
     const open = new Set<number>();
     let data: Market, rows: Row[] = [], regionsEl = () => {};
 
     const checked = (id: string, v: string) => document.querySelectorAll<HTMLElement>(`#${id} [data-v]`).forEach((b) => b.setAttribute('aria-checked', String(b.dataset.v === v)));
     let noEA = false; // no Early Access server in the data: the launch choice is not saved
-    const persist = () => { try { localStorage.setItem(STORE, JSON.stringify({ region: state.region, faction: state.faction, launch: noEA ? (saved.launch || 'launch') : state.launch, section: state.section })); } catch {} };
+    const syncUrl = () => writeUrl({ r: state.region, f: state.faction, l: noEA ? undefined : state.launch, sec: state.section, srv: state.server, q: state.q.trim() }, { f: 'all', l: 'launch', sec: 'all' });
+    const persist = () => { syncUrl(); try { localStorage.setItem(STORE, JSON.stringify({ region: state.region, faction: state.faction, launch: noEA ? (saved.launch || 'launch') : state.launch, section: state.section })); } catch {} };
 
     const pick = (s: Server) => s[2] === state.region && (state.faction === 'all' || s[4] === state.faction) && (state.launch === 'all' || (state.launch === 'ea') === !!s[6]);
     const compute = () => {
       const want = new Map(data.servers.filter(pick).map((s) => [s[0], s]));
       const needle = state.q.trim().toLowerCase();
       rows = [];
+      limit = PAGE;
       for (const it of data.items) {
         if (state.section !== 'all' && it[2] !== state.section) continue;
         if (needle && !it[1].toLowerCase().includes(needle)) continue;
@@ -227,13 +205,11 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
     };
 
     const sv = (r: Row['list'][number], faction: boolean) => `${faction ? `<i class="dot" title="${r.s[4]}" style="--h:${r.s[4] === 'Elyos' ? 200 : 290}"></i>` : ''}${esc(r.s[1])}`;
-    const render = () => {
+    const PAGE = 120; // rows drawn at a time; more are added when the list is scrolled near its end
+    let limit = PAGE;
+    const rowHtml = (r: Row) => {
       const both = state.faction === 'all';
-      status.textContent = `${nf.format(rows.length)} items · updated ${ago(data.generated)}`;
-      table.hidden = !rows.length;
-      empty.hidden = !!rows.length;
-      rowsEl.innerHTML = rows.map((r) => {
-        const lo = r.list[0], hi = r.list[r.list.length - 1], isOpen = open.has(r.key);
+      const lo = r.list[0], hi = r.list[r.list.length - 1], isOpen = open.has(r.key);
         const none = '<td class="na">—</td>';
         const loCell = lo ? `<td><b>${nf.format(lo.price)}</b><small>${sv(lo, both)} · ${lo.n} listed</small></td>` : none;
         const oldCell = r.old ? `<td class="old"><b>${nf.format(r.old.price)}</b><small>last price · ${ageText(r.old.h)}${r.old.s ? ' · ' + esc(r.old.s[1]) : ''}</small></td>` : none;
@@ -247,7 +223,12 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
         if (!isOpen || !r.list.length) return head;
         const list = r.list.map((e, i) => `<div class="sr${i === 0 ? " lo" : i === r.list.length - 1 ? " hi" : ""}${i === r.me ? " me" : ""}" style="--w:${Math.max(8, Math.round((e.price / hi.price) * 100))}%;--h:${e.s[4] === "Elyos" ? 200 : 290}"><b class="rk">${i + 1}</b><span class="nm"><i class="dot" title="${e.s[4]}"></i><span>${esc(e.s[1])}</span></span><span class="pr">${nf.format(e.price)}</span><span class="ls">${e.n} listed</span><span class="up">${i === 0 ? "" : `+${Math.round(((e.price - lo.price) / lo.price) * 100)}%`}</span></div>`).join("");
         return head + `<tr class="detail"><td colspan="4"><div class="sv">${list}</div></td></tr>`;
-      }).join('');
+    };
+    const render = () => {
+      status.textContent = `${nf.format(rows.length)} items · updated ${ago(data.generated)}`;
+      table.hidden = !rows.length;
+      empty.hidden = !!rows.length;
+      rowsEl.innerHTML = rows.slice(0, limit).map(rowHtml).join('');
       const heads = document.querySelectorAll<HTMLElement>('#table thead button');
       [heads[1].textContent, heads[2].textContent, heads[3].textContent] = state.server ? ['This server', 'Cheapest', 'Over cheapest'] : ['Cheapest', 'Most expensive', 'Gap'];
       $('#vol').setAttribute('aria-pressed', String(state.sort === 'vol'));
@@ -264,7 +245,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
       serverEl.innerHTML = '<option value="0">All servers</option>' + pool.map((s) => `<option value="${s[0]}">${esc(s[1])}${state.faction === 'all' ? ' · ' + s[4] : ''}</option>`).join('');
       serverEl.value = String(state.server);
     };
-    serverEl.addEventListener('change', () => { state.server = Number(serverEl.value); refresh(); }, { signal });
+    serverEl.addEventListener('change', () => { state.server = Number(serverEl.value); syncUrl(); refresh(); }, { signal });
     const refresh = () => { compute(); render(); $('#scroll').scrollTop = 0; };
 
     document.querySelectorAll<HTMLElement>('#faction, #launch, #section').forEach((g) => g.addEventListener('click', (e) => {
@@ -280,7 +261,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
       state.region = b.dataset.v!; checked('region', state.region); persist(); syncServers(); refresh();
     }, { signal });
     let t = 0;
-    q.addEventListener('input', () => { clearTimeout(t); t = window.setTimeout(() => { state.q = q.value; refresh(); }, 120); }, { signal });
+    q.addEventListener('input', () => { clearTimeout(t); t = window.setTimeout(() => { state.q = q.value; syncUrl(); refresh(); }, 120); }, { signal });
     $('#prices').addEventListener('click', (e) => {
       const b = (e.target as HTMLElement).closest<HTMLElement>('[data-sort]');
       if (!b) return;
@@ -297,7 +278,14 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
       rowsEl.querySelector<HTMLElement>(`tr.mrow[data-k="${k}"] .nb`)?.focus();
     };
     rowsEl.addEventListener('click', (e) => toggle(e.target as Element), { signal });
+    const scrollEl = $('#scroll');
+    scrollEl.addEventListener('scroll', () => {
+      if (limit >= rows.length || scrollEl.scrollTop + scrollEl.clientHeight < scrollEl.scrollHeight - 600) return;
+      rowsEl.insertAdjacentHTML('beforeend', rows.slice(limit, limit + PAGE).map(rowHtml).join(''));
+      limit += PAGE;
+    }, { signal, passive: true });
 
+    q.value = state.q;
     checked('faction', state.faction); checked('launch', state.launch); checked('section', state.section);
     load().then((d) => {
       if (signal.aborted) return;

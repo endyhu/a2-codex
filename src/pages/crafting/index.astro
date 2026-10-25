@@ -95,31 +95,8 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
 
 <style is:global>
   main { max-width: 1500px; }
-  .cft { display: grid; grid-template-columns: 340px minmax(0, 1fr); align-items: start; gap: 20px; }
-  .cft > .panel + .panel { margin-top: 0; }
-  .cft > .panel:first-child { position: sticky; top: 16px; }
   .cft .col { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
   .cft .col > .panel + .panel { margin-top: 0; }
-  .cft .panel-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
-  .cft .status { color: var(--muted); font-size: 0.84rem; font-variant-numeric: tabular-nums; }
-  .cft .togs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
-  #faction, #launch { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  #launch[hidden] { display: none; }
-  .cft .tog { min-width: 0; padding: 5px 4px; text-align: center; font-size: 0.82rem; font-weight: 600; line-height: 1.4; background: var(--panel); border: 1px solid var(--line); border-radius: 3px; color: var(--muted); cursor: pointer; transition: border-color 0.15s, color 0.15s; }
-  .cft .tog:hover, .cft .tog:focus-visible { border-color: color-mix(in srgb, var(--accent) 55%, transparent); color: var(--text); outline: none; }
-  .cft .tog[aria-checked='true'] { color: var(--text); border-color: color-mix(in srgb, var(--accent) 70%, transparent); background: radial-gradient(120% 140% at 0% 0%, var(--accent-soft), var(--panel) 70%); }
-  .cft .num { width: 100%; padding: 6px 8px; background: var(--bg); border: 1px solid var(--line); border-radius: 3px; color: var(--text); font: inherit; font-variant-numeric: tabular-nums; transition: border-color 0.15s; }
-  .cft .num:focus-visible { border-color: var(--accent); outline: none; }
-  .cft select.num { cursor: pointer; }
-  .cft .seg { gap: 0; border: 1px solid var(--line); border-radius: 3px; overflow: hidden; }
-  .cft .seg .tog { border: 0; border-radius: 0; }
-  .cft .seg .tog + .tog { border-left: 1px solid var(--line); }
-  .cft .seg .tog[aria-checked='true'] { box-shadow: inset 0 -2px 0 var(--accent); }
-  .cft .dot { display: inline-block; width: 7px; height: 7px; margin-right: 6px; border-radius: 50%; background: hsl(var(--h) 75% 60%); vertical-align: 1px; }
-  .cft #region .tog { padding: 7px 6px 6px; }
-  .cft #region .tog small { display: block; margin-top: 1px; color: var(--muted); font-size: 0.7rem; font-weight: 500; }
-  .cft .mini { margin: 22px 0 8px; }
-  .cft .mini:first-of-type { margin-top: 0; }
 
   .cft .pf { grid-template-columns: repeat(6, minmax(0, 1fr)); }
   .cft .pf .tog { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 7px 8px; }
@@ -129,14 +106,12 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
   .cft .tog:hover .ico, .cft .tog:focus-visible .ico { color: var(--text); }
   .cft .tog[aria-checked='true'] .ico { color: var(--accent); }
   .cft .bar { display: flex; margin: 10px 0; }
-  .cft .bar .search { flex: 1; min-width: 0; }
   .cft .rl { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: 4px 8px; max-height: 300px; overflow-y: auto; overscroll-behavior: contain; padding-right: 4px; }
   .cft .rl button { display: block; min-width: 0; padding: 6px 10px; text-align: left; background: var(--panel); border: 1px solid var(--line); border-radius: 3px; color: var(--text); font: inherit; cursor: pointer; transition: border-color 0.15s, background 0.15s; }
   .cft .rl button:hover, .cft .rl button:focus-visible { background: var(--panel-2); border-color: color-mix(in srgb, var(--accent) 55%, transparent); outline: none; }
   .cft .rl button[aria-pressed='true'] { border-color: color-mix(in srgb, var(--accent) 70%, transparent); background: radial-gradient(120% 140% at 0% 0%, var(--accent-soft), var(--panel) 70%); }
   .cft .rl b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.86rem; font-weight: 600; }
   .cft .rl small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); font-size: 0.74rem; }
-  .cft .empty { color: var(--muted); margin: 14px 0; }
 
   .cft .sub { grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); margin-top: 6px; }
   .cft .sub[hidden] { display: none; }
@@ -217,21 +192,21 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
   .cf .mode button[aria-pressed='true'] { position: relative; color: var(--text); border-color: color-mix(in srgb, var(--accent) 70%, transparent); background: radial-gradient(120% 140% at 0% 0%, var(--accent-soft), var(--panel) 70%); }
   .cf .mode button:disabled { opacity: 0.45; cursor: default; }
 
-  @media (max-width: 1100px) { .cft { grid-template-columns: minmax(0, 1fr); } .cft > .panel:first-child { position: static; } .cft .pf { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  @media (max-width: 1100px) { .cft .pf { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
   @media (max-width: 600px) {
-    .cf { display: table; font-size: 0.78rem; --pad: 4px; --step: 11px; }
+    .cf { display: table; font-size: 0.78rem; --pad: 4px; --step: 9px; }
     .cf th, .cf td { padding: 6px 4px; }
-    .cf th:nth-child(n+2) { width: 21%; }
+    .cf th:nth-child(n+2) { width: 20%; }
     .cf .mat { gap: 4px 8px; }
     .cf tr.nest .mat { padding-left: 7px; }
     .cf .nm small.of { display: none; }
     .cf td.made small, .cf td.na small { display: none; }
-    .cft .panel-head { flex-wrap: wrap; }
   }
 </style>
 
 <script>
   import { guessRegion } from '../../scripts/region';
+  import { oneOf, readUrl, writeUrl } from '../../scripts/urlstate';
   type Server = [number, string, string, string, string, string, number];
   type Market = { generated: string; servers: Server[]; items: [number, string, string, string, number][]; prices: Record<string, number[]>; last?: Record<string, number[]> };
   type Recipe = { product: number; qty: number; mastery: number; profession: string; level?: number; faction?: 'Elyos' | 'Asmodian'; type: string; combo: number; rate?: [string, string]; parts: [number, number][] };
@@ -259,31 +234,31 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
 
     let saved: Partial<Saved> = {};
     try { saved = JSON.parse(localStorage.getItem(STORE) || '{}') || {}; } catch {}
-    const state = { region: saved.region || '', faction: saved.faction || 'all', launch: saved.launch || 'launch', server: saved.server || 0, prof: saved.prof || 'all', sub: saved.sub || 'all', sel: saved.sel || '', qty: Math.max(1, saved.qty || 1), mast: Math.max(0, saved.mast || 0), q: '' };
+    const url = readUrl();
+    const state = { region: url.get('r') || saved.region || '', faction: oneOf(url.get('f'), ['all', 'Elyos', 'Asmodian']) ?? (saved.faction || 'all'), launch: oneOf(url.get('l'), ['launch', 'ea', 'all']) ?? (saved.launch || 'launch'), server: Number(url.get('srv')) || saved.server || 0, prof: oneOf(url.get('p'), ['all', 'Blacksmithing', 'Armorsmithing', 'Handicrafting', 'Alchemy', 'Cooking']) ?? (saved.prof || 'all'), sub: url.get('t') || saved.sub || 'all', sel: url.get('k') || saved.sel || '', qty: Math.min(9999, Math.max(1, Number(url.get('n')) || saved.qty || 1)), mast: Math.min(100, Math.max(0, Number(url.get('m')) || saved.mast || 0)), q: '' };
     const have = new Map<string, number>();
     // Items with the same name can have different ids (one per faction), so names map to lists of ids.
     let idsByName = new Map<string, number[]>();
     const splendent = (nm: string) => (/^(Artisan's|Expert's) /.test(nm) ? nm.replace(/^(Artisan's|Expert's) /, '$1 Splendent ') : `Splendent ${nm}`);
     const MERCHANT: Server = [0, 'Merchant', '', '', '', '', 0];
     let market: Market, craft: Craft, regionsEl = () => {};
-    let keys: string[] = [], producer = new Map<number, number>(), comboSrc = new Map<string, number[]>(), shown: number[] = [];
+    let keys: string[] = [], producers = new Map<number, number[]>(), comboSrc = new Map<string, number[]>(), shown: number[] = [];
     qtyEl.value = String(state.qty);
 
     const checked = (id: string, v: string) => document.querySelectorAll<HTMLElement>(`#${id} [data-v]`).forEach((b) => b.setAttribute('aria-checked', String(b.dataset.v === v)));
     let noEA = false; // no Early Access server in the data: the launch choice is not saved
-    const persist = () => { try { localStorage.setItem(STORE, JSON.stringify({ region: state.region, faction: state.faction, launch: noEA ? (saved.launch || 'launch') : state.launch, server: state.server, prof: state.prof, sub: state.sub, sel: state.sel, qty: state.qty, mast: state.mast })); } catch {} };
+    const syncUrl = () => writeUrl({ r: state.region, f: state.faction, l: noEA ? undefined : state.launch, srv: state.server, p: state.prof, t: state.sub, k: state.sel, n: state.qty, m: state.mast }, { f: 'all', l: 'launch', p: 'all', t: 'all', n: 1 });
+    const persist = () => { syncUrl(); try { localStorage.setItem(STORE, JSON.stringify({ region: state.region, faction: state.faction, launch: noEA ? (saved.launch || 'launch') : state.launch, server: state.server, prof: state.prof, sub: state.sub, sel: state.sel, qty: state.qty, mast: state.mast })); } catch {} };
     const pick = (s: Server) => s[2] === state.region && (state.faction === 'all' || s[4] === state.faction) && (state.launch === 'all' || (state.launch === 'ea') === !!s[6]);
     const name = (id: number) => craft.items[id][0];
 
-    // Recipe key = product id plus its position among the recipes of the same product (some products have two).
-    const variants = new Map<number, number[]>();
+    // Recipe key = product id plus its position among the recipes of the same product (40 products have two: one per faction).
     const index = () => {
       const seen = new Map<number, number>();
       keys = craft.recipes.map((r, i) => {
         const n = seen.get(r.product) ?? 0;
         seen.set(r.product, n + 1);
-        (variants.get(r.product) ?? variants.set(r.product, []).get(r.product)!).push(i);
-        if (n === 0) producer.set(r.product, i);
+        (producers.get(r.product) ?? producers.set(r.product, []).get(r.product)!).push(i);
         if (r.combo > 0 && r.rate) {
           const res = splendent(name(r.product));
           if (idsByName.has(res)) (comboSrc.get(res) ?? comboSrc.set(res, []).get(res)!).push(i);
@@ -302,8 +277,21 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
     const tier = (r: Recipe) => r.level ?? r.mastery;
     // Faction-only recipes of the other faction are hidden: your server's faction, else the Faction filter when it is one faction.
     const myFaction = (): string | null => (state.server ? market.servers.find((x) => x[0] === state.server)?.[4] : state.faction !== 'all' ? state.faction : null) ?? null;
+    // After a faction change the open recipe may be the other faction's: switch to its twin, or close it.
+    const fixSel = (fac: string | null) => {
+      const cur = keys.indexOf(state.sel), r = craft.recipes[cur];
+      if (cur < 0 || !fac || !r.faction || r.faction === fac) return;
+      const same = craft.recipes.map((t, i) => (t.faction === fac && t.profession === r.profession && t.type === r.type ? i : -1)).filter((i) => i >= 0);
+      // the same name (items both factions craft), else the one recipe of the same tier (Star Dragon Lord <-> True Dragon Lord)
+      const tier = same.filter((i) => craft.recipes[i].level === r.level && craft.recipes[i].mastery === r.mastery);
+      const twin = same.find((i) => name(craft.recipes[i].product) === name(r.product)) ?? (tier.length === 1 ? tier[0] : -1);
+      state.sel = twin >= 0 ? keys[twin] : '';
+      have.clear(); modes.clear();
+      persist(); renderResult();
+    };
     const renderList = () => {
       const fac = myFaction();
+      fixSel(fac);
       const needle = state.q.trim().toLowerCase();
       shown = craft.recipes.map((_, i) => i).filter((i) => {
         const r = craft.recipes[i];
@@ -311,7 +299,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
       }).sort((a, b) => tier(craft.recipes[a]) - tier(craft.recipes[b]) || craft.recipes[a].mastery - craft.recipes[b].mastery || name(craft.recipes[a].product).localeCompare(name(craft.recipes[b].product)) || a - b);
       count.textContent = `${nf.format(shown.length)} recipes`;
       listEl.innerHTML = shown.length ? shown.map((i) => {
-        const r = craft.recipes[i], v = variants.get(r.product)!;
+        const r = craft.recipes[i], v = shown.filter((j) => craft.recipes[j].product === r.product);
         return `<button type="button" data-i="${i}" aria-pressed="${keys[i] === state.sel}"><b>${esc(name(r.product))}</b><small>${r.profession}${r.level ? ` · Item level ${r.level}` : ""}${r.mastery ? ` · Mastery ${r.mastery}` : ""}${r.qty > 1 ? ` · makes ${r.qty}` : ''}${v.length > 1 ? ` · Recipe ${v.indexOf(i) + 1} of ${v.length}` : ''}</small></button>`;
       }).join('') : '<p class="empty">No recipe matches.</p>';
     };
@@ -354,9 +342,10 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
       return sc !== null && cb !== null ? (sc * r.combo * cb) / 1e6 : 0;
     };
     const source = (id: number): { ri: number; p: number; combo: boolean } | undefined => {
-      const ri = producer.get(id);
-      if (ri !== undefined) return { ri, p: 1, combo: false };
-      const cands = comboSrc.get(name(id)) ?? [], fac = myFaction(), bi = cands.find((i) => !fac || !craft.recipes[i].faction || craft.recipes[i].faction === fac) ?? cands[0], p = bi === undefined ? 0 : comboChance(bi);
+      const mine = (i: number) => !fac || !craft.recipes[i].faction || craft.recipes[i].faction === fac, fac = myFaction();
+      const own = producers.get(id);
+      if (own) return { ri: own.find(mine) ?? own[0], p: 1, combo: false };
+      const cands = comboSrc.get(name(id)) ?? [], bi = cands.find(mine) ?? cands[0], p = bi === undefined ? 0 : comboChance(bi);
       return bi !== undefined && p > 0 ? { ri: bi, p, combo: true } : undefined;
     };
     // Expected cost of one item made this way (a combo takes 1 / p crafts of the base recipe per item).
@@ -601,12 +590,13 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
     // Mouse wheel over a number box: up adds one, down takes one.
     rowsEl.addEventListener('wheel', (e) => {
       const el = e.target as HTMLInputElement;
-      if (!el.classList?.contains('have')) return;
+      if (!el.classList?.contains('have') || document.activeElement !== el) return;
       e.preventDefault();
       setHave(el.dataset.k!, Number(el.value) + (e.deltaY < 0 ? 1 : -1), Number(el.max));
       renderResult(); refocus('.have', el.dataset.k);
     }, { signal, passive: false });
     qtyEl.addEventListener('wheel', (e) => {
+      if (document.activeElement !== qtyEl) return;
       e.preventDefault();
       state.qty = Math.min(9999, Math.max(1, state.qty + (e.deltaY < 0 ? 1 : -1))); qtyEl.value = String(state.qty); persist(); renderResult();
     }, { signal, passive: false });
