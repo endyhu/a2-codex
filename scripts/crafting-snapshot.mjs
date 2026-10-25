@@ -85,6 +85,16 @@ await Promise.all(Array.from({ length: 6 }, async () => {
 }));
 console.log('faction-specific recipes:', recipes.filter((r) => r.faction).length);
 
+// Dragon Lord "Splendent X" recipes (114, all mastery 0): the client table lists only the extra materials (e.g. 11 Fine Thick Balaur Horn
+// + 4 Wrathful Mind), but the item X itself is consumed too (owner, in game: Splendent Star Dragon Lord Greatsword needs a Star Dragon Lord
+// Greatsword). Every one of the 114 has a base recipe with the same name without "Splendent", faction and item type; one is added as an ingredient.
+for (const r of recipes) {
+  const nm = props.items[r.product].name;
+  if (!/^Splendent /.test(nm)) continue;
+  const base = recipes.find((b) => props.items[b.product].name === nm.replace(/^Splendent /, '') && b.faction === r.faction && b.type === r.type);
+  if (base && !r.parts.some(([id]) => id === base.product)) r.parts = [[base.product, 1], ...r.parts];
+}
+
 // Kina prices of NPC shops, for materials that are only bought from merchants (the "(Bound)" items). Cheapest shop wins.
 // Shop pages list rows as: name | grade | price | currency (some shops add a faction column), between the "Price" header and "Where to find it".
 const byName = new Map(Object.entries(items).map(([id, [name]]) => [name, id]));
