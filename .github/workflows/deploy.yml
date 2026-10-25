@@ -2,6 +2,7 @@ name: Deploy to GitHub Pages
 
 # Two deploys per push: the site goes out right away (reusing the market data that is already live), then a second
 # job fetches fresh prices, rebuilds and deploys again. A slow or failing price fetch never holds up the site.
+# The second job is skipped when the live prices are less than an hour old, so rapid pushes do not spam the API.
 on:
   push:
     branches: [main]
@@ -19,6 +20,8 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      recent: ${{ steps.reuse.outputs.recent }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -28,11 +31,13 @@ jobs:
       - run: npm ci
       # Keep the prices that are live now; the committed public/market.json is only the fallback if this fails.
       - name: Reuse the live market data
+        id: reuse
         continue-on-error: true
         run: |
           curl -fsS --max-time 30 https://a2codex.prezenith.com/market.json -o /tmp/market.json
           node -e "const m = JSON.parse(require('fs').readFileSync('/tmp/market.json', 'utf8')); if (!m.servers?.length || !m.items?.length) process.exit(1)"
           cp /tmp/market.json public/market.json
+          node -e "const m = JSON.parse(require('fs').readFileSync('/tmp/market.json', 'utf8')); if (Date.now() - Date.parse(m.generated) < 36e5) console.log('recent=true')" >> "$GITHUB_OUTPUT"
       - run: npm run build
       - uses: actions/upload-pages-artifact@v5
         with:
@@ -49,7 +54,8 @@ jobs:
         uses: actions/deploy-pages@v5
 
   refresh:
-    needs: deploy
+    needs: [build, deploy]
+    if: needs.build.outputs.recent != 'true'
     runs-on: ubuntu-latest
     outputs:
       fresh: ${{ steps.mark.outputs.fresh }}
