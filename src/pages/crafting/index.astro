@@ -1,0 +1,644 @@
+---
+import Base from '../../layouts/Base.astro';
+import { bowIcon, daggerIcon, legsIcon, necklaceIcon } from '../../data/icons';
+import layoutGrid from 'lucide-static/icons/layout-grid.svg?raw';import anvil from 'lucide-static/icons/anvil.svg?raw';import shield from 'lucide-static/icons/shield.svg?raw';import gem from 'lucide-static/icons/gem.svg?raw';import flask from 'lucide-static/icons/flask-conical.svg?raw';import pot from 'lucide-static/icons/cooking-pot.svg?raw';
+
+// Icon per item type (the `type` of a recipe in crafting.json); the page script reads them from #sub-icons.
+const lucide = import.meta.glob('/node_modules/lucide-static/icons/*.svg', { query: '?raw', import: 'default', eager: true }) as Record<string, string>;
+const typeIcons: Record<string, string> = Object.fromEntries(Object.entries({
+  all: 'layout-grid', Swords: 'shield', Greatswords: 'sword', Maces: 'hammer', Guards: 'shield-half', Staves: 'wand', Orbs: 'orbit', Spellbooks: 'book-open',
+  Earrings: 'gem', Necklaces: 'link', Rings: 'circle-dot', Bracelets: 'circle', Helm: 'crown', Pauldrons: 'shield', Top: 'shirt', Cloak: 'ghost', Gloves: 'hand', Shoes: 'footprints', Components: 'package', Consumables: 'flask-conical', Food: 'utensils',
+}).map(([type, icon]) => [type, lucide[`/node_modules/lucide-static/icons/${icon}.svg`]]));
+typeIcons.Legs = legsIcon;
+typeIcons.Bows = bowIcon;
+typeIcons.Daggers = daggerIcon;
+typeIcons.Necklaces = necklaceIcon;
+// Lucide has no sword and shield: a shield with a sword on it.
+typeIcons.Swords = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.500-7.700 8.900a1 1 0 0 1-.6 0C7.500 20.500 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.500-1.200 6.200-2.700a1.200 1.200 0 0 1 1.600 0C14.500 3.800 17 5 19 5a1 1 0 0 1 1 1z"/><path d="M12 7v8M9.500 12h5"/></svg>';
+const professions:[string, string, string][] = [['all', 'All', layoutGrid], ['Blacksmithing', 'Blacksmithing', anvil], ['Armorsmithing', 'Armorsmithing', shield], ['Handicrafting', 'Handicrafting', gem], ['Alchemy', 'Alchemy', flask], ['Cooking', 'Cooking', pot]];
+const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asmodian', 'Asmodian']];
+---
+<Base title="Crafting" description="Material cost of every AION 2 Global recipe on your server, the cheapest server and the most expensive one.">
+  <h1 class="page-title">Crafting</h1>
+
+  <div class="cft">
+    <section class="panel" id="filters" aria-label="Prices from">
+      <header class="panel-head"><h2>Prices from</h2></header>
+
+      <h3 class="mini">Region</h3>
+      <div class="togs" id="region" role="radiogroup" aria-label="Region"></div>
+
+      <h3 class="mini">Faction</h3>
+      <div class="togs seg" id="faction" role="radiogroup" aria-label="Faction">
+        {factions.map(([v, l]) => <button type="button" class="tog" role="radio" aria-checked="false" data-v={v} style={v === "all" ? "" : `--h:${v === "Elyos" ? 200 : 290}`}>{v !== "all" && <i class="dot" />}{l}</button>)}
+      </div>
+
+      <h3 class="mini" id="launch-h">Servers</h3>
+      <div class="togs seg" id="launch" role="radiogroup" aria-label="Server launch">{[["launch", "Launch"], ["ea", "Early Access"], ["all", "Both"]].map(([v, l]) => <button type="button" class="tog" role="radio" aria-checked="false" data-v={v}>{l}</button>)}</div>
+
+      <h3 class="mini">Your server</h3>
+      <select id="server" class="num" aria-label="Your server"><option value="0">None</option></select>
+
+    </section>
+
+    <div class="col">
+      <section class="panel" id="recipes" aria-label="Recipe">
+        <header class="panel-head"><h2>Recipe</h2><span class="status" id="count">Loading</span></header>
+        <div class="togs pf" id="prof" role="radiogroup" aria-label="Profession">
+          {professions.map(([v, l, ic]) => <button type="button" class="tog" role="radio" aria-checked="false" data-v={v}><span class="ico" set:html={ic} />{l}</button>)}
+        </div>
+        <div class="togs sub" id="sub" role="radiogroup" aria-label="Item type" hidden></div>
+        <script type="application/json" id="sub-icons" set:html={JSON.stringify(typeIcons)} />
+        <div class="bar"><input id="q" class="num search" type="search" placeholder="Search recipes" autocomplete="off" aria-label="Search recipes" /></div>
+        <div class="rl" id="list"></div>
+      </section>
+
+      <section class="panel" id="result" aria-label="Materials" hidden>
+        <header class="panel-head">
+          <h2 id="title">Materials</h2>
+          <div class="ctl">
+            <div class="qty" role="group" aria-label="Your mastery">
+              <span>Mastery</span>
+              <input id="mast" class="solo" type="number" min="1" max="100" inputmode="numeric" aria-label="Your mastery" />
+            </div>
+            <div class="qty" role="group" aria-label="Amount">
+              <span>Amount</span>
+              <button type="button" class="step" data-d="-1" aria-label="One less">−</button>
+              <input id="qty" type="number" min="1" max="9999" value="1" inputmode="numeric" aria-label="Amount" />
+              <button type="button" class="step" data-d="1" aria-label="One more">+</button>
+            </div>
+          </div>
+        </header>
+        <p class="meta lead" id="lead"></p>
+        <p class="meta rate" id="rate"></p>
+        <div class="stats" id="stats"></div>
+        <div class="scroll">
+          <table class="saving cf" id="table">
+            <thead>
+              <tr>
+                <th scope="col">Material</th>
+                <th scope="col" class="c-me">Your server</th>
+                <th scope="col">Cheapest</th>
+                <th scope="col">Most expensive</th>
+              </tr>
+            </thead>
+            <tbody id="rows"></tbody>
+            <tfoot id="foot"></tfoot>
+          </table>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <p class="meta sources">Recipes: the Global client's crafting tables, via <a href="https://metabot.gg/en/aion-2/crafting">metabot.gg</a>. Prices: the cheapest listed unit price per item and server, from the <a href="https://aion2.exchange/">Aion2Market</a> public API (same snapshot as Market). Merchant prices (Kina): the crafting, general and substance morph NPC shops, via <a href="https://metabot.gg/en/aion-2/shops">metabot.gg</a>. Craftable components can be crafted or bought. A combo item you craft counts at its expected cost; failed crafts are not counted.</p>
+</Base>
+
+<style is:global>
+  main { max-width: 1500px; }
+  .cft { display: grid; grid-template-columns: 340px minmax(0, 1fr); align-items: start; gap: 20px; }
+  .cft > .panel + .panel { margin-top: 0; }
+  .cft > .panel:first-child { position: sticky; top: 16px; }
+  .cft .col { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+  .cft .col > .panel + .panel { margin-top: 0; }
+  .cft .panel-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+  .cft .status { color: var(--muted); font-size: 0.84rem; font-variant-numeric: tabular-nums; }
+  .cft .togs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+  #faction, #launch { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  #launch[hidden] { display: none; }
+  .cft .tog { min-width: 0; padding: 5px 4px; text-align: center; font-size: 0.82rem; font-weight: 600; line-height: 1.4; background: var(--panel); border: 1px solid var(--line); border-radius: 3px; color: var(--muted); cursor: pointer; transition: border-color 0.15s, color 0.15s; }
+  .cft .tog:hover, .cft .tog:focus-visible { border-color: color-mix(in srgb, var(--accent) 55%, transparent); color: var(--text); outline: none; }
+  .cft .tog[aria-checked='true'] { color: var(--text); border-color: color-mix(in srgb, var(--accent) 70%, transparent); background: radial-gradient(120% 140% at 0% 0%, var(--accent-soft), var(--panel) 70%); }
+  .cft .num { width: 100%; padding: 6px 8px; background: var(--bg); border: 1px solid var(--line); border-radius: 3px; color: var(--text); font: inherit; font-variant-numeric: tabular-nums; transition: border-color 0.15s; }
+  .cft .num:focus-visible { border-color: var(--accent); outline: none; }
+  .cft select.num { cursor: pointer; }
+  .cft .seg { gap: 0; border: 1px solid var(--line); border-radius: 3px; overflow: hidden; }
+  .cft .seg .tog { border: 0; border-radius: 0; }
+  .cft .seg .tog + .tog { border-left: 1px solid var(--line); }
+  .cft .seg .tog[aria-checked='true'] { box-shadow: inset 0 -2px 0 var(--accent); }
+  .cft .dot { display: inline-block; width: 7px; height: 7px; margin-right: 6px; border-radius: 50%; background: hsl(var(--h) 75% 60%); vertical-align: 1px; }
+  .cft #region .tog { padding: 7px 6px 6px; }
+  .cft #region .tog small { display: block; margin-top: 1px; color: var(--muted); font-size: 0.7rem; font-weight: 500; }
+  .cft .mini { margin: 22px 0 8px; }
+  .cft .mini:first-of-type { margin-top: 0; }
+
+  .cft .pf { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .cft .pf .tog { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 7px 8px; }
+  .cft .sub .tog { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 6px 8px; }
+  .cft .ico { display: inline-flex; flex: none; color: var(--muted); transition: color 0.15s; }
+  .cft .ico svg { display: block; width: 15px; height: 15px; }
+  .cft .tog:hover .ico, .cft .tog:focus-visible .ico { color: var(--text); }
+  .cft .tog[aria-checked='true'] .ico { color: var(--accent); }
+  .cft .bar { display: flex; margin: 10px 0; }
+  .cft .bar .search { flex: 1; min-width: 0; }
+  .cft .rl { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: 4px 8px; max-height: 300px; overflow-y: auto; overscroll-behavior: contain; padding-right: 4px; }
+  .cft .rl button { display: block; min-width: 0; padding: 6px 10px; text-align: left; background: var(--panel); border: 1px solid var(--line); border-radius: 3px; color: var(--text); font: inherit; cursor: pointer; transition: border-color 0.15s, background 0.15s; }
+  .cft .rl button:hover, .cft .rl button:focus-visible { background: var(--panel-2); border-color: color-mix(in srgb, var(--accent) 55%, transparent); outline: none; }
+  .cft .rl button[aria-pressed='true'] { border-color: color-mix(in srgb, var(--accent) 70%, transparent); background: radial-gradient(120% 140% at 0% 0%, var(--accent-soft), var(--panel) 70%); }
+  .cft .rl b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.86rem; font-weight: 600; }
+  .cft .rl small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); font-size: 0.74rem; }
+  .cft .empty { color: var(--muted); margin: 14px 0; }
+
+  .cft .sub { grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); margin-top: 6px; }
+  .cft .sub[hidden] { display: none; }
+  .cft .ctl { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px 20px; }
+  .cft .qty input.solo { width: 4.2em; border-width: 1px; border-radius: 3px; }
+  .cft .rate { margin: 0 0 12px; color: var(--muted); }
+  .cft .rate b.ok { color: var(--ok); }
+  .cft .rate b.warn { color: var(--warn); }
+  .cft .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 8px; margin: 0 0 14px; }
+  .cft .stats:empty { display: none; }
+  .cft .stat { padding: 9px 12px; background: var(--panel); border: 1px solid var(--line); border-radius: 3px; min-width: 0; }
+  .cft .stat span { display: block; color: var(--muted); font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+  .cft .stat b { display: block; margin-top: 2px; font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+  .cft .stat b.ok { color: var(--ok); }
+  .cft .stat b.warn { color: var(--warn); }
+  .cft .stat small { display: block; margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); font-size: 0.76rem; }
+  .cft .qty { display: flex; align-items: stretch; color: var(--muted); font-size: 0.74rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+  .cft .qty span { align-self: center; margin-right: 12px; }
+  .cft .qty input { width: 4.2em; padding: 5px 4px; text-align: center; background: var(--bg); border: 1px solid var(--line); border-width: 1px 0; color: var(--text); font: inherit; font-size: 0.9rem; letter-spacing: 0; font-variant-numeric: tabular-nums; appearance: textfield; -moz-appearance: textfield; }
+  .cft .qty input::-webkit-outer-spin-button, .cft .qty input::-webkit-inner-spin-button { appearance: none; margin: 0; }
+  .cft .qty input:focus-visible { outline: none; box-shadow: inset 0 -2px 0 var(--accent); }
+  .cft .qty .step { width: 30px; padding: 0; background: var(--panel); border: 1px solid var(--line); color: var(--muted); font: inherit; font-size: 1rem; line-height: 1; cursor: pointer; transition: border-color 0.15s, color 0.15s; }
+  .cft .qty .step:first-of-type { border-radius: 3px 0 0 3px; }
+  .cft .qty .step:last-of-type { border-radius: 0 3px 3px 0; }
+  .cft .qty .step:hover, .cft .qty .step:focus-visible { border-color: color-mix(in srgb, var(--accent) 55%, transparent); color: var(--text); outline: none; }
+  .cft .lead { margin: 0 0 8px; }
+  .cft .scroll { overflow-x: auto; }
+  .cf { table-layout: fixed; width: 100%; --pad: 10px; --step: 26px; --c1: 255 85% 70%; --c2: 190 70% 52%; --c3: 38 90% 58%; --c4: 330 75% 66%; }
+  .cf th:nth-child(n+2) { width: 18%; }
+  .cf[data-me='0'] .c-me { display: none; }
+  .cf[data-me='0'] th:nth-child(n+2) { width: 22%; }
+  .cf td, .cf tbody th { overflow-wrap: anywhere; }
+  .cf tbody th { text-transform: none; letter-spacing: normal; font-size: inherit; color: var(--text); text-align: left; }
+  .cf td b, .cf th b { display: block; font-weight: 600; }
+  .cf small { display: block; color: var(--muted); font-weight: 400; opacity: 1; }
+  .cf td.na { color: var(--muted); }
+  .cf tfoot td small { font-weight: 400; }
+  .cf .mat { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px 12px; margin-left: calc(var(--d, 0) * var(--step)); }
+  .cf .nm > b { min-width: 0; }
+  @media (min-width: 1700px) { .cf .nm > b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } }
+  .cf .need { display: flex; align-items: center; flex-wrap: wrap; flex: none; width: 9.5em; gap: 4px 5px; white-space: nowrap; }
+  .cf .stp { display: inline-flex; align-items: stretch; }
+  .cf .stp button { width: 20px; padding: 0; background: transparent; border: 1px solid var(--line); color: var(--muted); font: inherit; font-size: 0.95rem; line-height: 1; cursor: pointer; transition: border-color 0.15s, color 0.15s; }
+  .cf .stp button:first-child { border-radius: 3px 0 0 3px; }
+  .cf .stp button:last-child { border-radius: 0 3px 3px 0; }
+  .cf .stp button:hover, .cf .stp button:focus-visible { border-color: color-mix(in srgb, var(--accent) 55%, transparent); color: var(--text); outline: none; }
+  .cf .have { width: 2.7em; padding: 1px 0; text-align: center; background: var(--bg); border: 1px solid var(--line); border-width: 1px 0; color: var(--text); font: inherit; font-size: 0.82rem; font-weight: 700; font-variant-numeric: tabular-nums; appearance: textfield; -moz-appearance: textfield; }
+  .cf .have::-webkit-outer-spin-button, .cf .have::-webkit-inner-spin-button { appearance: none; margin: 0; }
+  .cf .have:focus-visible { outline: none; box-shadow: inset 0 -2px 0 var(--accent); }
+  .cf td.stale b { opacity: 0.6; }
+  .cf td.stale small { font-style: italic; }
+  .cf td.lo b { color: var(--ok); }
+  .cf td.hi b { color: var(--warn); }
+  /* one colour per nesting level: sub, sub-sub, ... */
+  .cf tr.d1 { --c: var(--c1); }
+  .cf tr.d2 { --c: var(--c2); }
+  .cf tr.d3 { --c: var(--c3); }
+  .cf tr.d4 { --c: var(--c4); }
+  .cf tr.nest th { border-bottom-color: transparent; } /* the row line is drawn inside the cell, full width and under the bars, so the bars run unbroken */
+  .cf tr.nest { background: hsl(var(--c) / 0.06); }
+  .cf tr.nest .mat { padding-left: 12px; }
+  .cf tr.nest .nm small.of { color: hsl(var(--c)); }
+  .cf .nm small.of { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin: 0 0 3px; color: var(--muted); font-size: 0.66rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+  .cf .nm { display: block; flex: 1 1 11em; min-width: 0; }
+  .cf .nm small { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; margin-top: 3px; font-size: 0.76rem; }
+  .cf .nm small.cmb, .cf tfoot small.cmb { color: color-mix(in srgb, var(--accent) 80%, var(--muted)); }
+  .cf .nm small.cmb { font-size: 0.7rem; }
+  .cf tfoot small.cmb { margin-top: 2px; font-size: 0.72rem; font-weight: 600; text-transform: none; letter-spacing: 0; }
+  .cf tr.crafted td.made b { color: var(--muted); font-weight: 600; }
+  .cf tr.crafted td.made.ev b { color: var(--text); }
+  .cf tr.inc td:not(:first-child) { opacity: 0.5; }
+  .cf td.made small { font-style: italic; }
+  .cf .mode { display: inline-flex; flex: none; }
+  .cf .mode button { padding: 2px 9px; background: var(--panel); border: 1px solid var(--line); color: var(--muted); font: inherit; font-size: 0.74rem; font-weight: 600; cursor: pointer; transition: border-color 0.15s, color 0.15s; }
+  .cf .mode button:first-child { border-radius: 3px 0 0 3px; }
+  .cf .mode button:last-child { border-radius: 0 3px 3px 0; margin-left: -1px; }
+  .cf .mode button:hover:not(:disabled), .cf .mode button:focus-visible { border-color: color-mix(in srgb, var(--accent) 55%, transparent); color: var(--text); outline: none; }
+  .cf .mode button[aria-pressed='true'] { position: relative; color: var(--text); border-color: color-mix(in srgb, var(--accent) 70%, transparent); background: radial-gradient(120% 140% at 0% 0%, var(--accent-soft), var(--panel) 70%); }
+  .cf .mode button:disabled { opacity: 0.45; cursor: default; }
+
+  @media (max-width: 1100px) { .cft { grid-template-columns: minmax(0, 1fr); } .cft > .panel:first-child { position: static; } .cft .pf { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  @media (max-width: 600px) {
+    .cf { display: table; font-size: 0.78rem; --pad: 4px; --step: 11px; }
+    .cf th, .cf td { padding: 6px 4px; }
+    .cf th:nth-child(n+2) { width: 21%; }
+    .cf .mat { gap: 4px 8px; }
+    .cf tr.nest .mat { padding-left: 7px; }
+    .cf .nm small.of { display: none; }
+    .cf td.made small, .cf td.na small { display: none; }
+    .cft .panel-head { flex-wrap: wrap; }
+  }
+</style>
+
+<script>
+  import { guessRegion } from '../../scripts/region';
+  type Server = [number, string, string, string, string, string, number];
+  type Market = { generated: string; servers: Server[]; items: [number, string, string, string, number][]; prices: Record<string, number[]>; last?: Record<string, number[]> };
+  type Recipe = { product: number; qty: number; mastery: number; profession: string; level?: number; faction?: 'Elyos' | 'Asmodian'; type: string; combo: number; rate?: [string, string]; parts: [number, number][] };
+  type Craft = { generated: string; items: Record<string, [string, string]>; vendor: Record<string, number>; curves: Record<string, number[]>; recipes: Recipe[] };
+  type Saved = { region: string; faction: string; launch: string; server: number; prof: string; sub: string; sel: string; qty: number; mast: number };
+  type Hit = { price: number; s: Server; stale?: number }; // stale: hours since the price was last seen listed
+  const STORE = 'a2codex-crafting-v1';
+  const nf = new Intl.NumberFormat('en-US');
+  const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
+  const once = <T,>(url: string) => { let p: Promise<T> | null = null; return () => (p ??= fetch(url).then((r) => { if (!r.ok) throw new Error(String(r.status)); return r.json() as Promise<T>; }).catch((e) => { p = null; throw e; })); };
+  const loadMarket = once<Market>('/market.json'), loadCraft = once<Craft>('/crafting.json');
+  const ageText = (h: number) => (h < 48 ? `${Math.max(1, h)} h ago` : `${Math.round(h / 24)} d ago`);
+  const kin = (n: number) => (n >= 1e9 ? `${+(n / 1e9).toFixed(2)}B` : n >= 1e6 ? `${+(n / 1e6).toFixed(2)}M` : nf.format(Math.round(n)));
+
+  document.addEventListener('astro:page-load', () => {
+    if (!document.getElementById('recipes')) return;
+    const ac = new AbortController();
+    const { signal } = ac;
+    document.addEventListener('astro:before-swap', () => ac.abort(), { once: true });
+    const $ = <T extends HTMLElement>(s: string) => document.querySelector<T>(s)!;
+    const count = $('#count'), listEl = $('#list'), result = $('#result'), rowsEl = $('#rows'), foot = $('#foot'), table = $('#table');
+    const subEl = $('#sub');
+    const icons: Record<string, string> = JSON.parse($('#sub-icons').textContent || '{}');
+    const q = $<HTMLInputElement>('#q'), qtyEl = $<HTMLInputElement>('#qty'), serverEl = $<HTMLSelectElement>('#server');
+
+    let saved: Partial<Saved> = {};
+    try { saved = JSON.parse(localStorage.getItem(STORE) || '{}') || {}; } catch {}
+    const state = { region: saved.region || '', faction: saved.faction || 'all', launch: saved.launch || 'launch', server: saved.server || 0, prof: saved.prof || 'all', sub: saved.sub || 'all', sel: saved.sel || '', qty: Math.max(1, saved.qty || 1), mast: Math.max(0, saved.mast || 0), q: '' };
+    const have = new Map<string, number>();
+    // Items with the same name can have different ids (one per faction), so names map to lists of ids.
+    let idsByName = new Map<string, number[]>();
+    const splendent = (nm: string) => (/^(Artisan's|Expert's) /.test(nm) ? nm.replace(/^(Artisan's|Expert's) /, '$1 Splendent ') : `Splendent ${nm}`);
+    const MERCHANT: Server = [0, 'Merchant', '', '', '', '', 0];
+    let market: Market, craft: Craft, regionsEl = () => {};
+    let keys: string[] = [], producer = new Map<number, number>(), comboSrc = new Map<string, number[]>(), shown: number[] = [];
+    qtyEl.value = String(state.qty);
+
+    const checked = (id: string, v: string) => document.querySelectorAll<HTMLElement>(`#${id} [data-v]`).forEach((b) => b.setAttribute('aria-checked', String(b.dataset.v === v)));
+    let noEA = false; // no Early Access server in the data: the launch choice is not saved
+    const persist = () => { try { localStorage.setItem(STORE, JSON.stringify({ region: state.region, faction: state.faction, launch: noEA ? (saved.launch || 'launch') : state.launch, server: state.server, prof: state.prof, sub: state.sub, sel: state.sel, qty: state.qty, mast: state.mast })); } catch {} };
+    const pick = (s: Server) => s[2] === state.region && (state.faction === 'all' || s[4] === state.faction) && (state.launch === 'all' || (state.launch === 'ea') === !!s[6]);
+    const name = (id: number) => craft.items[id][0];
+
+    // Recipe key = product id plus its position among the recipes of the same product (some products have two).
+    const variants = new Map<number, number[]>();
+    const index = () => {
+      const seen = new Map<number, number>();
+      keys = craft.recipes.map((r, i) => {
+        const n = seen.get(r.product) ?? 0;
+        seen.set(r.product, n + 1);
+        (variants.get(r.product) ?? variants.set(r.product, []).get(r.product)!).push(i);
+        if (n === 0) producer.set(r.product, i);
+        if (r.combo > 0 && r.rate) {
+          const res = splendent(name(r.product));
+          if (idsByName.has(res)) (comboSrc.get(res) ?? comboSrc.set(res, []).get(res)!).push(i);
+        }
+        return `${r.product}.${n}`;
+      });
+    };
+
+    // Item types of the chosen profession, in the order the recipes list them.
+    const renderSub = () => {
+      const types = state.prof === 'all' ? [] : [...new Set(craft.recipes.filter((r) => r.profession === state.prof).map((r) => r.type))];
+      if (!types.includes(state.sub)) state.sub = 'all';
+      subEl.hidden = !types.length;
+      subEl.innerHTML = types.length ? [['all', 'All types'], ...types.map((t) => [t, t])].map(([v, l]) => `<button type="button" class="tog" role="radio" aria-checked="${v === state.sub}" data-v="${esc(v)}"><span class="ico">${icons[v] ?? ''}</span>${esc(l)}</button>`).join('') : '';
+    };
+    const tier = (r: Recipe) => r.level ?? r.mastery;
+    // Faction-only recipes of the other faction are hidden: your server's faction, else the Faction filter when it is one faction.
+    const myFaction = (): string | null => (state.server ? market.servers.find((x) => x[0] === state.server)?.[4] : state.faction !== 'all' ? state.faction : null) ?? null;
+    const renderList = () => {
+      const fac = myFaction();
+      const needle = state.q.trim().toLowerCase();
+      shown = craft.recipes.map((_, i) => i).filter((i) => {
+        const r = craft.recipes[i];
+        return (!fac || !r.faction || r.faction === fac) && (state.prof === 'all' || r.profession === state.prof) && (state.sub === 'all' || r.type === state.sub) && (!needle || name(r.product).toLowerCase().includes(needle));
+      }).sort((a, b) => tier(craft.recipes[a]) - tier(craft.recipes[b]) || craft.recipes[a].mastery - craft.recipes[b].mastery || name(craft.recipes[a].product).localeCompare(name(craft.recipes[b].product)) || a - b);
+      count.textContent = `${nf.format(shown.length)} recipes`;
+      listEl.innerHTML = shown.length ? shown.map((i) => {
+        const r = craft.recipes[i], v = variants.get(r.product)!;
+        return `<button type="button" data-i="${i}" aria-pressed="${keys[i] === state.sel}"><b>${esc(name(r.product))}</b><small>${r.profession}${r.level ? ` · Item level ${r.level}` : ""}${r.mastery ? ` · Mastery ${r.mastery}` : ""}${r.qty > 1 ? ` · makes ${r.qty}` : ''}${v.length > 1 ? ` · Recipe ${v.indexOf(i) + 1} of ${v.length}` : ''}</small></button>`;
+      }).join('') : '<p class="empty">No recipe matches.</p>';
+    };
+
+    type Col = 'me' | 'lo' | 'hi';
+    const modes = new Map<number, 'craft' | 'buy'>();
+    const refCol = (): Col => (state.server ? 'me' : 'lo');
+    let pool = new Map<number, Server>();
+    let priced = new Map<number, Record<Col, Hit | null>>();
+
+    // What an item costs to buy in each column (your server, cheapest, most expensive). A merchant sells it at one price
+    // on every server, so it caps all three.
+    const priceOf = (id: number): Record<Col, Hit | null> => {
+      let got = priced.get(id);
+      if (got) return got;
+      const p = market.prices[id] ?? [], list: Hit[] = [];
+      let me: Hit | null = null;
+      for (let i = 0; i < p.length; i += 3) {
+        const s = pool.get(p[i]);
+        if (!s) continue;
+        if (s[0] === state.server) me = { price: p[i + 1], s };
+        list.push({ price: p[i + 1], s });
+      }
+      list.sort((a, b) => a.price - b.price || a.s[1].localeCompare(b.s[1]));
+      const v = craft.vendor[id], shop: Hit | null = v ? { price: v, s: MERCHANT } : null;
+      const cap = (h: Hit | null) => (shop && (!h || shop.price < h.price) ? shop : h);
+      // No listing: fall back to the last price seen (on your server, or the lowest and highest last prices in the pool).
+      const old: Hit[] = [], l = market.last?.[id] ?? [], nowH = Date.now() / 3.6e6;
+      for (let i = 0; i < l.length; i += 3) { const s = pool.get(l[i]); if (s) old.push({ price: l[i + 1], s, stale: Math.max(1, Math.round(nowH - l[i + 2])) }); }
+      old.sort((a, b) => a.price - b.price);
+      if (!me) me = old.find((h) => h.s[0] === state.server) ?? null;
+      got = { me: cap(me), lo: cap(list[0] ?? old[0] ?? null), hi: cap(list[list.length - 1] ?? old[old.length - 1] ?? null) };
+      priced.set(id, got);
+      return got;
+    };
+    // Chance that one craft of a recipe ends in its combo result (success x combo activation x combo success).
+    const comboChance = (ri: number) => {
+      const r = craft.recipes[ri], lv = state.mast || r.mastery;
+      const sc = rateAt(r.rate?.[0], r.mastery, lv), cb = rateAt(r.rate?.[1], r.mastery, lv);
+      return sc !== null && cb !== null ? (sc * r.combo * cb) / 1e6 : 0;
+    };
+    const source = (id: number): { ri: number; p: number; combo: boolean } | undefined => {
+      const ri = producer.get(id);
+      if (ri !== undefined) return { ri, p: 1, combo: false };
+      const cands = comboSrc.get(name(id)) ?? [], fac = myFaction(), bi = cands.find((i) => !fac || !craft.recipes[i].faction || craft.recipes[i].faction === fac) ?? cands[0], p = bi === undefined ? 0 : comboChance(bi);
+      return bi !== undefined && p > 0 ? { ri: bi, p, combo: true } : undefined;
+    };
+    // Expected cost of one item made this way (a combo takes 1 / p crafts of the base recipe per item).
+    const makeCost = (id: number, col: Col, depth = 0): number | null => {
+      const src = source(id);
+      if (!src) return null;
+      const c = craftCost(src.ri, col, depth);
+      return c === null ? null : src.combo ? (c * craft.recipes[src.ri].qty) / src.p : c;
+    };
+    // Cost of one unit of an item, taking the cheaper of buying and crafting it (or your Craft / Buy choice); null when something has no price.
+    const unitCost = (id: number, col: Col, depth = 0): number | null => {
+      const buy = priceOf(id)[col]?.price ?? null, src = source(id), o = modes.get(id);
+      if (!src || depth > 8 || (o === 'buy' && buy !== null)) return buy;
+      const c = makeCost(id, col, depth);
+      if (o === 'craft' && c !== null) return c;
+      return buy !== null && (c === null || buy <= c) ? buy : c;
+    };
+    const craftCost = (ri: number, col: Col, depth = 0): number | null => {
+      const r = craft.recipes[ri];
+      let t = 0;
+      for (const [id, n] of r.parts) {
+        const u = unitCost(id, col, depth + 1);
+        if (u === null) return null;
+        t += n * u;
+      }
+      return t / r.qty;
+    };
+    // Components are crafted or bought: your choice, otherwise whichever is cheaper in the reference column.
+    const decide = (id: number): 'craft' | 'buy' => {
+      const o = modes.get(id);
+      if (o) return o;
+      const buy = priceOf(id)[refCol()]?.price ?? null, c = makeCost(id, refCol());
+      return buy !== null && (c === null || buy <= c) ? 'buy' : 'craft';
+    };
+
+    // The recipe's ingredients as a tree: components you craft open into their own ingredients, components you buy stay one row.
+    // `key` is the path of item ids, so the same item in two branches keeps separate "have" counts.
+    type Node = { id: number; key: string; total: number; got: number; n: number; depth: number; kind: 'raw' | 'buy' | 'craft'; crafts: number; parent?: number; src?: NonNullable<ReturnType<typeof source>>; kids: Node[] };
+    const build = (ri: number, need: number, p: number, depth: number, prefix: string, steps: Map<number, number>, parent?: number): Node[] => {
+      const r = craft.recipes[ri], crafts = Math.ceil(need / (r.qty * p));
+      steps.set(ri, (steps.get(ri) ?? 0) + crafts);
+      return r.parts.map(([id, n]) => {
+        const key = prefix + id, total = n * crafts, got = Math.min(have.get(key) ?? 0, total), left = total - got;
+        const node: Node = { id, key, total, got, n: left, depth, kind: 'raw', crafts: 0, parent, kids: [] };
+        const src = source(id);
+        if (src && src.ri !== ri && depth < 8) {
+          node.src = src;
+          if (decide(id) === 'craft') {
+            node.kind = 'craft';
+            node.crafts = Math.ceil(left / craft.recipes[src.ri].qty);
+            if (left > 0) node.kids = build(src.ri, left, 1, depth + 1, key + '>', steps, id);
+          } else node.kind = 'buy';
+        }
+        return node;
+      });
+    };
+    const flat = (nodes: Node[]): Node[] => nodes.flatMap((x) => [x, ...flat(x.kids)]);
+    const subtotal = (x: Node, col: Col): number => (x.kind === 'craft' ? x.kids.reduce((t, k) => t + subtotal(k, col), 0) : (priceOf(x.id)[col]?.price ?? 0) * x.n);
+
+    // Chance at a mastery level from one of the client's curves (index = mastery above the recipe's own).
+    const rateAt = (key: string | undefined, need: number, mastery: number) => {
+      const c = key ? craft.curves[key] : undefined, i = Math.floor(mastery) - need;
+      return c?.length && i >= 0 ? c[Math.min(i, c.length - 1)] : null;
+    };
+    const pc = (n: number) => `${+n.toFixed(1)}%`;
+
+    const renderResult = () => {
+      const ri = keys.indexOf(state.sel);
+      result.hidden = ri < 0;
+      if (ri < 0) return;
+      const r = craft.recipes[ri];
+      pool = new Map(market.servers.filter(pick).map((s) => [s[0], s]));
+      priced = new Map();
+      const steps = new Map<number, number>();
+      const nodes = flat(build(ri, state.qty, 1, 0, '', steps));
+      const sum = { me: 0, lo: 0, hi: 0 };
+      const miss = { me: 0, lo: 0, hi: 0 };
+      const cell = (hit: Hit | null, n: number, key: Col, cls: string, label: boolean, inc = false) => {
+        if (n <= 0) return `<td class="na${cls ? ' ' + cls : ''}">—</td>`;
+        if (!hit) { if (!inc) miss[key]++; return `<td class="na${cls ? ' ' + cls : ''}">—</td>`; }
+        if (!inc) sum[key] += hit.price * n;
+        const old = hit.stale !== undefined;
+        const sub = [n > 1 ? nf.format(hit.price) + ' each' : '', label ? esc(hit.s[1]) : '', old ? `last price · ${ageText(hit.stale!)}` : ''].filter(Boolean).join(' · ');
+        return `<td class="${cls}${old ? ' stale' : ''}${inc ? ' inc' : ''}"><b>${kin(hit.price * n)}</b><small>${sub}</small></td>`;
+      };
+      const ref = refCol();
+      const need = new Map<number, number>(); // what is bought, for the best single server
+      let cover = -1; // depth of the combo item whose expected cost covers the rows below it
+      const body = nodes.map((x, i) => {
+        if (cover >= 0 && x.depth <= cover) cover = -1;
+        const inc = cover >= 0, ev = x.kind === 'craft' && !!x.src?.combo && !inc;
+        if (ev) cover = x.depth;
+        const name_ = name(x.id), { me, lo, hi } = priceOf(x.id);
+        const bound = / \(Bound\)$/.test(name_) && !lo;
+        let line = '';
+        if (x.src) {
+          const buy = priceOf(x.id)[ref]?.price ?? null, c = makeCost(x.id, ref), one = x.src.combo ? craftCost(x.src.ri, ref) : null, first = one === null ? c : one * craft.recipes[x.src.ri].qty;
+          line = `<small class="cl"><span class="mode"><button type="button" data-id="${x.id}" data-m="craft" aria-pressed="${x.kind === 'craft'}">Craft</button><button type="button" data-id="${x.id}" data-m="buy" aria-pressed="${x.kind === 'buy'}"${buy === null ? ' disabled' : ''}>Buy</button></span>${x.n > 0 ? `${c !== null ? `Craft ${kin(c * x.n)}${x.src.combo ? ' (expected)' : ''}` : 'Craft —'} · ${buy !== null ? `Buy ${kin(buy * x.n)}` : 'Buy —'}` : ''}</small>`;
+          if (x.src.combo) line += `<small class="cmb">${pc(x.src.p * 100)} combo · ~${+(1 / x.src.p).toFixed(1)} crafts${first !== null ? ` · ${kin(first * x.n)} first try` : ''}</small>`;
+        }
+        const row = `<tr class="${x.depth ? 'nest d' + Math.min(x.depth, 4) : ''}${x.kind === 'craft' ? ' crafted' : ''}${inc ? ' inc' : ''}"><th scope="row"${x.depth ? ` style="background:${[`linear-gradient(hsl(var(--c${Math.min(x.depth, 4)}) / 0.75),hsl(var(--c${Math.min(x.depth, 4)}) / 0.75)) calc(var(--pad) + ${x.depth} * var(--step)) 0 / 3px 100% no-repeat border-box`, ...Array.from({ length: x.depth - 1 }, (_, k) => `repeating-linear-gradient(hsl(var(--c${Math.min(k + 1, 4)}) / 0.5) 0 2px,transparent 2px 6px) calc(var(--pad) + ${k + 1} * var(--step) + 1px) 0 / 2px 100% no-repeat border-box`), 'linear-gradient(var(--line),var(--line)) 0 100% / 100% 1px no-repeat border-box'].join(',')}"` : ''}><div class="mat" style="--d:${x.depth}"><span class="nm">${x.parent !== undefined && nodes[i - 1]?.id === x.parent && nodes[i - 1].depth === x.depth - 1 ? `<small class="of">Ingredients for ${esc(name(x.parent))}</small>` : ''}<b>${esc(name_)}</b>${line}</span><small class="need"><span class="stp" role="group" aria-label="Have of ${esc(name_)}"><button type="button" data-k="${x.key}" data-d="-1" aria-label="One less">−</button><input class="have" type="number" min="0" max="${x.total}" value="${x.got}" data-k="${x.key}" inputmode="numeric" aria-label="Have of ${esc(name_)}" /><button type="button" data-k="${x.key}" data-d="1" aria-label="One more">+</button></span> /${nf.format(x.total)}${bound ? ' · not tradable' : ''}</small></div></th>`;
+        if (ev) {
+          // expected cost of one item = the cost of a craft / chance that it combos
+          const part = (col: Col, cls: string) => {
+            const u = makeCost(x.id, col);
+            if (x.n <= 0) return `<td class="na${cls ? ' ' + cls : ''}">—</td>`;
+            if (u === null) { miss[col]++; return `<td class="na${cls ? ' ' + cls : ''}">—</td>`; }
+            sum[col] += u * x.n;
+            return `<td class="made ev${cls ? ' ' + cls : ''}"><b>${kin(u * x.n)}</b><small>expected · ${pc(x.src!.p * 100)} combo chance</small></td>`;
+          };
+          return row + part('me', 'c-me') + part('lo', '') + part('hi', '') + '</tr>';
+        }
+        if (x.kind === 'craft') {
+          const part = (col: Col, cls: string) => { const t = subtotal(x, col); return `<td class="made${cls ? ' ' + cls : ''}">${x.n > 0 && t ? `<b>${kin(t)}</b><small>${x.src?.combo ? 'first try' : 'crafted'} · ${nf.format(x.crafts)} ${x.crafts === 1 ? 'craft' : 'crafts'}</small>` : '—'}</td>`; };
+          return row + part('me', 'c-me') + part('lo', '') + part('hi', '') + '</tr>';
+        }
+        if (x.n > 0 && priceOf(x.id).lo) need.set(x.id, (need.get(x.id) ?? 0) + x.n);
+        if (bound) { if (x.n > 0 && !inc) { miss.me++; miss.lo++; miss.hi++; } return row + `<td class="na c-me">—</td><td class="na">—</td><td class="na">—</td></tr>`; }
+        return row + cell(me, x.n, 'me', 'c-me', false, inc) + cell(lo, x.n, 'lo', 'lo', true, inc) + cell(hi, x.n, 'hi', 'hi', true, inc) + '</tr>';
+      });
+      const total = (key: Col, cls = '') => `<td${cls ? ` class="${cls}"` : ''}>${sum[key] ? kin(sum[key]) : '—'}<small>${miss[key] ? `${miss[key]} without a price` : ''}</small></td>`;
+      rowsEl.innerHTML = body.join('');
+      const assumes = nodes.some((x) => x.kind === 'craft' && x.src?.combo);
+      foot.innerHTML = `<tr class="sum big"><th scope="row">Total${assumes ? '<small class="cmb">Combo items count at expected cost; the rows under them are one craft</small>' : ''}</th>${total('me', 'c-me')}${total('lo')}${total('hi')}</tr>`;
+      table.dataset.me = String(state.server ? 1 : 0);
+      $('#title').textContent = name(r.product);
+      const crafts = steps.get(ri)!, made = crafts * r.qty;
+      $('#lead').textContent = `${r.profession}${r.mastery ? ` · Mastery ${r.mastery}` : ''} · ${nf.format(crafts)} ${crafts === 1 ? 'craft' : 'crafts'}${r.qty > 1 ? ` of ${r.qty}` : ''}`;
+
+      // Success and combo chance at the mastery you entered (the recipe's own when empty).
+      const lv = state.mast || r.mastery, rateEl = $('#rate');
+      $<HTMLInputElement>('#mast').placeholder = String(r.mastery);
+      const sc = rateAt(r.rate?.[0], r.mastery, lv), cb = rateAt(r.rate?.[1], r.mastery, lv);
+      if (!r.rate) rateEl.textContent = '';
+      else if (lv < r.mastery) rateEl.innerHTML = `<b class="warn">Needs mastery ${r.mastery} to craft</b>`;
+      else if (sc !== null) rateEl.innerHTML = `<b class="ok">${pc(sc)} success</b> at mastery ${lv}${lv > r.mastery ? ` (+${lv - r.mastery})` : ''}${cb !== null && r.combo > 0 ? ` · <span>Combo: ${pc(r.combo)} to activate, then ${pc(cb)} to succeed, about ${pc((sc * r.combo * cb) / 1e4)} of crafts end in the combo result</span>` : ''}`;
+      else rateEl.textContent = '';
+
+      // Summary: best single server, what the product sells for, profit.
+      const stats: string[] = [];
+      const old = (h: Hit) => (h.stale !== undefined ? ` · last price ${ageText(h.stale)}` : '');
+      const stat = (label: string, value: string, sub = '', cls = '') => stats.push(`<div class="stat"><span>${label}</span><b${cls ? ` class="${cls}"` : ''}>${value}</b>${sub ? `<small>${sub}</small>` : ''}</div>`);
+      let best: { s: Server; sum: number; miss: number } | null = null;
+      if (need.size) {
+        for (const s of pool.values()) {
+          let t = 0, m = 0;
+          for (const [id, n] of need) {
+            const p = market.prices[id] ?? [], shop = craft.vendor[id];
+            let price = shop ?? Infinity;
+            for (let i = 0; i < p.length; i += 3) if (p[i] === s[0]) price = Math.min(price, p[i + 1]);
+            if (price === Infinity) m++; else t += price * n;
+          }
+          if (!best || m < best.miss || (m === best.miss && t < best.sum)) best = { s, sum: t, miss: m };
+        }
+      }
+      const sell = priceOf(r.product);
+      if (sell.me || sell.hi) {
+        const mine = sell.me;
+        stat('Sells for', mine ? kin(mine.price * made) : kin(sell.hi!.price * made), mine ? `${nf.format(mine.price)} each · your server${old(mine)}` : `${nf.format(sell.hi!.price)} each · ${esc(sell.hi!.s[1])}${old(sell.hi!)}`);
+        if (mine && state.server && !miss.me) {
+          const profit = mine.price * made - sum.me;
+          stat('Profit', `${profit >= 0 ? '+' : '−'}${kin(Math.abs(profit))}`, 'sale price minus materials, your server', profit >= 0 ? 'ok' : 'warn');
+        }
+      }
+      // A combo swaps the output for the Splendent version of the item (one grade up), when the client has one.
+      const cids = r.combo > 0 ? idsByName.get(splendent(name(r.product))) ?? [] : [];
+      const cid = cids.find((x) => priceOf(x).me || priceOf(x).hi), cmb = cid ? priceOf(cid) : null;
+      if (cid && cmb && (cmb.me || cmb.hi)) {
+        const hit = cmb.me ?? cmb.hi!;
+        stat('If it combos', kin(hit.price), `${esc(splendent(name(r.product)))} · each · ${cmb.me ? 'your server' : esc(hit.s[1])} · ${pc(r.combo)} chance${old(hit)}`);
+      }
+      // last: it matters least
+      if (best) stat('Cheapest single server', kin(best.sum), `${esc(best.s[1])}${best.miss ? ` · ${best.miss} not listed there` : ''}`);
+      $('#stats').innerHTML = stats.join('');
+    };
+
+    const syncServers = () => {
+      const pool = market.servers.filter(pick).sort((a, b) => a[1].localeCompare(b[1]) || a[4].localeCompare(b[4]));
+      if (!pool.some((s) => s[0] === state.server)) state.server = 0;
+      serverEl.innerHTML = '<option value="0">None</option>' + pool.map((s) => `<option value="${s[0]}">${esc(s[1])}${state.faction === 'all' ? ' · ' + s[4] : ''}</option>`).join('');
+      serverEl.value = String(state.server);
+    };
+
+    document.querySelectorAll<HTMLElement>('#faction, #launch').forEach((g) => g.addEventListener('click', (e) => {
+      const b = (e.target as HTMLElement).closest<HTMLElement>('[data-v]');
+      if (!b) return;
+      state[g.id as 'faction' | 'launch'] = b.dataset.v!;
+      if (g.id === 'launch') { regionsEl(); checked('region', state.region); }
+      checked(g.id, b.dataset.v!); syncServers(); persist(); renderList(); renderResult();
+    }, { signal }));
+    $('#region').addEventListener('click', (e) => {
+      const b = (e.target as HTMLElement).closest<HTMLElement>('[data-v]');
+      if (!b) return;
+      state.region = b.dataset.v!; checked('region', state.region); syncServers(); persist(); renderList(); renderResult();
+    }, { signal });
+    serverEl.addEventListener('change', () => { state.server = Number(serverEl.value); persist(); renderList(); renderResult(); }, { signal });
+    $('#prof').addEventListener('click', (e) => {
+      const b = (e.target as HTMLElement).closest<HTMLElement>('[data-v]');
+      if (!b) return;
+      state.prof = b.dataset.v!; state.sub = 'all'; checked('prof', state.prof); renderSub(); persist(); renderList(); listEl.scrollTop = 0;
+    }, { signal });
+    subEl.addEventListener('click', (e) => {
+      const b = (e.target as HTMLElement).closest<HTMLElement>('[data-v]');
+      if (!b) return;
+      state.sub = b.dataset.v!; checked('sub', state.sub); persist(); renderList(); listEl.scrollTop = 0;
+    }, { signal });
+    document.querySelectorAll<HTMLElement>('.qty .step').forEach((b) => b.addEventListener('click', () => {
+      state.qty = Math.min(9999, Math.max(1, state.qty + Number(b.dataset.d))); qtyEl.value = String(state.qty); persist(); renderResult();
+    }, { signal }));
+    let t = 0;
+    q.addEventListener('input', () => { clearTimeout(t); t = window.setTimeout(() => { state.q = q.value; renderList(); listEl.scrollTop = 0; }, 120); }, { signal });
+    const mastEl = $<HTMLInputElement>('#mast');
+    mastEl.value = state.mast ? String(state.mast) : '';
+    mastEl.addEventListener('input', () => { const n = Math.floor(Number(mastEl.value)); state.mast = n >= 1 ? Math.min(n, 100) : 0; persist(); renderResult(); }, { signal });
+    rowsEl.addEventListener('click', (e) => {
+      const b = (e.target as HTMLElement).closest<HTMLButtonElement>('.mode button');
+      if (!b || b.disabled) return;
+      modes.set(Number(b.dataset.id), b.dataset.m as 'craft' | 'buy');
+      renderResult();
+    }, { signal });
+    qtyEl.addEventListener('input', () => { const n = Math.floor(Number(qtyEl.value)); if (n >= 1) { state.qty = Math.min(n, 9999); persist(); renderResult(); } }, { signal });
+    // The box holds how many you already have (starts at 0); the prices cover the rest.
+    const setHave = (key: string, v: number, total: number) => { have.set(key, Math.min(total, Math.max(0, Math.floor(v) || 0))); };
+    const refocus = (sel: string, id?: string) => {
+      const el = rowsEl.querySelector<HTMLElement>(`${sel}[data-k="${id}"]`);
+      el?.focus();
+      if (el instanceof HTMLInputElement) el.setSelectionRange(el.value.length, el.value.length);
+    };
+    rowsEl.addEventListener('input', (e) => {
+      const el = e.target as HTMLInputElement;
+      if (!el.classList.contains('have')) return;
+      setHave(el.dataset.k!, Number(el.value), Number(el.max));
+      renderResult(); refocus('.have', el.dataset.k);
+    }, { signal });
+    rowsEl.addEventListener('click', (e) => {
+      const b = (e.target as HTMLElement).closest<HTMLButtonElement>('.stp button');
+      if (!b) return;
+      const inp = b.parentElement!.querySelector<HTMLInputElement>('.have')!;
+      setHave(b.dataset.k!, Number(inp.value) + Number(b.dataset.d), Number(inp.max));
+      renderResult(); refocus(`.stp button[data-d="${b.dataset.d}"]`, b.dataset.k);
+    }, { signal });
+    // Mouse wheel over a number box: up adds one, down takes one.
+    rowsEl.addEventListener('wheel', (e) => {
+      const el = e.target as HTMLInputElement;
+      if (!el.classList?.contains('have')) return;
+      e.preventDefault();
+      setHave(el.dataset.k!, Number(el.value) + (e.deltaY < 0 ? 1 : -1), Number(el.max));
+      renderResult(); refocus('.have', el.dataset.k);
+    }, { signal, passive: false });
+    qtyEl.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      state.qty = Math.min(9999, Math.max(1, state.qty + (e.deltaY < 0 ? 1 : -1))); qtyEl.value = String(state.qty); persist(); renderResult();
+    }, { signal, passive: false });
+    rowsEl.addEventListener('focusin', (e) => { if ((e.target as HTMLElement).classList.contains('have')) (e.target as HTMLInputElement).select(); }, { signal });
+    listEl.addEventListener('click', (e) => {
+      const b = (e.target as HTMLElement).closest<HTMLElement>('[data-i]');
+      if (!b) return;
+      state.sel = keys[Number(b.dataset.i)];
+      have.clear(); modes.clear();
+      listEl.querySelectorAll('[aria-pressed="true"]').forEach((x) => x.setAttribute('aria-pressed', 'false'));
+      b.setAttribute('aria-pressed', 'true');
+      persist(); renderResult();
+    }, { signal });
+
+    checked('faction', state.faction); checked('launch', state.launch); checked('prof', state.prof);
+    Promise.all([loadMarket(), loadCraft()]).then(([m, c]) => {
+      if (signal.aborted) return;
+      market = m; craft = c;
+      idsByName = new Map();
+      for (const [id, nm] of [...Object.entries(c.items).map(([id, v]) => [Number(id), v[0]] as const), ...m.items.map((i) => [i[0], i[1]] as const)]) {
+        const l = idsByName.get(nm) ?? idsByName.set(nm, []).get(nm)!;
+        if (!l.includes(id)) l.push(id);
+      }
+      index();
+      if (!keys.includes(state.sel)) state.sel = '';
+      const regions = [...new Map(m.servers.map((s) => [s[2], s[3]])).entries()];
+      if (!regions.some(([code]) => code === state.region)) state.region = guessRegion(regions.map(([code]) => code));
+      regionsEl = () => $('#region').innerHTML = regions.map(([code, n]) => `<button type="button" class="tog" role="radio" aria-checked="false" data-v="${esc(code)}">${esc(n.replace('North America', 'NA'))}<small>${m.servers.filter((s) => s[2] === code && (state.launch === 'all' || (state.launch === 'ea') === !!s[6])).length} servers</small></button>`).join('');
+      if (!m.servers.some((s) => s[6])) { noEA = true; state.launch = 'all'; $('#launch-h').hidden = $('#launch').hidden = true; }
+      regionsEl(); checked('region', state.region);
+      syncServers(); renderSub(); renderList(); renderResult();
+      listEl.querySelector('[aria-pressed="true"]')?.scrollIntoView({ block: 'nearest' });
+    }).catch(() => { count.textContent = 'Data could not be loaded'; });
+  });
+</script>
