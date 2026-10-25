@@ -216,7 +216,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
   const STORE = 'a2codex-crafting-v1';
   const nf = new Intl.NumberFormat('en-US');
   const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
-  const once = <T,>(url: string) => { let p: Promise<T> | null = null; return () => (p ??= fetch(url).then((r) => { if (!r.ok) throw new Error(String(r.status)); return r.json() as Promise<T>; }).catch((e) => { p = null; throw e; })); };
+  const once = <T,>(url: string) => { let p: Promise<T> | null = null; return () => (p ??= fetch(url, { cache: 'no-cache' }).then((r) => { if (!r.ok) throw new Error(String(r.status)); return r.json() as Promise<T>; }).catch((e) => { p = null; throw e; })); };
   const loadMarket = once<Market>('/market.json'), loadCraft = once<Craft>('/crafting.json');
   const ageText = (h: number) => (h < 48 ? `${Math.max(1, h)} h ago` : `${Math.round(h / 24)} d ago`);
   const kin = (n: number) => (n >= 1e9 ? `${+(n / 1e9).toFixed(2)}B` : n >= 1e6 ? `${+(n / 1e6).toFixed(2)}M` : nf.format(Math.round(n)));

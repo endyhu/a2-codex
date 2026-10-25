@@ -134,7 +134,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
   const nf = new Intl.NumberFormat('en-US');
   const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
   let cache: Promise<Market> | null = null;
-  const load = () => (cache ??= fetch('/market.json').then((r) => { if (!r.ok) throw new Error(String(r.status)); return r.json(); }).catch((e) => { cache = null; throw e; }));
+  const load = () => (cache ??= fetch('/market.json', { cache: 'no-cache' }).then((r) => { if (!r.ok) throw new Error(String(r.status)); return r.json(); }).catch((e) => { cache = null; throw e; }));
   const ageText = (h: number) => (h < 48 ? `${Math.max(1, h)} h ago` : `${Math.round(h / 24)} d ago`);
   const kin = (n: number) => (n >= 1e9 ? `${+(n / 1e9).toFixed(1)}B` : n >= 1e6 ? `${+(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `${Math.round(n / 1e3)}K` : String(n));
   const pct = (x: number) => (x >= 100 ? '9,999%+' : `${x >= 0.1 ? Math.round(x * 100) : (x * 100).toFixed(1)}%`);
