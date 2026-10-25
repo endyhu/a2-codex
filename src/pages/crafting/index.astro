@@ -355,6 +355,13 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
       const c = craftCost(src.ri, col, depth);
       return c === null ? null : src.combo ? (c * craft.recipes[src.ri].qty) / src.p : c;
     };
+    // The market can list a product under another id than the recipe's (38 products, e.g. Splendent Star Dragon Lord Greatsword is 110130100 in the recipe and 110130021 on the market), so look it up by name too.
+    const priceOfName = (id: number) => {
+      const own = priceOf(id);
+      if (own.me || own.hi) return own;
+      for (const x of idsByName.get(name(id)) ?? []) { const p = priceOf(x); if (p.me || p.hi) return p; }
+      return own;
+    };
     // Cost of one unit of an item, taking the cheaper of buying and crafting it (or your Craft / Buy choice); null when something has no price.
     const unitCost = (id: number, col: Col, depth = 0): number | null => {
       const buy = priceOf(id)[col]?.price ?? null, src = source(id), o = modes.get(id);
@@ -501,7 +508,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
           if (!best || m < best.miss || (m === best.miss && t < best.sum)) best = { s, sum: t, miss: m };
         }
       }
-      const sell = priceOf(r.product);
+      const sell = priceOfName(r.product);
       if (sell.me || sell.hi) {
         const mine = sell.me;
         stat('Sells for', mine ? kin(mine.price * made) : kin(sell.hi!.price * made), mine ? `${nf.format(mine.price)} each · your server${old(mine)}` : `${nf.format(sell.hi!.price)} each · ${esc(sell.hi!.s[1])}${old(sell.hi!)}`);
