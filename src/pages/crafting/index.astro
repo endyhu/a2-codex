@@ -96,7 +96,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
     </div>
   </div>
 
-  <p class="meta sources">Recipes: the Global client's crafting tables, via <a href="https://metabot.gg/en/aion-2/crafting">metabot.gg</a>. Prices: the median over 7 days of the cheapest listed unit price per item and server (or the current cheapest, when set to Now), from the <a href="https://aion2.exchange/">Aion2Market</a> public API (same snapshot as Market). Merchant prices (Kina): the crafting, general and substance morph NPC shops, via <a href="https://metabot.gg/en/aion-2/shops">metabot.gg</a>. Craftable components can be crafted or bought. A combo item you craft counts at its expected cost; failed crafts are not counted. Profit and Margin sort by what the product sells for on your server minus the cheaper of buying or crafting each material there.</p>
+  <p class="meta sources">Recipes: the Global client's crafting tables, via <a href="https://metabot.gg/en/aion-2/crafting">metabot.gg</a>. Prices: the median over 7 days of the cheapest listed unit price per item and server (or the current cheapest, when set to Now), from the <a href="https://aion2.exchange/">Aion2Market</a> public API (same snapshot as Market). Merchant prices (Kina): the crafting, general and substance morph NPC shops, via <a href="https://metabot.gg/en/aion-2/shops">metabot.gg</a>. Craftable components can be crafted or bought. A combo item you craft counts at its expected cost; failed crafts are not counted. Profit and Margin sort by what the product sells for on your server (capped at the median of the servers that list it) minus the cheaper of buying or crafting each material there.</p>
 </Base>
 
 <style is:global>
@@ -322,7 +322,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
       count.textContent = `${nf.format(shown.length)} recipes`;
       listEl.innerHTML = shown.length ? shown.map((i) => {
         const r = craft.recipes[i], v = shown.filter((j) => craft.recipes[j].product === r.product), g = gain.get(i);
-        const gl = g ? `<small class="gain ${g.profit >= 0 ? 'ok' : 'warn'}">${g.profit >= 0 ? '+' : '−'}${kin(Math.abs(g.profit))} · ${g.margin < 0 ? '−' : ''}${Math.abs(Math.round(g.margin))}%${g.stale !== undefined ? ` · last price ${ageText(g.stale)}` : ''}</small>` : '';
+        const gl = g ? `<small class="gain ${g.profit >= 0 ? 'ok' : 'warn'}">${g.profit >= 0 ? '+' : '−'}${kin(Math.abs(g.profit))} · ${g.margin < 0 ? '−' : ''}${Math.abs(Math.round(g.margin))}%${g.over ? ' · capped' : ''}${g.stale !== undefined ? ` · last price ${ageText(g.stale)}` : ''}</small>` : '';
         return `<button type="button" data-i="${i}" aria-pressed="${keys[i] === state.sel}"><b>${esc(name(r.product))}</b><small>${r.profession}${r.level ? ` · Item level ${r.level}` : ""}${r.mastery ? ` · Mastery ${r.mastery}` : ""}${r.qty > 1 ? ` · makes ${r.qty}` : ''}${v.length > 1 ? ` · Recipe ${v.indexOf(i) + 1} of ${v.length}` : ''}</small>${gl}</button>`;
       }).join('') : '<p class="empty">No recipe matches.</p>';
     };
@@ -331,9 +331,11 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
     const modes = new Map<number, 'craft' | 'buy'>();
     const refCol = (): Col => (state.server ? 'me' : 'lo');
     let pool = new Map<number, Server>();
-    let priced = new Map<number, Record<Col, Hit | null>>();
+    let priced = new Map<number, Record<Col, Hit | null> & { med: Ref | null }>();
     // Profit ranking: one craft sold on your server minus the materials there (cheaper of buy or craft, your Craft / Buy picks ignored).
-    type Gain = { profit: number; margin: number; stale?: number };
+    type Gain = { profit: number; margin: number; stale?: number; over?: number };
+    // What the product is counted at: your server's price, but never above the median of the pool's servers (a lone high ask is not a sale). `over` = how far your server is above it.
+    const sold = (p: { me: Hit | null; med: Ref | null }) => { const m = p.me, over = m && p.med && m.price >= p.med.m * 1.1 ? m.price / p.med.m - 1 : undefined; return m ? { price: over ? p.med!.m : m.price, over, scope: p.med?.scope, stale: m.stale } : null; };
     let ranking = false, gains = new Map<number, Gain | null>(), gainSig = '';
     const gainOf = (ri: number): Gain | null => {
       const sig = [state.region, state.faction, state.launch, state.server, state.basis, JSON.stringify(state.mast)].join('|');
@@ -341,12 +343,12 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
       if (gains.has(ri)) return gains.get(ri)!;
       pool = new Map(market.servers.filter(pick).map((s) => [s[0], s]));
       priced = new Map();
-      const r = craft.recipes[ri], sell = priceOfName(r.product).me;
+      const r = craft.recipes[ri], sell = sold(priceOfName(r.product));
       let g: Gain | null = null;
       ranking = true;
       try {
         const cost = !sell || (state.mast[r.profession] && r.mastery > state.mast[r.profession]) ? null : craftCost(ri, 'me');
-        if (sell && cost !== null && cost > 0) g = { profit: (sell.price - cost) * r.qty, margin: (sell.price - cost) / cost * 100, stale: sell.stale };
+        if (sell && cost !== null && cost > 0) g = { profit: (sell.price - cost) * r.qty, margin: (sell.price - cost) / cost * 100, stale: sell.stale, over: sell.over };
       } finally { ranking = false; }
       gains.set(ri, g);
       return g;
@@ -357,9 +359,21 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
       const t = market.typical?.[id];
       if (t) for (let i = 0; i < t.length; i += 2) if (t[i] === server) return t[i + 1];
     };
+    // Reference price of an item: the median over the servers that list it, taken from your filtered servers, else your region, else every server (needs 3 listings).
+    type Ref = { m: number; scope: string };
+    const refMedian = (id: number): Ref | null => {
+      const p = market.prices[id] ?? [], reg = new Map(market.servers.map((s) => [s[0], s[2]]));
+      const tiers: [string, (sid: number) => boolean][] = [['your servers', (sid) => pool.has(sid)], [`${state.region} servers`, (sid) => reg.get(sid) === state.region], ['all servers', () => true]];
+      for (const [scope, ok] of tiers) {
+        const v: number[] = [];
+        for (let i = 0; i < p.length; i += 3) if (ok(p[i])) v.push((state.basis === 'median' ? typical(id, p[i]) : undefined) ?? p[i + 1]);
+        if (v.length >= 3) { v.sort((a, b) => a - b); return { m: v.length % 2 ? v[v.length >> 1] : Math.round((v[v.length / 2 - 1] + v[v.length / 2]) / 2), scope }; }
+      }
+      return null;
+    };
     // What an item costs to buy in each column (your server, cheapest, most expensive). A merchant sells it at one price
     // on every server, so it caps all three.
-    const priceOf = (id: number): Record<Col, Hit | null> => {
+    const priceOf = (id: number): Record<Col, Hit | null> & { med: Ref | null } => {
       let got = priced.get(id);
       if (got) return got;
       const p = market.prices[id] ?? [], list: Hit[] = [];
@@ -380,7 +394,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
       for (let i = 0; i < l.length; i += 3) { const s = pool.get(l[i]); if (s) old.push({ price: l[i + 1], s, stale: Math.max(1, Math.round(nowH - l[i + 2])) }); }
       old.sort((a, b) => a.price - b.price);
       if (!me) me = old.find((h) => h.s[0] === state.server) ?? null;
-      got = { me: cap(me), lo: cap(list[0] ?? old[0] ?? null), hi: cap(list[list.length - 1] ?? old[old.length - 1] ?? null) };
+      got = { med: refMedian(id), me: cap(me), lo: cap(list[0] ?? old[0] ?? null), hi: cap(list[list.length - 1] ?? old[old.length - 1] ?? null) };
       priced.set(id, got);
       return got;
     };
@@ -562,10 +576,10 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
       }
       const sell = priceOfName(r.product);
       if (sell.me || sell.hi) {
-        const mine = sell.me;
-        stat('Sells for', mine ? kin(mine.price * made) : kin(sell.hi!.price * made), mine ? `${nf.format(mine.price)} each · your server${old(mine)}` : `${nf.format(sell.hi!.price)} each · ${esc(sell.hi!.s[1])}${old(sell.hi!)}`);
+        const mine = sell.me, eff = sold(sell);
+        stat('Sells for', eff ? kin(eff.price * made) : kin(sell.hi!.price * made), eff ? `${nf.format(eff.price)} each · ${eff.over ? `capped at the median of ${eff.scope}, your server asks ${nf.format(mine!.price)} (+${Math.round(eff.over * 100)}%)` : 'your server'}${old(mine!)}` : `${nf.format(sell.hi!.price)} each · ${esc(sell.hi!.s[1])}${old(sell.hi!)}`);
         if (mine && state.server && !miss.me) {
-          const profit = mine.price * made - sum.me;
+          const profit = eff!.price * made - sum.me;
           stat('Profit', `${profit >= 0 ? '+' : '−'}${kin(Math.abs(profit))}`, 'sale price minus materials, your server', profit >= 0 ? 'ok' : 'warn');
         }
       }
