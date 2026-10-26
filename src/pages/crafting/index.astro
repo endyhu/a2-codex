@@ -453,7 +453,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
           line = `<small class="cl"><span class="mode"><button type="button" data-id="${x.id}" data-m="craft" aria-pressed="${x.kind === 'craft'}">Craft</button><button type="button" data-id="${x.id}" data-m="buy" aria-pressed="${x.kind === 'buy'}"${buy === null ? ' disabled' : ''}>Buy</button></span>${x.n > 0 ? `${c !== null ? `Craft ${kin(c * x.n)}${x.src.combo ? ' (expected)' : ''}` : 'Craft —'} · ${buy !== null ? `Buy ${kin(buy * x.n)}` : 'Buy —'}` : ''}</small>`;
           if (x.src.combo) line += `<small class="cmb">${pc(x.src.p * 100)} combo · ~${+(1 / x.src.p).toFixed(1)} crafts${first !== null ? ` · ${kin(first * x.n)} first try` : ''}</small>`;
         }
-        const row = `<tr class="${x.depth ? 'nest d' + Math.min(x.depth, 4) : ''}${x.kind === 'craft' ? ' crafted' : ''}${inc ? ' inc' : ''}"><th scope="row"${x.depth ? ` style="background:${[`linear-gradient(hsl(var(--c${Math.min(x.depth, 4)}) / 0.75),hsl(var(--c${Math.min(x.depth, 4)}) / 0.75)) calc(var(--pad) + ${x.depth} * var(--step)) 0 / 3px 100% no-repeat border-box`, ...Array.from({ length: x.depth - 1 }, (_, k) => `repeating-linear-gradient(hsl(var(--c${Math.min(k + 1, 4)}) / 0.5) 0 2px,transparent 2px 6px) calc(var(--pad) + ${k + 1} * var(--step) + 1px) 0 / 2px 100% no-repeat border-box`), 'linear-gradient(var(--line),var(--line)) 0 100% / 100% 1px no-repeat border-box'].join(',')}"` : ''}><div class="mat" style="--d:${x.depth}"><span class="nm">${x.parent !== undefined && nodes[i - 1]?.id === x.parent && nodes[i - 1].depth === x.depth - 1 ? `<small class="of">Ingredients for ${esc(name(x.parent))}</small>` : ''}<b>${esc(name_)}</b>${line}</span><small class="need"><span class="stp" role="group" aria-label="Have of ${esc(name_)}"><button type="button" data-k="${x.key}" data-d="-1" aria-label="One less">−</button><input class="have" type="number" min="0" max="${x.total}" value="${x.got}" data-k="${x.key}" inputmode="numeric" aria-label="Have of ${esc(name_)}" /><button type="button" data-k="${x.key}" data-d="1" aria-label="One more">+</button></span> /${nf.format(x.total)}${bound ? ' · not tradable' : ''}</small></div></th>`;
+        const row = `<tr class="${x.depth ? 'nest d' + Math.min(x.depth, 4) : ''}${x.kind === 'craft' ? ' crafted' : ''}${inc ? ' inc' : ''}"><th scope="row"${x.depth ? ` style="background:${[`linear-gradient(hsl(var(--c${Math.min(x.depth, 4)}) / 0.75),hsl(var(--c${Math.min(x.depth, 4)}) / 0.75)) calc(var(--pad) + ${x.depth} * var(--step)) 0 / 3px 100% no-repeat border-box`, ...Array.from({ length: x.depth - 1 }, (_, k) => `repeating-linear-gradient(hsl(var(--c${Math.min(k + 1, 4)}) / 0.5) 0 2px,transparent 2px 6px) calc(var(--pad) + ${k + 1} * var(--step) + 1px) 0 / 2px 100% no-repeat border-box`), 'linear-gradient(var(--line),var(--line)) 0 100% / 100% 1px no-repeat border-box'].join(',')}"` : ''}><div class="mat" style="--d:${x.depth}"><span class="nm">${x.parent !== undefined && nodes[i - 1]?.id === x.parent && nodes[i - 1].depth === x.depth - 1 ? `<small class="of">Ingredients for ${esc(name(x.parent))}</small>` : ''}<b>${esc(name_)}</b>${line}</span><small class="need"><span class="stp" role="group" aria-label="Have of ${esc(name_)}"><button type="button" data-k="${x.key}" data-d="-1" aria-label="One less">−</button><input class="have" type="text" data-max="${x.total}" value="${x.got}" data-k="${x.key}" inputmode="numeric" autocomplete="off" aria-label="Have of ${esc(name_)}" /><button type="button" data-k="${x.key}" data-d="1" aria-label="One more">+</button></span> /${nf.format(x.total)}${bound ? ' · not tradable' : ''}</small></div></th>`;
         if (ev) {
           // expected cost of one item = the cost of a craft / chance that it combos
           const part = (col: Col, cls: string) => {
@@ -576,25 +576,26 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
     qtyEl.addEventListener('input', () => { const n = Math.floor(Number(qtyEl.value)); if (n >= 1) { state.qty = Math.min(n, 9999); persist(); renderResult(); } }, { signal });
     // The box holds how many you already have (starts at 0); the prices cover the rest.
     const setHave = (key: string, v: number, total: number) => { have.set(key, Math.min(total, Math.max(0, Math.floor(v) || 0))); syncUrl(); };
-    // Number inputs have no caret API, so a re-render keeps typing by refocusing without the select-all below.
+    // A re-render replaces the box, so refocus it with the caret at the end and without the select-all below.
     let refocusing = false;
     const refocus = (sel: string, id?: string) => {
       const el = rowsEl.querySelector<HTMLElement>(`${sel}[data-k="${id}"]`);
       refocusing = true;
       el?.focus();
+      if (el instanceof HTMLInputElement) el.setSelectionRange(el.value.length, el.value.length);
       refocusing = false;
     };
     rowsEl.addEventListener('input', (e) => {
       const el = e.target as HTMLInputElement;
       if (!el.classList.contains('have')) return;
-      setHave(el.dataset.k!, Number(el.value), Number(el.max));
+      setHave(el.dataset.k!, Number(el.value.replace(/D/g, '')), Number(el.dataset.max));
       renderResult(); refocus('.have', el.dataset.k);
     }, { signal });
     rowsEl.addEventListener('click', (e) => {
       const b = (e.target as HTMLElement).closest<HTMLButtonElement>('.stp button');
       if (!b) return;
       const inp = b.parentElement!.querySelector<HTMLInputElement>('.have')!;
-      setHave(b.dataset.k!, Number(inp.value) + Number(b.dataset.d), Number(inp.max));
+      setHave(b.dataset.k!, Number(inp.value) + Number(b.dataset.d), Number(inp.dataset.max));
       renderResult(); refocus(`.stp button[data-d="${b.dataset.d}"]`, b.dataset.k);
     }, { signal });
     // Mouse wheel over a number box: up adds one, down takes one.
@@ -602,7 +603,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
       const el = e.target as HTMLInputElement;
       if (!el.classList?.contains('have') || document.activeElement !== el) return;
       e.preventDefault();
-      setHave(el.dataset.k!, Number(el.value) + (e.deltaY < 0 ? 1 : -1), Number(el.max));
+      setHave(el.dataset.k!, Number(el.value) + (e.deltaY < 0 ? 1 : -1), Number(el.dataset.max));
       renderResult(); refocus('.have', el.dataset.k);
     }, { signal, passive: false });
     qtyEl.addEventListener('wheel', (e) => {
