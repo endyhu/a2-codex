@@ -576,10 +576,13 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
     qtyEl.addEventListener('input', () => { const n = Math.floor(Number(qtyEl.value)); if (n >= 1) { state.qty = Math.min(n, 9999); persist(); renderResult(); } }, { signal });
     // The box holds how many you already have (starts at 0); the prices cover the rest.
     const setHave = (key: string, v: number, total: number) => { have.set(key, Math.min(total, Math.max(0, Math.floor(v) || 0))); syncUrl(); };
+    // Number inputs have no caret API, so a re-render keeps typing by refocusing without the select-all below.
+    let refocusing = false;
     const refocus = (sel: string, id?: string) => {
       const el = rowsEl.querySelector<HTMLElement>(`${sel}[data-k="${id}"]`);
+      refocusing = true;
       el?.focus();
-      if (el instanceof HTMLInputElement) el.setSelectionRange(el.value.length, el.value.length);
+      refocusing = false;
     };
     rowsEl.addEventListener('input', (e) => {
       const el = e.target as HTMLInputElement;
@@ -607,7 +610,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
       e.preventDefault();
       state.qty = Math.min(9999, Math.max(1, state.qty + (e.deltaY < 0 ? 1 : -1))); qtyEl.value = String(state.qty); persist(); renderResult();
     }, { signal, passive: false });
-    rowsEl.addEventListener('focusin', (e) => { if ((e.target as HTMLElement).classList.contains('have')) (e.target as HTMLInputElement).select(); }, { signal });
+    rowsEl.addEventListener('focusin', (e) => { if (!refocusing && (e.target as HTMLElement).classList.contains('have')) (e.target as HTMLInputElement).select(); }, { signal });
     listEl.addEventListener('click', (e) => {
       const b = (e.target as HTMLElement).closest<HTMLElement>('[data-i]');
       if (!b) return;
