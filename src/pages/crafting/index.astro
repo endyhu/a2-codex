@@ -116,7 +116,8 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
   .cft .bar .seg[hidden] { display: none; }
   .cft .bar .seg { display: flex; flex: none; }
   .cft .bar .seg .tog { white-space: nowrap; padding: 6px 12px; }
-  .cft .rl small.gain { margin-top: 1px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .cft .rl small.gain { display: flex; justify-content: space-between; gap: 8px; margin-top: 1px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .cft .rl small.gain em { flex: none; color: var(--muted); font-style: normal; font-weight: 400; }
   .cft .rl small.gain.ok { color: var(--ok); }
   .cft .rl small.gain.warn { color: var(--warn); }
   .cft .rl { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: 4px 8px; max-height: 300px; overflow-y: auto; overscroll-behavior: contain; padding-right: 4px; }
@@ -140,7 +141,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
   .cft .stat b { display: block; margin-top: 2px; font-size: 1.15rem; font-variant-numeric: tabular-nums; }
   .cft .stat b.ok { color: var(--ok); }
   .cft .stat b.warn { color: var(--warn); }
-  .cft .stat small { display: block; margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); font-size: 0.76rem; }
+  .cft .stat small { display: block; margin-top: 1px; color: var(--muted); font-size: 0.76rem; }
   .cft .qty { display: flex; align-items: stretch; color: var(--muted); font-size: 0.74rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
   .cft .qty span { align-self: center; margin-right: 12px; }
   .cft .qty input { width: 4.2em; padding: 5px 4px; text-align: center; background: var(--bg); border: 1px solid var(--line); border-width: 1px 0; color: var(--text); font: inherit; font-size: 0.9rem; letter-spacing: 0; font-variant-numeric: tabular-nums; appearance: textfield; -moz-appearance: textfield; }
@@ -221,7 +222,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
   import { guessRegion } from '../../scripts/region';
   import { oneOf, readUrl, writeUrl } from '../../scripts/urlstate';
   type Server = [number, string, string, string, string, string, number];
-  type Market = { generated: string; servers: Server[]; items: [number, string, string, string, number][]; prices: Record<string, number[]>; typical?: Record<string, number[]>; last?: Record<string, number[]> };
+  type Market = { generated: string; servers: Server[]; items: [number, string, string, string, number][]; prices: Record<string, number[]>; typical?: Record<string, number[]>; sold?: Record<string, number[]>; last?: Record<string, number[]> };
   type Recipe = { product: number; qty: number; mastery: number; profession: string; level?: number; faction?: 'Elyos' | 'Asmodian'; type: string; combo: number; rate?: [string, string]; parts: [number, number][] };
   type Craft = { generated: string; items: Record<string, [string, string]>; vendor: Record<string, number>; curves: Record<string, number[]>; recipes: Recipe[] };
   type Saved = { region: string; faction: string; launch: string; server: number; prof: string; sub: string; sel: string; qty: number; mast: Record<string, number>; sort: string; basis: string };
@@ -322,7 +323,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
       count.textContent = `${nf.format(shown.length)} recipes`;
       listEl.innerHTML = shown.length ? shown.map((i) => {
         const r = craft.recipes[i], v = shown.filter((j) => craft.recipes[j].product === r.product), g = gain.get(i);
-        const gl = g ? `<small class="gain ${g.profit >= 0 ? 'ok' : 'warn'}">${g.profit >= 0 ? '+' : '−'}${kin(Math.abs(g.profit))} · ${g.margin < 0 ? '−' : ''}${Math.abs(Math.round(g.margin))}%${g.over ? ' · capped' : ''}${g.stale !== undefined ? ` · last price ${ageText(g.stale)}` : ''}</small>` : '';
+        const gl = g ? `<small class="gain ${g.profit >= 0 ? 'ok' : 'warn'}"><span>${g.profit >= 0 ? '+' : '−'}${kin(Math.abs(g.profit))} · ${g.margin < 0 ? '−' : ''}${Math.abs(Math.round(g.margin))}%</span>${g.ref ? `<em>${nf.format(g.ref.units)} sold</em>` : ''}</small>` : '';
         return `<button type="button" data-i="${i}" aria-pressed="${keys[i] === state.sel}"><b>${esc(name(r.product))}</b><small>${r.profession}${r.level ? ` · Item level ${r.level}` : ""}${r.mastery ? ` · Mastery ${r.mastery}` : ""}${r.qty > 1 ? ` · makes ${r.qty}` : ''}${v.length > 1 ? ` · Recipe ${v.indexOf(i) + 1} of ${v.length}` : ''}</small>${gl}</button>`;
       }).join('') : '<p class="empty">No recipe matches.</p>';
     };
@@ -333,9 +334,28 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
     let pool = new Map<number, Server>();
     let priced = new Map<number, Record<Col, Hit | null> & { med: Ref | null }>();
     // Profit ranking: one craft sold on your server minus the materials there (cheaper of buy or craft, your Craft / Buy picks ignored).
-    type Gain = { profit: number; margin: number; stale?: number; over?: number };
+    type Sale = { units: number; avg: number; min: number; max: number; twin: boolean };
+    type Gain = { profit: number; margin: number; stale?: number; capped?: boolean; ref?: Sale | null };
     // What the product is counted at: your server's price, but never above the median of the pool's servers (a lone high ask is not a sale). `over` = how far your server is above it.
-    const sold = (p: { me: Hit | null; med: Ref | null }) => { const m = p.me, over = m && p.med && m.price >= p.med.m * 1.1 ? m.price / p.med.m - 1 : undefined; return m ? { price: over ? p.med!.m : m.price, over, scope: p.med?.scope, stale: m.stale } : null; };
+    const capAsk = (p: { me: Hit | null; med: Ref | null }) => { const m = p.me, over = m && p.med && m.price >= p.med.m * 1.1 ? m.price / p.med.m - 1 : undefined; return m ? { price: over ? p.med!.m : m.price, over, scope: p.med?.scope, stale: m.stale } : null; };
+    // Sales of the product in the API's 28-day window (EU Kaisinel, an Elyos server, is the only server with them). A product with none uses the other faction's twin recipe of the same tier (Star Dragon Lord <-> True Dragon Lord).
+    const soldFor = (ri: number): Sale | null => {
+      const look = (pid: number, twin: boolean): Sale | null => {
+        for (const id of [pid, ...(idsByName.get(name(pid)) ?? [])]) { const x = market.sold?.[id]; if (x) return { units: x[0], avg: x[1], min: x[2], max: x[3], twin }; }
+        return null;
+      };
+      const r = craft.recipes[ri], own = look(r.product, false);
+      if (own || !r.faction) return own;
+      const tw = craft.recipes.filter((t) => t.faction && t.faction !== r.faction && t.profession === r.profession && t.type === r.type && t.level === r.level && t.mastery === r.mastery);
+      return tw.length === 1 ? look(tw[0].product, true) : null;
+    };
+    // The sale price: your server's price, capped at the median ask of the servers that list it, and at the 28-day sales average when there is one.
+    const saleFor = (ri: number) => {
+      const p = priceOfName(craft.recipes[ri].product), ask = capAsk(p), ref = soldFor(ri);
+      if (!ask) return null;
+      const byAvg = !!ref && ref.avg < ask.price;
+      return { ...ask, price: byAvg ? ref!.avg : ask.price, byAvg, ref, mine: p.me };
+    };
     let ranking = false, gains = new Map<number, Gain | null>(), gainSig = '';
     const gainOf = (ri: number): Gain | null => {
       const sig = [state.region, state.faction, state.launch, state.server, state.basis, JSON.stringify(state.mast)].join('|');
@@ -343,12 +363,12 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
       if (gains.has(ri)) return gains.get(ri)!;
       pool = new Map(market.servers.filter(pick).map((s) => [s[0], s]));
       priced = new Map();
-      const r = craft.recipes[ri], sell = sold(priceOfName(r.product));
+      const r = craft.recipes[ri], sell = saleFor(ri);
       let g: Gain | null = null;
       ranking = true;
       try {
         const cost = !sell || (state.mast[r.profession] && r.mastery > state.mast[r.profession]) ? null : craftCost(ri, 'me');
-        if (sell && cost !== null && cost > 0) g = { profit: (sell.price - cost) * r.qty, margin: (sell.price - cost) / cost * 100, stale: sell.stale, over: sell.over };
+        if (sell && cost !== null && cost > 0) g = { profit: (sell.price - cost) * r.qty, margin: (sell.price - cost) / cost * 100, stale: sell.stale, capped: !!sell.over || sell.byAvg, ref: sell.ref };
       } finally { ranking = false; }
       gains.set(ri, g);
       return g;
@@ -559,8 +579,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
 
       // Summary: best single server, what the product sells for, profit.
       const stats: string[] = [];
-      const old = (h: Hit) => (h.stale !== undefined ? ` · last price ${ageText(h.stale)}` : '');
-      const stat = (label: string, value: string, sub = '', cls = '') => stats.push(`<div class="stat"><span>${label}</span><b${cls ? ` class="${cls}"` : ''}>${value}</b>${sub ? `<small>${sub}</small>` : ''}</div>`);
+      const stat = (label: string, value: string, cls = '') => stats.push(`<div class="stat"><span>${label}</span><b${cls ? ` class="${cls}"` : ''}>${value}</b></div>`);
       let best: { s: Server; sum: number; miss: number } | null = null;
       if (need.size) {
         for (const s of pool.values()) {
@@ -576,11 +595,11 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
       }
       const sell = priceOfName(r.product);
       if (sell.me || sell.hi) {
-        const mine = sell.me, eff = sold(sell);
-        stat('Sells for', eff ? kin(eff.price * made) : kin(sell.hi!.price * made), eff ? `${nf.format(eff.price)} each · ${eff.over ? `capped at the median of ${eff.scope}, your server asks ${nf.format(mine!.price)} (+${Math.round(eff.over * 100)}%)` : 'your server'}${old(mine!)}` : `${nf.format(sell.hi!.price)} each · ${esc(sell.hi!.s[1])}${old(sell.hi!)}`);
+        const mine = sell.me, eff = saleFor(ri);
+        stat('Sells for', eff ? kin(eff.price * made) : kin(sell.hi!.price * made));
         if (mine && state.server && !miss.me) {
           const profit = eff!.price * made - sum.me;
-          stat('Profit', `${profit >= 0 ? '+' : '−'}${kin(Math.abs(profit))}`, 'sale price minus materials, your server', profit >= 0 ? 'ok' : 'warn');
+          stat('Profit', `${profit >= 0 ? '+' : '−'}${kin(Math.abs(profit))}`, profit >= 0 ? 'ok' : 'warn');
         }
       }
       // A combo swaps the output for the Splendent version of the item (one grade up), when the client has one.
@@ -588,10 +607,10 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
       const cid = cids.find((x) => priceOf(x).me || priceOf(x).hi), cmb = cid ? priceOf(cid) : null;
       if (cid && cmb && (cmb.me || cmb.hi)) {
         const hit = cmb.me ?? cmb.hi!;
-        stat('If it combos', kin(hit.price), `${esc(splendent(name(r.product)))} · each · ${cmb.me ? 'your server' : esc(hit.s[1])} · ${pc(r.combo)} chance${old(hit)}`);
+        stat('If it combos', kin(hit.price));
       }
       // last: it matters least
-      if (best) stat('Cheapest single server', kin(best.sum), `${esc(best.s[1])}${best.miss ? ` · ${best.miss} not listed there` : ''}`);
+      if (best) stat(`Cheapest server · ${esc(best.s[1])}`, kin(best.sum));
       $('#stats').innerHTML = stats.join('');
     };
 

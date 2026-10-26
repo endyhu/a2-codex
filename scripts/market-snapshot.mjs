@@ -38,6 +38,7 @@ const prices = {}; // key -> [serverId, price, listings, ...]
 const lastRaw = []; // [key, serverId, price, hours since epoch] for items with no listing right now
 const updated = {}; // serverId -> latest captured_at
 const traded = {}; // key -> Kinah traded on the API's default server
+const sold = {}; // key -> [units sold, average, min, max price] over the API's 28-day sales window, default server only
 let ok = 0;
 
 // Typical price: median of the cheapest-price points of the last 7 days (the API's /sparklines draws one point per 4 hours, 100 items per call).
@@ -67,7 +68,10 @@ const worker = async () => {
     try {
       const { items: list } = await get(`/items?server=${s.server_id}&limit=1000&sort=key`);
       for (const it of list) {
-        if (s.server_id === defaultServer) traded[it.item_key] = Math.round((it.units_sold ?? 0) * (it.sold_avg_price ?? 0));
+        if (s.server_id === defaultServer) {
+          traded[it.item_key] = Math.round((it.units_sold ?? 0) * (it.sold_avg_price ?? 0));
+          if (it.units_sold > 0 && it.sold_avg_price != null) sold[it.item_key] = [it.units_sold, Math.round(it.sold_avg_price), Math.round(it.sold_min_price ?? it.sold_avg_price), Math.round(it.sold_max_price ?? it.sold_avg_price)];
+        }
         if (wanted(s) && !it.listed && it.last_price != null && it.last_seen_at && it.name) lastRaw.push([it.item_key, s.server_id, it.last_price, Math.floor(Date.parse(it.last_seen_at) / 3.6e6)]);
         if (!wanted(s) || !it.listed || it.price == null || !it.name) continue;
         if (!items.has(it.item_key)) items.set(it.item_key, [it.item_key, it.name, it.category.section_id, it.category.name]);
@@ -108,6 +112,7 @@ const out = {
   items: [...items.values()].map((i) => [...i, traded[i[0]] ?? 0]).sort((a, b) => a[1].localeCompare(b[1])),
   prices,
   typical,
+  sold,
   last,
 };
 writeFileSync(new URL('../public/market.json', import.meta.url), JSON.stringify(out));
