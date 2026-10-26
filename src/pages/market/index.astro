@@ -23,6 +23,9 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
       <h3 class="mini" id="launch-h">Servers</h3>
       <div class="togs seg" id="launch" role="radiogroup" aria-label="Server launch">{[["launch", "Launch"], ["ea", "Early Access"], ["all", "Both"]].map(([v, l]) => <button type="button" class="tog" role="radio" aria-checked="false" data-v={v}>{l}</button>)}</div>
 
+      <h3 class="mini">Price</h3>
+      <div class="togs seg" id="basis" role="radiogroup" aria-label="Price basis">{[["median", "7-day median"], ["now", "Now"]].map(([v, l]) => <button type="button" class="tog" role="radio" aria-checked="false" data-v={v}>{l}</button>)}</div>
+
       <h3 class="mini">Server</h3>
       <select id="server" class="num" aria-label="Server"><option value="0">All servers</option></select>
 
@@ -53,7 +56,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
     </section>
   </div>
 
-  <p class="meta sources">Prices: the cheapest listed unit price per item and server, from the <a href="https://aion2.exchange/">Aion2Market</a> public API, which collects the in-game market every hour. This page is rebuilt from a fresh snapshot every 6 hours.</p>
+  <p class="meta sources">Prices: the median over 7 days of the cheapest listed unit price per item and server (or the current cheapest, when set to Now), from the <a href="https://aion2.exchange/">Aion2Market</a> public API, which collects the in-game market every hour. This page is rebuilt from a fresh snapshot every 6 hours.</p>
 </Base>
 
 <style is:global>
@@ -127,8 +130,8 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
   import { guessRegion } from '../../scripts/region';
   import { oneOf, readUrl, writeUrl } from '../../scripts/urlstate';
   type Server = [number, string, string, string, string, string, number];
-  type Market = { generated: string; servers: Server[]; items: [number, string, string, string, number][]; prices: Record<string, number[]>; last?: Record<string, number[]> };
-  type Saved = { region: string; faction: string; launch: string; section: string };
+  type Market = { generated: string; servers: Server[]; items: [number, string, string, string, number][]; prices: Record<string, number[]>; typical?: Record<string, number[]>; last?: Record<string, number[]> };
+  type Saved = { region: string; faction: string; launch: string; section: string; basis: string };
   type Row = { key: number; name: string; cat: string; vol: number; me: number; list: { s: Server; price: number; n: number }[]; min: number; max: number; spread: number; old?: { price: number; h: number; s?: Server } };
   const STORE = 'a2codex-market-v1';
   const nf = new Intl.NumberFormat('en-US');
@@ -155,14 +158,14 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
     let saved: Partial<Saved> = {};
     try { saved = JSON.parse(localStorage.getItem(STORE) || '{}') || {}; } catch {}
     const url = readUrl();
-    const state = { server: Number(url.get('srv')) || 0, region: url.get('r') || saved.region || '', faction: oneOf(url.get('f'), ['all', 'Elyos', 'Asmodian']) ?? (saved.faction || 'all'), launch: oneOf(url.get('l'), ['launch', 'ea', 'all']) ?? (saved.launch || 'launch'), section: oneOf(url.get('sec'), ['all', 'weapons', 'armor', 'accessories', 'consumables', 'materials', 'skins', 'other']) ?? (saved.section || 'all'), q: url.get('q') || '', sort: 'vol', dir: -1};
+    const state = { server: Number(url.get('srv')) || 0, region: url.get('r') || saved.region || '', faction: oneOf(url.get('f'), ['all', 'Elyos', 'Asmodian']) ?? (saved.faction || 'all'), launch: oneOf(url.get('l'), ['launch', 'ea', 'all']) ?? (saved.launch || 'launch'), section: oneOf(url.get('sec'), ['all', 'weapons', 'armor', 'accessories', 'consumables', 'materials', 'skins', 'other']) ?? (saved.section || 'all'), basis: oneOf(url.get('b'), ['median', 'now']) ?? oneOf(saved.basis ?? null, ['median', 'now']) ?? 'median', q: url.get('q') || '', sort: 'vol', dir: -1};
     const open = new Set<number>();
     let data: Market, rows: Row[] = [], regionsEl = () => {};
 
     const checked = (id: string, v: string) => document.querySelectorAll<HTMLElement>(`#${id} [data-v]`).forEach((b) => b.setAttribute('aria-checked', String(b.dataset.v === v)));
     let noEA = false; // no Early Access server in the data: the launch choice is not saved
-    const syncUrl = () => writeUrl({ r: state.region, f: state.faction, l: noEA ? undefined : state.launch, sec: state.section, srv: state.server, q: state.q.trim() }, { f: 'all', l: 'launch', sec: 'all' });
-    const persist = () => { syncUrl(); try { localStorage.setItem(STORE, JSON.stringify({ region: state.region, faction: state.faction, launch: noEA ? (saved.launch || 'launch') : state.launch, section: state.section })); } catch {} };
+    const syncUrl = () => writeUrl({ r: state.region, f: state.faction, l: noEA ? undefined : state.launch, sec: state.section, srv: state.server, b: state.basis, q: state.q.trim() }, { f: 'all', l: 'launch', sec: 'all', b: 'median' });
+    const persist = () => { syncUrl(); try { localStorage.setItem(STORE, JSON.stringify({ region: state.region, faction: state.faction, launch: noEA ? (saved.launch || 'launch') : state.launch, section: state.section, basis: state.basis })); } catch {} };
 
     const pick = (s: Server) => s[2] === state.region && (state.faction === 'all' || s[4] === state.faction) && (state.launch === 'all' || (state.launch === 'ea') === !!s[6]);
     const compute = () => {
@@ -173,10 +176,13 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
       for (const it of data.items) {
         if (state.section !== 'all' && it[2] !== state.section) continue;
         if (needle && !it[1].toLowerCase().includes(needle)) continue;
-        const p = data.prices[it[0]], list: Row['list'] = [];
+        const p = data.prices[it[0]], list: Row['list'] = [], t = state.basis === 'median' ? data.typical?.[it[0]] : undefined;
         for (let i = 0; i < p.length; i += 3) {
           const s = want.get(p[i]);
-          if (s) list.push({ s, price: p[i + 1], n: p[i + 2] });
+          if (!s) continue;
+          let price = p[i + 1];
+          if (t) for (let j = 0; j < t.length; j += 2) if (t[j] === p[i]) price = t[j + 1]; // 7-day median of the cheapest price on that server
+          list.push({ s, price, n: p[i + 2] });
         }
         list.sort((a, b) => a.price - b.price || a.s[1].localeCompare(b.s[1]));
         const me = state.server ? list.findIndex((e) => e.s[0] === state.server) : -1;
@@ -248,10 +254,10 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
     serverEl.addEventListener('change', () => { state.server = Number(serverEl.value); syncUrl(); refresh(); }, { signal });
     const refresh = () => { compute(); render(); $('#scroll').scrollTop = 0; };
 
-    document.querySelectorAll<HTMLElement>('#faction, #launch, #section').forEach((g) => g.addEventListener('click', (e) => {
+    document.querySelectorAll<HTMLElement>('#faction, #launch, #section, #basis').forEach((g) => g.addEventListener('click', (e) => {
       const b = (e.target as HTMLElement).closest<HTMLElement>('[data-v]');
       if (!b) return;
-      state[g.id as 'faction' | 'launch' | 'section'] = b.dataset.v!;
+      state[g.id as 'faction' | 'launch' | 'section' | 'basis'] = b.dataset.v!;
       if (g.id === 'launch') { regionsEl(); checked('region', state.region); }
       checked(g.id, b.dataset.v!); persist(); syncServers(); refresh();
     }, { signal }));
@@ -286,7 +292,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
     }, { signal, passive: true });
 
     q.value = state.q;
-    checked('faction', state.faction); checked('launch', state.launch); checked('section', state.section);
+    checked('faction', state.faction); checked('launch', state.launch); checked('section', state.section); checked('basis', state.basis);
     load().then((d) => {
       if (signal.aborted) return;
       data = d;

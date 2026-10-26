@@ -40,6 +40,25 @@ const updated = {}; // serverId -> latest captured_at
 const traded = {}; // key -> Kinah traded on the API's default server
 let ok = 0;
 
+// Typical price: median of the cheapest-price points of the last 7 days (the API's /sparklines draws one point per 4 hours, 100 items per call).
+// One stray low or high listing right now does not move it. Needs MIN_POINTS points; a failed call just leaves those items without one.
+const MIN_POINTS = 6;
+const typical = {}; // key -> [serverId, median, ...]
+const median = (a) => { const s = [...a].sort((x, y) => x - y), m = s.length >> 1; return s.length % 2 ? s[m] : Math.round((s[m - 1] + s[m]) / 2); };
+const typicalFor = async (server, keys) => {
+  for (let i = 0; i < keys.length; i += 100) {
+    try {
+      const { sparklines } = await get(`/sparklines?window=7d&server=${server}&keys=${keys.slice(i, i + 100).join(',')}`);
+      for (const sp of sparklines) {
+        const p = sp.points.map((x) => x.price).filter((x) => x != null);
+        if (p.length >= MIN_POINTS) (typical[sp.item_key] ??= []).push(server, median(p));
+      }
+    } catch (e) {
+      console.warn(`no typical prices for server ${server}: ${e.message}`);
+    }
+  }
+};
+
 let failed = 0;
 let skipped = [];
 const queue = [...live];
@@ -55,6 +74,7 @@ const worker = async () => {
         (prices[it.item_key] ??= []).push(s.server_id, it.price, it.listings);
         if (!updated[s.server_id] || it.captured_at > updated[s.server_id]) updated[s.server_id] = it.captured_at;
       }
+      if (wanted(s)) await typicalFor(s.server_id, list.filter((it) => it.listed && it.price != null && it.name).map((it) => it.item_key));
       ok++;
       console.log(`${ok}/${live.length} ${s.name} ${s.server_id}`);
     } catch (e) {
@@ -87,6 +107,7 @@ const out = {
   servers: live.filter((s) => wanted(s) && updated[s.server_id]).map((s) => [s.server_id, s.name, s.region, s.region_name, s.faction, updated[s.server_id], early(s) ? 1 : 0]),
   items: [...items.values()].map((i) => [...i, traded[i[0]] ?? 0]).sort((a, b) => a[1].localeCompare(b[1])),
   prices,
+  typical,
   last,
 };
 writeFileSync(new URL('../public/market.json', import.meta.url), JSON.stringify(out));

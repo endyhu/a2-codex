@@ -36,6 +36,9 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
       <h3 class="mini" id="launch-h">Servers</h3>
       <div class="togs seg" id="launch" role="radiogroup" aria-label="Server launch">{[["launch", "Launch"], ["ea", "Early Access"], ["all", "Both"]].map(([v, l]) => <button type="button" class="tog" role="radio" aria-checked="false" data-v={v}>{l}</button>)}</div>
 
+      <h3 class="mini">Price</h3>
+      <div class="togs seg" id="basis" role="radiogroup" aria-label="Price basis">{[["median", "7-day median"], ["now", "Now"]].map(([v, l]) => <button type="button" class="tog" role="radio" aria-checked="false" data-v={v}>{l}</button>)}</div>
+
       <h3 class="mini">Your server</h3>
       <select id="server" class="num" aria-label="Your server"><option value="0">None</option></select>
 
@@ -93,7 +96,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
     </div>
   </div>
 
-  <p class="meta sources">Recipes: the Global client's crafting tables, via <a href="https://metabot.gg/en/aion-2/crafting">metabot.gg</a>. Prices: the cheapest listed unit price per item and server, from the <a href="https://aion2.exchange/">Aion2Market</a> public API (same snapshot as Market). Merchant prices (Kina): the crafting, general and substance morph NPC shops, via <a href="https://metabot.gg/en/aion-2/shops">metabot.gg</a>. Craftable components can be crafted or bought. A combo item you craft counts at its expected cost; failed crafts are not counted. Profit and Margin sort by what the product sells for on your server minus the cheaper of buying or crafting each material there.</p>
+  <p class="meta sources">Recipes: the Global client's crafting tables, via <a href="https://metabot.gg/en/aion-2/crafting">metabot.gg</a>. Prices: the median over 7 days of the cheapest listed unit price per item and server (or the current cheapest, when set to Now), from the <a href="https://aion2.exchange/">Aion2Market</a> public API (same snapshot as Market). Merchant prices (Kina): the crafting, general and substance morph NPC shops, via <a href="https://metabot.gg/en/aion-2/shops">metabot.gg</a>. Craftable components can be crafted or bought. A combo item you craft counts at its expected cost; failed crafts are not counted. Profit and Margin sort by what the product sells for on your server minus the cheaper of buying or crafting each material there.</p>
 </Base>
 
 <style is:global>
@@ -218,11 +221,11 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
   import { guessRegion } from '../../scripts/region';
   import { oneOf, readUrl, writeUrl } from '../../scripts/urlstate';
   type Server = [number, string, string, string, string, string, number];
-  type Market = { generated: string; servers: Server[]; items: [number, string, string, string, number][]; prices: Record<string, number[]>; last?: Record<string, number[]> };
+  type Market = { generated: string; servers: Server[]; items: [number, string, string, string, number][]; prices: Record<string, number[]>; typical?: Record<string, number[]>; last?: Record<string, number[]> };
   type Recipe = { product: number; qty: number; mastery: number; profession: string; level?: number; faction?: 'Elyos' | 'Asmodian'; type: string; combo: number; rate?: [string, string]; parts: [number, number][] };
   type Craft = { generated: string; items: Record<string, [string, string]>; vendor: Record<string, number>; curves: Record<string, number[]>; recipes: Recipe[] };
-  type Saved = { region: string; faction: string; launch: string; server: number; prof: string; sub: string; sel: string; qty: number; mast: Record<string, number>; sort: string };
-  type Hit = { price: number; s: Server; stale?: number }; // stale: hours since the price was last seen listed
+  type Saved = { region: string; faction: string; launch: string; server: number; prof: string; sub: string; sel: string; qty: number; mast: Record<string, number>; sort: string; basis: string };
+  type Hit = { price: number; s: Server; stale?: number; now?: number }; // now: the current cheapest listing, set when the price shown is the 7-day median and differs // stale: hours since the price was last seen listed
   const STORE = 'a2codex-crafting-v1';
   const nf = new Intl.NumberFormat('en-US');
   const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
@@ -245,7 +248,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
     let saved: Partial<Saved> = {};
     try { saved = JSON.parse(localStorage.getItem(STORE) || '{}') || {}; } catch {}
     const url = readUrl();
-    const state = { region: url.get('r') || saved.region || '', faction: oneOf(url.get('f'), ['all', 'Elyos', 'Asmodian']) ?? (saved.faction || 'all'), launch: oneOf(url.get('l'), ['launch', 'ea', 'all']) ?? (saved.launch || 'launch'), server: Number(url.get('srv')) || saved.server || 0, prof: oneOf(url.get('p'), ['all', 'Blacksmithing', 'Armorsmithing', 'Handicrafting', 'Alchemy', 'Cooking']) ?? (saved.prof || 'all'), sub: url.get('t') || saved.sub || 'all', sel: url.get('k') || saved.sel || '', qty: Math.min(9999, Math.max(1, Number(url.get('n')) || saved.qty || 1)), mast: Object.fromEntries(Object.entries(typeof saved.mast === 'object' && saved.mast ? saved.mast : {}).map(([k, v]) => [k, Math.min(100, Math.max(0, Math.floor(Number(v)) || 0))]).filter(([, v]) => v)) as Record<string, number>, sort: oneOf(url.get('o'), ['level', 'profit', 'margin']) ?? oneOf(saved.sort ?? null, ['level', 'profit', 'margin']) ?? 'level', q: '' };
+    const state = { region: url.get('r') || saved.region || '', faction: oneOf(url.get('f'), ['all', 'Elyos', 'Asmodian']) ?? (saved.faction || 'all'), launch: oneOf(url.get('l'), ['launch', 'ea', 'all']) ?? (saved.launch || 'launch'), server: Number(url.get('srv')) || saved.server || 0, prof: oneOf(url.get('p'), ['all', 'Blacksmithing', 'Armorsmithing', 'Handicrafting', 'Alchemy', 'Cooking']) ?? (saved.prof || 'all'), sub: url.get('t') || saved.sub || 'all', sel: url.get('k') || saved.sel || '', qty: Math.min(9999, Math.max(1, Number(url.get('n')) || saved.qty || 1)), mast: Object.fromEntries(Object.entries(typeof saved.mast === 'object' && saved.mast ? saved.mast : {}).map(([k, v]) => [k, Math.min(100, Math.max(0, Math.floor(Number(v)) || 0))]).filter(([, v]) => v)) as Record<string, number>, sort: oneOf(url.get('o'), ['level', 'profit', 'margin']) ?? oneOf(saved.sort ?? null, ['level', 'profit', 'margin']) ?? 'level', basis: oneOf(url.get('b'), ['median', 'now']) ?? oneOf(saved.basis ?? null, ['median', 'now']) ?? 'median', q: '' };
     const have = new Map<string, number>();
     // Items with the same name can have different ids (one per faction), so names map to lists of ids.
     let idsByName = new Map<string, number[]>();
@@ -257,8 +260,8 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
 
     const checked = (id: string, v: string) => document.querySelectorAll<HTMLElement>(`#${id} [data-v]`).forEach((b) => b.setAttribute('aria-checked', String(b.dataset.v === v)));
     let noEA = false; // no Early Access server in the data: the launch choice is not saved
-    const syncUrl = () => writeUrl({ r: state.region, f: state.faction, l: noEA ? undefined : state.launch, srv: state.server, p: state.prof, t: state.sub, k: state.sel, n: state.qty, h: [...have].filter(([, v]) => v > 0).map(([k, v]) => `${k}:${v}`).join(','), o: state.sort }, { f: 'all', l: 'launch', p: 'all', t: 'all', n: 1, o: 'level' });
-    const persist = () => { syncUrl(); try { localStorage.setItem(STORE, JSON.stringify({ region: state.region, faction: state.faction, launch: noEA ? (saved.launch || 'launch') : state.launch, server: state.server, prof: state.prof, sub: state.sub, sel: state.sel, qty: state.qty, mast: state.mast, sort: state.sort })); } catch {} };
+    const syncUrl = () => writeUrl({ r: state.region, f: state.faction, l: noEA ? undefined : state.launch, srv: state.server, p: state.prof, t: state.sub, k: state.sel, n: state.qty, h: [...have].filter(([, v]) => v > 0).map(([k, v]) => `${k}:${v}`).join(','), o: state.sort, b: state.basis }, { f: 'all', l: 'launch', p: 'all', t: 'all', n: 1, o: 'level', b: 'median' });
+    const persist = () => { syncUrl(); try { localStorage.setItem(STORE, JSON.stringify({ region: state.region, faction: state.faction, launch: noEA ? (saved.launch || 'launch') : state.launch, server: state.server, prof: state.prof, sub: state.sub, sel: state.sel, qty: state.qty, mast: state.mast, sort: state.sort, basis: state.basis })); } catch {} };
     const pick = (s: Server) => s[2] === state.region && (state.faction === 'all' || s[4] === state.faction) && (state.launch === 'all' || (state.launch === 'ea') === !!s[6]);
     const name = (id: number) => craft.items[id][0];
 
@@ -333,7 +336,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
     type Gain = { profit: number; margin: number; stale?: number };
     let ranking = false, gains = new Map<number, Gain | null>(), gainSig = '';
     const gainOf = (ri: number): Gain | null => {
-      const sig = [state.region, state.faction, state.launch, state.server, JSON.stringify(state.mast)].join('|');
+      const sig = [state.region, state.faction, state.launch, state.server, state.basis, JSON.stringify(state.mast)].join('|');
       if (sig !== gainSig) { gainSig = sig; gains = new Map(); }
       if (gains.has(ri)) return gains.get(ri)!;
       pool = new Map(market.servers.filter(pick).map((s) => [s[0], s]));
@@ -349,6 +352,11 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
       return g;
     };
 
+    // Median of the cheapest price over the last 7 days on one server (market.json `typical`, one point per 4 hours).
+    const typical = (id: number, server: number) => {
+      const t = market.typical?.[id];
+      if (t) for (let i = 0; i < t.length; i += 2) if (t[i] === server) return t[i + 1];
+    };
     // What an item costs to buy in each column (your server, cheapest, most expensive). A merchant sells it at one price
     // on every server, so it caps all three.
     const priceOf = (id: number): Record<Col, Hit | null> => {
@@ -359,8 +367,10 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
       for (let i = 0; i < p.length; i += 3) {
         const s = pool.get(p[i]);
         if (!s) continue;
-        if (s[0] === state.server) me = { price: p[i + 1], s };
-        list.push({ price: p[i + 1], s });
+        const typ = state.basis === 'median' ? typical(id, s[0]) : undefined, hit: Hit = { price: typ ?? p[i + 1], s };
+        if (typ !== undefined && Math.abs(typ - p[i + 1]) >= typ * 0.1) hit.now = p[i + 1];
+        if (s[0] === state.server) me = hit;
+        list.push(hit);
       }
       list.sort((a, b) => a.price - b.price || a.s[1].localeCompare(b.s[1]));
       const v = craft.vendor[id], shop: Hit | null = v ? { price: v, s: MERCHANT } : null;
@@ -474,7 +484,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
         if (!hit) { if (!inc) miss[key]++; return `<td class="na${cls ? ' ' + cls : ''}">—</td>`; }
         if (!inc) sum[key] += hit.price * n;
         const old = hit.stale !== undefined;
-        const sub = [n > 1 ? nf.format(hit.price) + ' each' : '', label ? esc(hit.s[1]) : '', old ? `last price · ${ageText(hit.stale!)}` : ''].filter(Boolean).join(' · ');
+        const sub = [n > 1 ? nf.format(hit.price) + ' each' : '', label ? esc(hit.s[1]) : '', old ? `last price · ${ageText(hit.stale!)}` : '', hit.now !== undefined ? `now ${kin(hit.now)}` : ''].filter(Boolean).join(' · ');
         return `<td class="${cls}${old ? ' stale' : ''}${inc ? ' inc' : ''}"><b>${kin(hit.price * n)}</b><small>${sub}</small></td>`;
       };
       const ref = refCol();
@@ -544,7 +554,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
           for (const [id, n] of need) {
             const p = market.prices[id] ?? [], shop = craft.vendor[id];
             let price = shop ?? Infinity;
-            for (let i = 0; i < p.length; i += 3) if (p[i] === s[0]) price = Math.min(price, p[i + 1]);
+            for (let i = 0; i < p.length; i += 3) if (p[i] === s[0]) price = Math.min(price, (state.basis === 'median' ? typical(id, s[0]) : undefined) ?? p[i + 1]);
             if (price === Infinity) m++; else t += price * n;
           }
           if (!best || m < best.miss || (m === best.miss && t < best.sum)) best = { s, sum: t, miss: m };
@@ -578,10 +588,10 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
       serverEl.value = String(state.server);
     };
 
-    document.querySelectorAll<HTMLElement>('#faction, #launch').forEach((g) => g.addEventListener('click', (e) => {
+    document.querySelectorAll<HTMLElement>('#faction, #launch, #basis').forEach((g) => g.addEventListener('click', (e) => {
       const b = (e.target as HTMLElement).closest<HTMLElement>('[data-v]');
       if (!b) return;
-      state[g.id as 'faction' | 'launch'] = b.dataset.v!;
+      state[g.id as 'faction' | 'launch' | 'basis'] = b.dataset.v!;
       if (g.id === 'launch') { regionsEl(); checked('region', state.region); }
       checked(g.id, b.dataset.v!); syncServers(); persist(); renderList(); renderResult();
     }, { signal }));
@@ -673,7 +683,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
       persist(); renderResult();
     }, { signal });
 
-    checked('faction', state.faction); checked('launch', state.launch); checked('prof', state.prof); checked('sort', state.sort);
+    checked('faction', state.faction); checked('launch', state.launch); checked('prof', state.prof); checked('sort', state.sort); checked('basis', state.basis);
     Promise.all([loadMarket(), loadCraft()]).then(([m, c]) => {
       if (signal.aborted) return;
       market = m; craft = c;
