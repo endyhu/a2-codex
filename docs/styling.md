@@ -21,7 +21,7 @@ Colour mixing: `color-mix(in srgb, var(--accent) N%, transparent)`. Hued items u
 | Inner card/row | `background: var(--panel)`, 1px `--line`, 3px radius |
 | Page title | `.page-title`: 1.9rem, 4px gradient accent bar before it |
 | Home card | `.card`: same gradient as `.panel`, 3px radius, 18px padding |
-| Tooltip | shared look in global.css (`#tip`, `[data-tip]`): `#0d1018`, 1px white 14%, 3px radius, `0 8px 28px` black 50% |
+| Tooltip | shared look in global.css (`#tip`, `[data-tip]`, `#clip-tip`: Base.astro shows it on hover for any text cut off by an ellipsis, so new truncated text needs no extra markup; hover only, no touch): `#0d1018`, 1px white 14%, 3px radius, `0 8px 28px` black 50% |
 | Spacing | steps on Gear are a uniform 32px; keep gaps uniform inside a group |
 
 ## Hover, focus, glow

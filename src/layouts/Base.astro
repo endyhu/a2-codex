@@ -136,6 +136,22 @@ const isActive = (href: string) => path === `${base}${href}`;
           await load();
         };
       });
+      // Text cut off with an ellipsis shows in full in a tooltip on hover.
+      let clipTip: HTMLDivElement | null = null;
+      const hideClip = () => clipTip?.remove();
+      document.addEventListener('mouseover', (e) => {
+        let el = e.target as Element | null;
+        while (el && el !== document.body && !(el instanceof HTMLElement && getComputedStyle(el).textOverflow === 'ellipsis')) el = el.parentElement;
+        if (!(el instanceof HTMLElement) || el === document.body || el.scrollWidth <= el.clientWidth) return hideClip();
+        clipTip ??= Object.assign(document.createElement('div'), { id: 'clip-tip' });
+        clipTip.textContent = el.textContent;
+        document.body.append(clipTip);
+        const r = el.getBoundingClientRect();
+        clipTip.style.left = `${Math.max(8, Math.min(r.left, innerWidth - clipTip.offsetWidth - 8))}px`;
+        clipTip.style.top = r.top > clipTip.offsetHeight + 12 ? `${r.top - clipTip.offsetHeight - 6}px` : `${r.bottom + 6}px`;
+      });
+      document.addEventListener('astro:before-swap', hideClip);
+      addEventListener('scroll', hideClip, { passive: true, capture: true });
       document.addEventListener('visibilitychange', () => { if (!document.hidden) checkVersion(); });
       setInterval(checkVersion, 5 * 60 * 1000);
       checkVersion();

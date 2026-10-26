@@ -125,7 +125,8 @@ td:first-child { font-weight: 600; }
 .panel-head h2 { margin: 0; font-size: 1.2rem; }
 
 /* Shared tooltip look: the Stats wheel tooltip (#tip) and every [data-tip] hover tip. */
-#tip, [data-tip]:hover::after, [data-tip]:focus::after { padding: 10px 14px; background: #0d1018; color: #eceff5; border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 3px; box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5); font-size: 0.88rem; line-height: 1.45; font-weight: 400; text-align: left; }
+#tip, #clip-tip, [data-tip]:hover::after, [data-tip]:focus::after { padding: 10px 14px; background: #0d1018; color: #eceff5; border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 3px; box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5); font-size: 0.88rem; line-height: 1.45; font-weight: 400; text-align: left; }
+#clip-tip { position: fixed; z-index: 60; max-width: min(360px, calc(100vw - 16px)); padding: 6px 10px; font-size: 0.84rem; pointer-events: none; }
 
 @media (prefers-reduced-motion: no-preference) {
   html { scroll-behavior: smooth; }
