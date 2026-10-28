@@ -168,9 +168,23 @@ const isActive = (href: string) => path === `${base}${href}`;
           labelTheme();
           try { localStorage.setItem('theme', next); } catch {}
         } else if (t.closest('#menu')) {
-          const open = document.body.classList.toggle('menu-open');
-          document.getElementById('menu')!.setAttribute('aria-expanded', String(open));
+          setMenu(!document.body.classList.contains('menu-open'));
         }
+      });
+      // Phone menu: a tap outside it, a tap on one of its links or Escape closes it. The outside tap only closes, it does not reach the page.
+      const setMenu = (open: boolean) => {
+        document.body.classList.toggle('menu-open', open);
+        document.getElementById('menu')!.setAttribute('aria-expanded', String(open));
+      };
+      document.addEventListener('click', (e) => {
+        if (!document.body.classList.contains('menu-open')) return;
+        const t = e.target as Element;
+        if (t.closest('#menu')) return;
+        if (!t.closest('#side')) { e.preventDefault(); e.stopPropagation(); setMenu(false); }
+        else if (t.closest('a')) setMenu(false);
+      }, { capture: true });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && document.body.classList.contains('menu-open')) { setMenu(false); document.getElementById('menu')!.focus(); }
       });
     </script>
   </body>

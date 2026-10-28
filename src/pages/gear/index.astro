@@ -218,6 +218,7 @@ const order: Step[] = [
     const links = [...document.querySelectorAll<HTMLAnchorElement>('.rail a')];
     const firstStep = document.querySelector<HTMLElement>('.path > li')!;
     const card = document.querySelector('[aria-label="Enhancement order"]')!;
+    let shown: string | null | undefined;
     const setUp = () => firstStep.style.setProperty('--up', `${firstStep.getBoundingClientRect().top - card.getBoundingClientRect().top - 1}px`);
     const { signal, mark, unpin } = sectionGlow(['best-lines', ...links.map((a) => a.dataset.step!)], {
       // The bar only pushes the trigger line down while it is stuck to the top of the screen.
@@ -225,7 +226,15 @@ const order: Step[] = [
         const r = rail.getBoundingClientRect();
         return matchMedia('(max-width: 1799px)').matches && r.top <= parseFloat(getComputedStyle(rail).top) + 1 ? r.bottom : 0;
       },
-      onActive: (id) => links.forEach((a) => a.classList.toggle('on', a.dataset.step === id)),
+      onActive: (id) => {
+        if (id === shown) return;
+        shown = id;
+        links.forEach((a) => {
+          a.classList.toggle('on', a.dataset.step === id);
+          // Narrow screens: the bar scrolls sideways, keep the active step in view.
+          if (a.dataset.step === id && rail.scrollWidth > rail.clientWidth) rail.scrollTo({ left: a.offsetLeft - (rail.clientWidth - a.offsetWidth) / 2, behavior: 'smooth' });
+        });
+      },
     });
     addEventListener('resize', () => { setUp(); mark(); }, { signal });
     setUp();

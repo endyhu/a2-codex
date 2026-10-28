@@ -1,7 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import { bowIcon, daggerIcon, legsIcon, necklaceIcon } from '../../data/icons';
-import layoutGrid from 'lucide-static/icons/layout-grid.svg?raw';import anvil from 'lucide-static/icons/anvil.svg?raw';import shield from 'lucide-static/icons/shield.svg?raw';import gem from 'lucide-static/icons/gem.svg?raw';import flask from 'lucide-static/icons/flask-conical.svg?raw';import pot from 'lucide-static/icons/cooking-pot.svg?raw';
+import layoutGrid from 'lucide-static/icons/layout-grid.svg?raw';import anvil from 'lucide-static/icons/anvil.svg?raw';import shield from 'lucide-static/icons/shield.svg?raw';import gem from 'lucide-static/icons/gem.svg?raw';import flask from 'lucide-static/icons/flask-conical.svg?raw';import pot from 'lucide-static/icons/cooking-pot.svg?raw';import chevron from 'lucide-static/icons/chevron-down.svg?raw';
 
 // Icon per item type (the `type` of a recipe in crafting.json); the page script reads them from #sub-icons.
 const lucide = import.meta.glob('/node_modules/lucide-static/icons/*.svg', { query: '?raw', import: 'default', eager: true }) as Record<string, string>;
@@ -23,7 +23,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
 
   <div class="cft">
     <section class="panel" id="filters" aria-label="Prices from">
-      <header class="panel-head"><h2>Prices from</h2></header>
+      <header class="panel-head"><h2>Prices from</h2><button type="button" class="fold" aria-expanded="true" aria-controls="filters"><span class="fold-sum"></span><span class="fold-ico" set:html={chevron} /></button></header>
 
       <h3 class="mini">Region</h3>
       <div class="togs" id="region" role="radiogroup" aria-label="Region"></div>
@@ -207,7 +207,23 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
   .cf .mode button:disabled { opacity: 0.45; cursor: default; }
 
   @media (max-width: 1100px) { .cft .pf { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  /* Touch: bigger steppers and Craft / Buy buttons. */
+  @media (pointer: coarse) {
+    .cf .stp button { width: 30px; }
+    .cf .have { padding: 4px 0; }
+    .cf .need { width: auto; }
+    .cf .mode button { padding: 6px 12px; }
+    .cft .qty .step { width: 38px; }
+  }
   @media (max-width: 600px) {
+    .cft .pf { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .cft .pf .tog { justify-content: flex-start; }
+    .cft .rl { max-height: min(420px, 55vh); }
+    .cft .rl b, .cft .rl small { white-space: normal; }
+    .cft .ctl { flex: 1 1 100%; justify-content: space-between; }
+    .cft .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .cft .stat b { font-size: 1.05rem; }
+    .cf thead th { text-transform: none; letter-spacing: 0; font-size: 0.72rem; line-height: 1.25; vertical-align: bottom; }
     .cf { display: table; font-size: 0.78rem; --pad: 4px; --step: 9px; }
     .cf th, .cf td { padding: 6px 4px; }
     .cf th:nth-child(n+2) { width: 20%; }
@@ -221,6 +237,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
 <script>
   import { guessRegion } from '../../scripts/region';
   import { oneOf, readUrl, writeUrl } from '../../scripts/urlstate';
+  import { foldPanel } from '../../scripts/fold';
   type Server = [number, string, string, string, string, string, number];
   type Market = { generated: string; servers: Server[]; items: [number, string, string, string, number][]; prices: Record<string, number[]>; typical?: Record<string, number[]>; sold?: Record<string, number[]>; last?: Record<string, number[]> };
   type Recipe = { product: number; qty: number; mastery: number; profession: string; level?: number; faction?: 'Elyos' | 'Asmodian'; type: string; combo: number; rate?: [string, string]; parts: [number, number][] };
@@ -240,6 +257,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
     const ac = new AbortController();
     const { signal } = ac;
     document.addEventListener('astro:before-swap', () => ac.abort(), { once: true });
+    foldPanel(document.getElementById('filters')!, signal);
     const $ = <T extends HTMLElement>(s: string) => document.querySelector<T>(s)!;
     const count = $('#count'), listEl = $('#list'), result = $('#result'), rowsEl = $('#rows'), foot = $('#foot'), table = $('#table');
     const subEl = $('#sub');

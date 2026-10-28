@@ -46,7 +46,8 @@ Rule of thumb: glows are soft (negative spread, 16-28px, accent only). The stron
 - Stats and Gear use wider layouts with sticky rails; see STATUS.md for their rules.
 
 ## Market / Crafting filter controls
-The two pages share one set of rules in `global.css` (`:is(.mkt, .cft)`): the filters-beside-results grid (340px, sticky, stacks under 1100px), the `.togs` / `.tog` buttons and `.seg` segments, `.num` inputs, region buttons, `.mini` headings. Change them there, not in a page.
+The two pages share one set of rules in `global.css` (`:is(.mkt, .cft)`): the filters-beside-results grid (340px, sticky, stacks under 1100px), the `.togs` / `.tog` buttons and `.seg` segments, `.num` inputs, region buttons, `.mini` headings. Change them there, not in a page. When stacked, the filter panel folds to a header with a one-line summary (`.fold` button in the `.panel-head`, `foldPanel` from `src/scripts/fold.ts`); a new tool page with a long filter panel should do the same.
+Touch sizes go in `@media (pointer: coarse)` blocks (bigger steppers and small buttons); text inputs are 16px there globally so iOS does not zoom.
 
 ## Crafting tree (nested rows)
 Rows of crafted components nest: `tr.nest.d1..d4` with one colour per level (`--c1..--c4`: violet, teal, amber, pink), a tinted row, a 3px bar on the name cell for the row's own level, faint dotted bars for ancestor levels and a full-width 1px row line, all drawn as backgrounds on the name cell in the row's inline style (`--pad` and `--step` set the spacing: 10px / 26px, 4px / 11px on phones). Rows of one level join into one bar; do not reuse the class name `.sub` (that is the Crafting item-type row). The Craft / Buy switch (`.mode`) and the have stepper (`.stp`) are small segmented controls in the same 3px style.

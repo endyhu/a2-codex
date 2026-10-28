@@ -357,6 +357,7 @@ const rows = ranked.map((s) => ({ ...s, gets: tagsFor(s) }));
   .tags { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
   .tag { padding: 1px 8px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel); font-size: 0.72rem; line-height: 1.5; }
   .tag.community { border-style: dashed; }
+  @media (pointer: coarse) { .tags { gap: 6px; } a.tag, .more { padding: 4px 10px; } }
   a.tag.link { color: inherit; text-decoration: none; transition: border-color 0.15s, color 0.15s; }
   a.tag.link:hover, a.tag.link:focus-visible { border-color: var(--accent); color: var(--accent); outline: none; }
   /* "+N" popup: opens on hover, keyboard focus or tap. The transparent top padding bridges the gap so hover holds. */

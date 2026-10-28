@@ -154,6 +154,8 @@ const groups = [
   .chip.off:hover { opacity: 1; }
   .chip img.sk, .chip .bd { width: 22px; height: 22px; }
   .chip:hover, .chip:focus-visible { border-color: hsl(var(--h) 75% 58%); outline: none; }
+  /* Touch: room for a finger on the reorder buttons, chips and boards. */
+  @media (pointer: coarse) { .ib { width: 34px; height: 34px; } .chip { padding-top: 5px; padding-bottom: 5px; } .tog { padding: 6px 4px; } .tabs button { padding: 7px 12px; } }
   .order { list-style: none; counter-reset: o; margin: 0; padding: 0; display: grid; gap: 6px; }
   .order li { counter-increment: o; position: relative; padding-left: 26px; font-size: 0.86rem; line-height: 1.4; }
   .order li::before { content: counter(o, decimal-leading-zero); position: absolute; left: 0; top: 0.12em; color: var(--accent); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; font-variant-numeric: tabular-nums; }
@@ -196,6 +198,7 @@ const groups = [
   .t.void { visibility: hidden; }
   @media (max-width: 480px) { .board { --gap: 3px; --link: 2px; } .t { font-size: 0.56rem; } }
   .sum { flex: 0 1 300px; min-width: min(100%, 240px); }
+  @media (max-width: 700px) { .sum { flex-basis: 100%; } }
   .sum .saving { margin: 0; }
   .sum .saving td { white-space: nowrap; }
   .gains { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr)); gap: 4px 16px; font-size: 0.84rem; }
