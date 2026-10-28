@@ -431,12 +431,12 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
       const cands = comboSrc.get(name(id)) ?? [], bi = cands.find(mine) ?? cands[0], p = bi === undefined ? 0 : comboChance(bi);
       return bi !== undefined && p > 0 ? { ri: bi, p, combo: true } : undefined;
     };
-    // Expected cost of one item made this way (a combo takes 1 / p crafts of the base recipe per item).
-    const makeCost = (id: number, col: Col, depth = 0): number | null => {
+    // Cost of n items made this way: whole crafts (a recipe making 3 is paid in full for 1), a combo takes 1 / p crafts of the base recipe per item on average.
+    const makeCost = (id: number, col: Col, depth = 0, n = 1): number | null => {
       const src = source(id);
       if (!src) return null;
-      const c = craftCost(src.ri, col, depth);
-      return c === null ? null : src.combo ? (c * craft.recipes[src.ri].qty) / src.p : c;
+      const c = craftCost(src.ri, col, depth), q = craft.recipes[src.ri].qty;
+      return c === null ? null : src.combo ? (c * q * n) / src.p : c * q * Math.ceil(n / q);
     };
     // The market can list a product under another id than the recipe's (38 products, e.g. Splendent Star Dragon Lord Greatsword is 110130100 in the recipe and 110130021 on the market), so look it up by name too.
     const priceOfName = (id: number) => {
@@ -446,10 +446,10 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
       return own;
     };
     // Cost of one unit of an item, taking the cheaper of buying and crafting it (or your Craft / Buy choice); null when something has no price.
-    const unitCost = (id: number, col: Col, depth = 0): number | null => {
-      const buy = priceOf(id)[col]?.price ?? null, src = source(id), o = ranking ? undefined : modes.get(id);
+    const unitCost = (id: number, col: Col, depth = 0, n = 1): number | null => {
+      const p = priceOf(id)[col]?.price ?? null, buy = p === null ? null : p * n, src = source(id), o = ranking ? undefined : modes.get(id);
       if (!src || depth > 8 || (o === 'buy' && buy !== null)) return buy;
-      const c = makeCost(id, col, depth);
+      const c = makeCost(id, col, depth, n);
       if (o === 'craft' && c !== null) return c;
       return buy !== null && (c === null || buy <= c) ? buy : c;
     };
@@ -457,17 +457,17 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
       const r = craft.recipes[ri];
       let t = 0;
       for (const [id, n] of r.parts) {
-        const u = unitCost(id, col, depth + 1);
+        const u = unitCost(id, col, depth + 1, n);
         if (u === null) return null;
-        t += n * u;
+        t += u;
       }
       return t / r.qty;
     };
     // Components are crafted or bought: your choice, otherwise whichever is cheaper in the reference column.
-    const decide = (id: number): 'craft' | 'buy' => {
+    const decide = (id: number, n = 1): 'craft' | 'buy' => {
       const o = modes.get(id);
       if (o) return o;
-      const buy = priceOf(id)[refCol()]?.price ?? null, c = makeCost(id, refCol());
+      const p = priceOf(id)[refCol()]?.price ?? null, buy = p === null ? null : p * n, c = makeCost(id, refCol(), 0, n);
       return buy !== null && (c === null || buy <= c) ? 'buy' : 'craft';
     };
 
@@ -483,7 +483,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
         const src = source(id);
         if (src && src.ri !== ri && depth < 8) {
           node.src = src;
-          if (decide(id) === 'craft') {
+          if (decide(id, Math.max(left, 1)) === 'craft') {
             node.kind = 'craft';
             node.crafts = Math.ceil(left / craft.recipes[src.ri].qty);
             if (left > 0) node.kids = build(src.ri, left, 1, depth + 1, key + '>', steps, id);
@@ -532,19 +532,19 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
         const bound = / \(Bound\)$/.test(name_) && !lo;
         let line = '';
         if (x.src) {
-          const buy = priceOf(x.id)[ref]?.price ?? null, c = makeCost(x.id, ref), one = x.src.combo ? craftCost(x.src.ri, ref) : null, first = one === null ? c : one * craft.recipes[x.src.ri].qty;
-          line = `<small class="cl"><span class="mode"><button type="button" data-id="${x.id}" data-m="craft" aria-pressed="${x.kind === 'craft'}">Craft</button><button type="button" data-id="${x.id}" data-m="buy" aria-pressed="${x.kind === 'buy'}"${buy === null ? ' disabled' : ''}>Buy</button></span>${x.n > 0 ? `${c !== null ? `Craft ${kin(c * x.n)}${x.src.combo ? ' (expected)' : ''}` : 'Craft —'} · ${buy !== null ? `Buy ${kin(buy * x.n)}` : 'Buy —'}` : ''}</small>`;
+          const buy = priceOf(x.id)[ref]?.price ?? null, nn = Math.max(x.n, 1), c = makeCost(x.id, ref, 0, nn), one = x.src.combo ? craftCost(x.src.ri, ref) : null, first = one === null ? (c === null ? null : c / nn) : one * craft.recipes[x.src.ri].qty;
+          line = `<small class="cl"><span class="mode"><button type="button" data-id="${x.id}" data-m="craft" aria-pressed="${x.kind === 'craft'}">Craft</button><button type="button" data-id="${x.id}" data-m="buy" aria-pressed="${x.kind === 'buy'}"${buy === null ? ' disabled' : ''}>Buy</button></span>${x.n > 0 ? `${c !== null ? `Craft ${kin(c)}${x.src.combo ? ' (expected)' : ''}` : 'Craft —'} · ${buy !== null ? `Buy ${kin(buy * x.n)}` : 'Buy —'}` : ''}</small>`;
           if (x.src.combo) line += `<small class="cmb">${pc(x.src.p * 100)} combo · ~${+(1 / x.src.p).toFixed(1)} crafts${first !== null ? ` · ${kin(first * x.n)} first try` : ''}</small>`;
         }
         const row = `<tr class="${x.depth ? 'nest d' + Math.min(x.depth, 4) : ''}${x.kind === 'craft' ? ' crafted' : ''}${inc ? ' inc' : ''}"><th scope="row"${x.depth ? ` style="background:${[`linear-gradient(hsl(var(--c${Math.min(x.depth, 4)}) / 0.75),hsl(var(--c${Math.min(x.depth, 4)}) / 0.75)) calc(var(--pad) + ${x.depth} * var(--step)) 0 / 3px 100% no-repeat border-box`, ...Array.from({ length: x.depth - 1 }, (_, k) => `repeating-linear-gradient(hsl(var(--c${Math.min(k + 1, 4)}) / 0.5) 0 2px,transparent 2px 6px) calc(var(--pad) + ${k + 1} * var(--step) + 1px) 0 / 2px 100% no-repeat border-box`), 'linear-gradient(var(--line),var(--line)) 0 100% / 100% 1px no-repeat border-box'].join(',')}"` : ''}><div class="mat" style="--d:${x.depth}"><span class="nm">${x.parent !== undefined && nodes[i - 1]?.id === x.parent && nodes[i - 1].depth === x.depth - 1 ? `<small class="of">Ingredients for ${esc(name(x.parent))}</small>` : ''}<b>${esc(name_)}</b>${line}</span><small class="need"><span class="stp" role="group" aria-label="Have of ${esc(name_)}"><button type="button" data-k="${x.key}" data-d="-1" aria-label="One less">−</button><input class="have" type="text" data-max="${x.total}" value="${x.got}" data-k="${x.key}" inputmode="numeric" autocomplete="off" aria-label="Have of ${esc(name_)}" /><button type="button" data-k="${x.key}" data-d="1" aria-label="One more">+</button></span> /${nf.format(x.total)}${bound ? ' · not tradable' : ''}</small></div></th>`;
         if (ev) {
           // expected cost of one item = the cost of a craft / chance that it combos
           const part = (col: Col, cls: string) => {
-            const u = makeCost(x.id, col);
+            const u = makeCost(x.id, col, 0, x.n);
             if (x.n <= 0) return `<td class="na${cls ? ' ' + cls : ''}">—</td>`;
             if (u === null) { miss[col]++; return `<td class="na${cls ? ' ' + cls : ''}">—</td>`; }
-            sum[col] += u * x.n;
-            return `<td class="made ev${cls ? ' ' + cls : ''}"><b>${kin(u * x.n)}</b><small>expected · ${pc(x.src!.p * 100)} combo chance</small></td>`;
+            sum[col] += u;
+            return `<td class="made ev${cls ? ' ' + cls : ''}"><b>${kin(u)}</b><small>expected · ${pc(x.src!.p * 100)} combo chance</small></td>`;
           };
           return row + part('me', 'c-me') + part('lo', '') + part('hi', '') + '</tr>';
         }
