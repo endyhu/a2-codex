@@ -83,12 +83,20 @@ const extra = [
   ['Draupnir', ['Illusion', 'Life', 'Wisdom'], 'Transcendent Bakarma'],
   ['Vakron Sky Island', ['Illusion', 'Life', 'Wisdom'], 'Vakron'],
 ];
+// No icon of their own is published yet: the Wrathful artwork reuses the icon of the Unique artwork of the same name (confirmed for Urugugu and Vakron Sky Island on metabot.gg).
+const copyIcon = (n, id) => {
+  const base = items.find((it) => it.name === 'Artwork: ' + n);
+  const src = path.join(outImg, `${base?.item}.webp`);
+  if (!base?.icon || !fs.existsSync(src)) return false;
+  fs.copyFileSync(src, path.join(outImg, `${id}.webp`));
+  return true;
+};
 extra.forEach(([n, d, boss], i) => {
   const name = `Artwork: Wrathful ${n}`;
   if (items.some((it) => it.name === name)) return;
   items.push({
     id: 9001 + i, item: 9001 + i, type: 'Artwork', grade: 'Heroic', name, race: 'All',
-    domains: Object.fromEntries(d.map((k) => [k, 5])), from: [{ kind: 'Dropped by', names: [{ name: boss }], more: 0 }], icon: false,
+    domains: Object.fromEntries(d.map((k) => [k, 5])), from: [{ kind: 'Dropped by', names: [{ name: boss }], more: 0 }], icon: copyIcon(n, 9001 + i),
   });
 });
 items.sort((a, b) => a.id - b.id);
