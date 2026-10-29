@@ -80,13 +80,18 @@ function best(type: (typeof types)[number], race: Race) {
   return gs.flatMap((g, i) => g.items.slice(0, bestCnt[i]).map((it) => ({ it, others: g.items.slice(bestCnt[i]) }))).sort((a, b) => byPriority(a.it, b.it) || ease(a.it) - ease(b.it));
 }
 
-const races: Race[] = ['Elyos', 'Asmodian'];
-const setups = races.map((race) => {
+// Both factions get the same items (a faction-only item has a twin of the same name and stats on the other side), so one setup is shown.
+// The build stops if a patch ever makes the two pools differ.
+const build = (race: Race) => {
   const groups = types.map((type) => ({ type, picks: best(type, race) }));
   const total: Record<string, number> = {};
   for (const g of groups) for (const p of g.picks) for (const d of order) total[d] = (total[d] ?? 0) + pts(p.it, d);
-  return { race, groups, total: order.filter((d) => total[d]).map((d) => ({ d: deity[d], n: total[d] })) };
-});
+  return { groups, total: order.filter((d) => total[d]).map((d) => ({ d: deity[d], n: total[d] })) };
+};
+const setup = build('Elyos');
+const names = (r: Race) => build(r).groups.flatMap((g) => g.picks.map((p) => short(p.it.name))).sort().join('|');
+if (names('Elyos') !== names('Asmodian')) throw new Error('Pantheon: the Elyos and Asmodian best setups differ, show both');
+
 
 const all = [...data.items].sort((a, b) => byPriority(a, b) || GRADES.indexOf(a.grade) - GRADES.indexOf(b.grade) || a.name.localeCompare(b.name));
 // The item table is drawn by the page script in chunks (rows come from this JSON), so the page stays small as the list grows.
@@ -101,14 +106,10 @@ const pct = (n: number) => `+${(n / 10).toFixed(1)}%`;
 <Base title="Pantheon" description="Best Pantheon setup for AION 2 Global: Colossus, Statues and Artworks by stat priority, with every decoration listed.">
   <h1 class="page-title">Pantheon</h1>
 
-  <div class="race" role="group" aria-label="Race">
-    {races.map((r) => <button type="button" data-race={r} aria-pressed={r === 'Elyos'}>{r}</button>)}
-  </div>
-
   <section class="panel" id="best-setup" aria-label="Best setup">
     <header class="panel-head"><h2>Best setup</h2></header>
-    {setups.map((s) => (
-      <div class="setup" data-race={s.race} hidden={s.race !== 'Elyos'}>
+    {[setup].map((s) => (
+      <div class="setup">
         <ul class="totals">
           {s.total.map(({ d, n }) => (
             <li style={`--h:${d.hue}`}>
@@ -175,11 +176,10 @@ const pct = (n: number) => `+${(n / 10).toFixed(1)}%`;
 </Base>
 
 <style>
-  .race { display: inline-flex; margin-bottom: 14px; border: 1px solid var(--line); border-radius: 3px; overflow: hidden; }
-  .race button, .seg button { padding: 6px 16px; background: var(--panel); border: 0; color: var(--muted); font: inherit; font-size: 0.86rem; font-weight: 600; cursor: pointer; transition: color 0.15s, background 0.15s; }
-  .race button + button, .seg button + button { border-left: 1px solid var(--line); }
-  .race button:hover, .seg button:hover, .race button:focus-visible, .seg button:focus-visible { color: var(--text); outline: none; }
-  .race button[aria-pressed='true'], .seg button[aria-pressed='true'] { color: var(--text); background: radial-gradient(120% 140% at 0% 0%, var(--accent-soft), var(--panel) 70%); box-shadow: inset 0 -2px 0 var(--accent); }
+  .seg button { padding: 6px 16px; background: var(--panel); border: 0; color: var(--muted); font: inherit; font-size: 0.86rem; font-weight: 600; cursor: pointer; transition: color 0.15s, background 0.15s; }
+  .seg button + button { border-left: 1px solid var(--line); }
+  .seg button:hover, .seg button:focus-visible { color: var(--text); outline: none; }
+  .seg button[aria-pressed='true'] { color: var(--text); background: radial-gradient(120% 140% at 0% 0%, var(--accent-soft), var(--panel) 70%); box-shadow: inset 0 -2px 0 var(--accent); }
 
   .totals { list-style: none; margin: 0 0 18px; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr)); gap: 8px; }
   .totals li { --c: hsl(var(--h) 75% 64%); display: grid; grid-template-columns: 1fr auto; align-items: baseline; gap: 0 8px; padding: 6px 10px; border-left: 3px solid hsl(var(--h) 70% 55% / 0.55); background: linear-gradient(90deg, hsl(var(--h) 60% 50% / 0.12), transparent 80%); border-radius: 3px; }
@@ -235,7 +235,7 @@ const pct = (n: number) => `+${(n / 10).toFixed(1)}%`;
     .cards { grid-template-columns: minmax(0, 1fr); }
   }
   @media (pointer: coarse) {
-    .race button, .seg button { padding: 10px 16px; }
+    .seg button { padding: 10px 16px; }
   }
 </style>
 
@@ -244,11 +244,6 @@ const pct = (n: number) => `+${(n / 10).toFixed(1)}%`;
   document.addEventListener('astro:page-load', () => {
     if (!document.getElementById('all-items')) return;
     const { signal } = sectionGlow(['best-setup', 'all-items']);
-    const KEY = 'a2codex-pantheon-v1';
-    let saved: { race?: string } = {};
-    try { saved = JSON.parse(localStorage.getItem(KEY) ?? '{}'); } catch {}
-
-    let race = saved.race === 'Asmodian' ? 'Asmodian' : 'Elyos';
     let type = 'All';
     type Row = { n: string; t: string; r: string; g: string; s: [string, number, number][]; f: string; i: string };
     const rows: Row[] = JSON.parse(document.getElementById('items-data')!.textContent!);
@@ -282,22 +277,15 @@ const pct = (n: number) => `+${(n / 10).toFixed(1)}%`;
     io.observe(sentinel);
     signal.addEventListener('abort', () => io.disconnect());
     const apply = () => {
-      for (const b of document.querySelectorAll<HTMLElement>('.race button')) b.setAttribute('aria-pressed', String(b.dataset.race === race));
       for (const b of document.querySelectorAll<HTMLElement>('.seg button')) b.setAttribute('aria-pressed', String(b.dataset.type === type));
-      for (const s of document.querySelectorAll<HTMLElement>('.setup')) s.hidden = s.dataset.race !== race;
       const term = q.value.trim().toLowerCase();
-      list = rows.filter((r) => (r.r === 'All' || r.r === race) && (type === 'All' || r.t === type) && (!term || r.n.toLowerCase().includes(term)));
+      list = rows.filter((r) => (type === 'All' || r.t === type) && (!term || r.n.toLowerCase().includes(term)));
       tbody.innerHTML = '';
       drawn = 0;
       empty.hidden = list.length > 0;
       settle(document.getElementById('best-setup')!);
       fill();
     };
-    document.querySelectorAll<HTMLElement>('.race button').forEach((b) => b.addEventListener('click', () => {
-      race = b.dataset.race!;
-      try { localStorage.setItem(KEY, JSON.stringify({ race })); } catch {}
-      apply();
-    }, { signal }));
     document.querySelectorAll<HTMLElement>('.seg button').forEach((b) => b.addEventListener('click', () => { type = b.dataset.type!; apply(); }, { signal }));
     q.addEventListener('input', apply, { signal });
     apply();
