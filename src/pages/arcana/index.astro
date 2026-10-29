@@ -180,6 +180,11 @@ const grades: [string, string, string][] = [['Common', '2', '900'], ['Rare', '3'
   document.addEventListener('astro:page-load', () => {
     if (!document.getElementById('upgrading')) return;
     const { signal } = sectionGlow(['best-cards', 'sets', 'upgrading']);
+    // Card art in the first screen loads eagerly, the rest lazily (Astro's loading-attribute audit).
+    for (const img of document.querySelectorAll<HTMLImageElement>('main img')) {
+      const r = img.getBoundingClientRect();
+      img.loading = r.width > 0 && r.top < innerHeight && r.bottom > 0 ? 'eager' : 'lazy';
+    }
     // Hovering or focusing a card lights the same card in the other panel.
     const items = [...document.querySelectorAll<HTMLElement>('[data-key]')];
     const light = (key: string | null, on: boolean) => items.forEach((e) => e.dataset.key === key && e.classList.toggle('hl', on));

@@ -93,7 +93,7 @@ Navigation has two headed groups (owner request): **Tools** first (Daevanion, Ma
 - Character > **Stats** (stats reference), **Gear** (Gear BiS, stat lines/BiS lines, enhancement order; the owner's name, replaces the in-game "Enhancement"), **Genus Insight** (Genus BiS, `genus/`; replaces a separate Pets page), **Arcana** (Arcana BiS)
 - **Daevanion** (`daevanion/`, the owner's name; a tool, not a cheatsheet: class, boards, crystals, PvE/PvP switch, must-have skills in, best route out)
 Do not invent menu names; if a page needs a new one, copy the in-game label. The Skills / class pages were dropped by the owner (not planned).
-Build order: scaffold, Stats (done), Gear (done), Genus Insight (done), Arcana (done), Daevanion (done). **Market** (`market/`, cross-server prices from the aion2.exchange API; done). **Crafting** (`crafting/`, recipe material cost on your server vs cheapest/most expensive, profit/margin sort with a 7-day median price basis and a sale price capped by sales; done). Later ideas: Abyss shop, weekly checklist.
+Build order: scaffold, Stats (done), Gear (done), Genus Insight (done), Arcana (done), **Pantheon** (`pantheon/`, Character, best Colossus/Statues/Artworks from our stat priorities; done), Daevanion (done). **Market** (`market/`, cross-server prices from the aion2.exchange API; done). **Crafting** (`crafting/`, recipe material cost on your server vs cheapest/most expensive, profit/margin sort with a 7-day median price basis and a sale price capped by sales; done). Later ideas: Abyss shop, weekly checklist.
 When a page ships, the "Get it from" tags on the Stats page link to it automatically (flip `ready` in `nav.ts`; mapping in `TAG_PAGE` in `stats.astro`).
 
 ## Start of every session
@@ -107,6 +107,7 @@ Never commit personal info: real names, emails, usernames, character names, loca
 - `docs/styling.md`: shared styling recipes (tokens, shapes, hover/glow, icons). Read it before any UI work; do not guess styles.
 - `docs/data-sources.md`: source policy (what to trust for Global), verified Global terms, how to cross-check sources, game-client findings.
 - `scripts/global-sources.mjs` -> `src/data/stat-sources.json`: where each stat can be obtained, from Global client data. Re-run after patches.
+- `scripts/pantheon-snapshot.mjs` -> `src/data/pantheon.json` + `src/assets/pantheon/*.webp` (Pantheon items, stats, sources, icons from aion2hub.com; about 1 minute, re-run after patches).
 - `scripts/market-snapshot.mjs` -> `public/market.json` (prices, last prices; the deploy refreshes it) and `scripts/crafting-snapshot.mjs` -> `public/crafting.json` (recipes, factions, item levels, shop prices; about 2 minutes, re-run after patches).
 
 ## Money-saving tips

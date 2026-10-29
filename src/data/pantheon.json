@@ -1,0 +1,3449 @@
+{
+ "builtAt": "2026-09-19",
+ "slots": {
+  "Large": 1,
+  "Small": 4,
+  "Frame": 12
+ },
+ "domains": [
+  {
+   "id": "Life",
+   "name": "Life [Yustiel]",
+   "cap": 200,
+   "converts": [
+    {
+     "stat": "MaxHPRatio",
+     "per": 10
+    },
+    {
+     "stat": "Restoration",
+     "per": 10
+    }
+   ]
+  },
+  {
+   "id": "Wisdom",
+   "name": "Wisdom [Lumiel]",
+   "cap": 200,
+   "converts": [
+    {
+     "stat": "MPUseIncrease",
+     "per": -10
+    },
+    {
+     "stat": "HardHit",
+     "per": 10
+    }
+   ]
+  },
+  {
+   "id": "Destiny",
+   "name": "Destiny [Marchutan]",
+   "cap": 200,
+   "converts": [
+    {
+     "stat": "MaxMPRatio",
+     "per": 10
+    },
+    {
+     "stat": "IronWall",
+     "per": 10
+    }
+   ]
+  },
+  {
+   "id": "Illusion",
+   "name": "Illusion [Kaisinel]",
+   "cap": 200,
+   "converts": [
+    {
+     "stat": "CoolTimeIncrease",
+     "per": -10
+    },
+    {
+     "stat": "IgnoreIronWall",
+     "per": 10
+    }
+   ]
+  },
+  {
+   "id": "Freedom",
+   "name": "Freedom [Vaizel]",
+   "cap": 200,
+   "converts": [
+    {
+     "stat": "AccuracyRatio",
+     "per": 10
+    },
+    {
+     "stat": "EvasionRatio",
+     "per": 10
+    }
+   ]
+  },
+  {
+   "id": "Death",
+   "name": "Death [Triniel]",
+   "cap": 200,
+   "converts": [
+    {
+     "stat": "CriticalRatio",
+     "per": 10
+    },
+    {
+     "stat": "IgnoreRestoration",
+     "per": 10
+    }
+   ]
+  },
+  {
+   "id": "Space",
+   "name": "Space [Israphel]",
+   "cap": 200,
+   "converts": [
+    {
+     "stat": "MoveSpeed",
+     "per": 10
+    },
+    {
+     "stat": "BlockRatio",
+     "per": 10
+    }
+   ]
+  },
+  {
+   "id": "Time",
+   "name": "Time [Siel]",
+   "cap": 200,
+   "converts": [
+    {
+     "stat": "CombatSpeed",
+     "per": 10
+    },
+    {
+     "stat": "HardHitResist",
+     "per": 10
+    }
+   ]
+  },
+  {
+   "id": "Destruction",
+   "name": "Destruction [Zikel]",
+   "cap": 200,
+   "converts": [
+    {
+     "stat": "DamageRatio",
+     "per": 10
+    },
+    {
+     "stat": "PerfectResist",
+     "per": 10
+    }
+   ]
+  },
+  {
+   "id": "Justice",
+   "name": "Justice [Nezekan]",
+   "cap": 200,
+   "converts": [
+    {
+     "stat": "DefenseRatio",
+     "per": 10
+    },
+    {
+     "stat": "Perfect",
+     "per": 10
+    }
+   ]
+  }
+ ],
+ "items": [
+  {
+   "id": 9,
+   "item": 534310009,
+   "type": "Artwork",
+   "grade": "Rare",
+   "name": "Artwork: Wind Breeze Merchants",
+   "race": "Elyos",
+   "domains": {
+    "Illusion": 2,
+    "Life": 2
+   },
+   "from": [
+    {
+     "kind": "Quest reward",
+     "names": [
+      {
+       "name": "Names Lost in the Wind",
+       "lv": 45
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 10,
+   "item": 534310010,
+   "type": "Artwork",
+   "grade": "Rare",
+   "name": "Artwork: Quai Merchants",
+   "race": "Asmodian",
+   "domains": {
+    "Illusion": 2,
+    "Life": 2
+   },
+   "from": [
+    {
+     "kind": "Quest reward",
+     "names": [
+      {
+       "name": "Farewell, My Instructor",
+       "lv": 45
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 11,
+   "item": 534310011,
+   "type": "Artwork",
+   "grade": "Epic",
+   "name": "Artwork: Shulak",
+   "race": "All",
+   "domains": {
+    "Destiny": 3,
+    "Illusion": 3
+   },
+   "from": [
+    {
+     "kind": "Battle Pass",
+     "names": [
+      {
+       "name": "Battle Pass"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 12,
+   "item": 534310012,
+   "type": "Artwork",
+   "grade": "Rare",
+   "name": "Artwork: Artisan Handicrafter",
+   "race": "Elyos",
+   "domains": {
+    "Destiny": 2,
+    "Life": 2
+   },
+   "from": [
+    {
+     "kind": "Quest reward",
+     "names": [
+      {
+       "name": "[Upgrade] Handicrafting Specialty Skill",
+       "lv": 10
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 13,
+   "item": 534310013,
+   "type": "Artwork",
+   "grade": "Rare",
+   "name": "Artwork: Artisan Alchemist",
+   "race": "Elyos",
+   "domains": {
+    "Illusion": 2,
+    "Wisdom": 2
+   },
+   "from": [
+    {
+     "kind": "Quest reward",
+     "names": [
+      {
+       "name": "[Upgrade] Alchemy Specialty Skill",
+       "lv": 10
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 14,
+   "item": 534310014,
+   "type": "Artwork",
+   "grade": "Rare",
+   "name": "Artwork: Artisan Chef",
+   "race": "Elyos",
+   "domains": {
+    "Illusion": 2,
+    "Life": 2
+   },
+   "from": [
+    {
+     "kind": "Quest reward",
+     "names": [
+      {
+       "name": "[Upgrade] Cooking Specialty Skill",
+       "lv": 10
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 30,
+   "item": 534310030,
+   "type": "Artwork",
+   "grade": "Rare",
+   "name": "Artwork: Artisan Chef",
+   "race": "Asmodian",
+   "domains": {
+    "Illusion": 2,
+    "Life": 2
+   },
+   "from": [
+    {
+     "kind": "Quest reward",
+     "names": [
+      {
+       "name": "[Upgrade] Cooking Specialty Skill",
+       "lv": 10
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 31,
+   "item": 534310031,
+   "type": "Artwork",
+   "grade": "Rare",
+   "name": "Artwork: Artisan Armorsmith",
+   "race": "Asmodian",
+   "domains": {
+    "Destiny": 2,
+    "Wisdom": 2
+   },
+   "from": [
+    {
+     "kind": "Quest reward",
+     "names": [
+      {
+       "name": "[Upgrade] Armorsmithing Specialty Skill",
+       "lv": 10
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 32,
+   "item": 534310032,
+   "type": "Artwork",
+   "grade": "Rare",
+   "name": "Artwork: Artisan Armorsmith",
+   "race": "Elyos",
+   "domains": {
+    "Destiny": 2,
+    "Wisdom": 2
+   },
+   "from": [
+    {
+     "kind": "Quest reward",
+     "names": [
+      {
+       "name": "[Upgrade] Armorsmithing Specialty Skill",
+       "lv": 10
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 35,
+   "item": 514310035,
+   "type": "Artwork",
+   "grade": "Unique",
+   "name": "Artwork: Fire Temple",
+   "race": "All",
+   "domains": {
+    "Destiny": 4,
+    "Life": 4,
+    "Wisdom": 4
+   },
+   "from": [
+    {
+     "kind": "Party dungeon",
+     "names": [
+      {
+       "name": "Party Dungeon"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 43,
+   "item": 534310043,
+   "type": "Artwork",
+   "grade": "Epic",
+   "name": "Artwork: Teina's Portrait",
+   "race": "Elyos",
+   "domains": {
+    "Destiny": 3,
+    "Life": 3
+   },
+   "from": [
+    {
+     "kind": "Quest reward",
+     "names": [
+      {
+       "name": "Until I Hold You Again",
+       "lv": 45
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 52,
+   "item": 514310052,
+   "type": "Artwork",
+   "grade": "Unique",
+   "name": "Artwork: Urugugu",
+   "race": "All",
+   "domains": {
+    "Destiny": 4,
+    "Life": 4,
+    "Wisdom": 4
+   },
+   "from": [
+    {
+     "kind": "Party dungeon",
+     "names": [
+      {
+       "name": "Party Dungeon"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 54,
+   "item": 514310054,
+   "type": "Artwork",
+   "grade": "Unique",
+   "name": "Artwork: Draupnir",
+   "race": "All",
+   "domains": {
+    "Illusion": 4,
+    "Life": 4,
+    "Wisdom": 4
+   },
+   "from": [
+    {
+     "kind": "Dropped by",
+     "names": [
+      {
+       "name": "Executor Tamasa",
+       "lv": 65
+      },
+      {
+       "name": "Executioner Dramos",
+       "lv": 80
+      },
+      {
+       "name": "Turncoat Ducal",
+       "lv": 80
+      }
+     ],
+     "more": 1
+    },
+    {
+     "kind": "Party dungeon",
+     "names": [
+      {
+       "name": "Party Dungeon"
+      }
+     ],
+     "more": 0
+    },
+    {
+     "kind": "Battle Pass",
+     "names": [
+      {
+       "name": "Battle Pass"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 57,
+   "item": 534310057,
+   "type": "Artwork",
+   "grade": "Rare",
+   "name": "Artwork: Artisan Blacksmith",
+   "race": "Elyos",
+   "domains": {
+    "Destiny": 2,
+    "Illusion": 2
+   },
+   "from": [
+    {
+     "kind": "Quest reward",
+     "names": [
+      {
+       "name": "[Upgrade] Blacksmithing Specialty Skill",
+       "lv": 10
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 58,
+   "item": 534310058,
+   "type": "Artwork",
+   "grade": "Rare",
+   "name": "Artwork: Artisan Blacksmith",
+   "race": "Asmodian",
+   "domains": {
+    "Destiny": 2,
+    "Illusion": 2
+   },
+   "from": [
+    {
+     "kind": "Quest reward",
+     "names": [
+      {
+       "name": "[Upgrade] Blacksmithing Specialty Skill",
+       "lv": 10
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 59,
+   "item": 534310059,
+   "type": "Artwork",
+   "grade": "Rare",
+   "name": "Artwork: Artisan Handicrafter",
+   "race": "Asmodian",
+   "domains": {
+    "Destiny": 2,
+    "Life": 2
+   },
+   "from": [
+    {
+     "kind": "Quest reward",
+     "names": [
+      {
+       "name": "[Upgrade] Handicrafting Specialty Skill",
+       "lv": 10
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 60,
+   "item": 534310060,
+   "type": "Artwork",
+   "grade": "Rare",
+   "name": "Artwork: Artisan Alchemist",
+   "race": "Asmodian",
+   "domains": {
+    "Illusion": 2,
+    "Wisdom": 2
+   },
+   "from": [
+    {
+     "kind": "Quest reward",
+     "names": [
+      {
+       "name": "[Upgrade] Alchemy Specialty Skill",
+       "lv": 10
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 61,
+   "item": 534310061,
+   "type": "Artwork",
+   "grade": "Rare",
+   "name": "Artwork: Artisan Essence Extractor",
+   "race": "Elyos",
+   "domains": {
+    "Destiny": 2,
+    "Wisdom": 2
+   },
+   "from": [
+    {
+     "kind": "Quest reward",
+     "names": [
+      {
+       "name": "[Upgrade] Essence Extraction Specialty Skill",
+       "lv": 45
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 62,
+   "item": 534310062,
+   "type": "Artwork",
+   "grade": "Rare",
+   "name": "Artwork: Artisan Essence Extractor",
+   "race": "Asmodian",
+   "domains": {
+    "Destiny": 2,
+    "Wisdom": 2
+   },
+   "from": [
+    {
+     "kind": "Quest reward",
+     "names": [
+      {
+       "name": "[Upgrade] Essence Extraction Specialty Skill",
+       "lv": 45
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 63,
+   "item": 534310063,
+   "type": "Artwork",
+   "grade": "Epic",
+   "name": "Artwork: Destruction Archons High Priest Hystan",
+   "race": "Asmodian",
+   "domains": {
+    "Destiny": 3,
+    "Life": 3
+   },
+   "from": [
+    {
+     "kind": "Quest reward",
+     "names": [
+      {
+       "name": "Lest We Forget",
+       "lv": 45
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 64,
+   "item": 514310064,
+   "type": "Artwork",
+   "grade": "Unique",
+   "name": "Artwork: Specter Archon Axios",
+   "race": "All",
+   "domains": {
+    "Destiny": 4,
+    "Illusion": 4,
+    "Life": 4
+   },
+   "from": [
+    {
+     "kind": "Dropped by",
+     "names": [
+      {
+       "name": "Specter Archon Axios",
+       "lv": 45
+      }
+     ],
+     "more": 0
+    },
+    {
+     "kind": "Conversion recipe",
+     "names": [
+      {
+       "name": "Conversion recipe"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 65,
+   "item": 514310065,
+   "type": "Artwork",
+   "grade": "Epic",
+   "name": "Artwork: Addicted Hardirun",
+   "race": "All",
+   "domains": {
+    "Destiny": 3,
+    "Life": 3
+   },
+   "from": [
+    {
+     "kind": "Dropped by",
+     "names": [
+      {
+       "name": "Addicted Hardirun",
+       "lv": 45
+      }
+     ],
+     "more": 0
+    },
+    {
+     "kind": "Conversion recipe",
+     "names": [
+      {
+       "name": "Conversion recipe"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 66,
+   "item": 514310066,
+   "type": "Artwork",
+   "grade": "Unique",
+   "name": "Artwork: Executioner Barthien",
+   "race": "All",
+   "domains": {
+    "Destiny": 4,
+    "Illusion": 4,
+    "Life": 4
+   },
+   "from": [
+    {
+     "kind": "Dropped by",
+     "names": [
+      {
+       "name": "Executioner Barthien",
+       "lv": 45
+      }
+     ],
+     "more": 0
+    },
+    {
+     "kind": "Conversion recipe",
+     "names": [
+      {
+       "name": "Conversion recipe"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 67,
+   "item": 514310067,
+   "type": "Artwork",
+   "grade": "Unique",
+   "name": "Artwork: Drakan Battalion Weapon Guruta",
+   "race": "All",
+   "domains": {
+    "Destiny": 4,
+    "Illusion": 4,
+    "Wisdom": 4
+   },
+   "from": [
+    {
+     "kind": "Dropped by",
+     "names": [
+      {
+       "name": "Drakan Battalion Weapon Guruta",
+       "lv": 45
+      }
+     ],
+     "more": 0
+    },
+    {
+     "kind": "Conversion recipe",
+     "names": [
+      {
+       "name": "Conversion recipe"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 68,
+   "item": 514310068,
+   "type": "Artwork",
+   "grade": "Unique",
+   "name": "Artwork: Sentinel K'nash",
+   "race": "All",
+   "domains": {
+    "Destiny": 4,
+    "Illusion": 4,
+    "Wisdom": 4
+   },
+   "from": [
+    {
+     "kind": "Dropped by",
+     "names": [
+      {
+       "name": "Sentinel K'nash",
+       "lv": 45
+      }
+     ],
+     "more": 0
+    },
+    {
+     "kind": "Conversion recipe",
+     "names": [
+      {
+       "name": "Conversion recipe"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 69,
+   "item": 514310069,
+   "type": "Artwork",
+   "grade": "Epic",
+   "name": "Artwork: Veteran Shujakan",
+   "race": "All",
+   "domains": {
+    "Illusion": 3,
+    "Wisdom": 3
+   },
+   "from": [
+    {
+     "kind": "Dropped by",
+     "names": [
+      {
+       "name": "Veteran Shujakan",
+       "lv": 45
+      }
+     ],
+     "more": 0
+    },
+    {
+     "kind": "Conversion recipe",
+     "names": [
+      {
+       "name": "Conversion recipe"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 70,
+   "item": 514310070,
+   "type": "Artwork",
+   "grade": "Unique",
+   "name": "Artwork: Visionary Karuka",
+   "race": "All",
+   "domains": {
+    "Destiny": 4,
+    "Illusion": 4,
+    "Life": 4
+   },
+   "from": [
+    {
+     "kind": "Dropped by",
+     "names": [
+      {
+       "name": "Visionary Karuka",
+       "lv": 45
+      }
+     ],
+     "more": 0
+    },
+    {
+     "kind": "Conversion recipe",
+     "names": [
+      {
+       "name": "Conversion recipe"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 71,
+   "item": 514310071,
+   "type": "Artwork",
+   "grade": "Unique",
+   "name": "Artwork: Dark Shadow Vishwada",
+   "race": "All",
+   "domains": {
+    "Destiny": 4,
+    "Illusion": 4,
+    "Life": 4
+   },
+   "from": [
+    {
+     "kind": "Dropped by",
+     "names": [
+      {
+       "name": "Dark Shadow Vishwada",
+       "lv": 45
+      }
+     ],
+     "more": 0
+    },
+    {
+     "kind": "Conversion recipe",
+     "names": [
+      {
+       "name": "Conversion recipe"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 72,
+   "item": 514310072,
+   "type": "Artwork",
+   "grade": "Unique",
+   "name": "Artwork: Researcher Setram",
+   "race": "All",
+   "domains": {
+    "Destiny": 4,
+    "Illusion": 4,
+    "Life": 4
+   },
+   "from": [
+    {
+     "kind": "Dropped by",
+     "names": [
+      {
+       "name": "Researcher Setram",
+       "lv": 45
+      }
+     ],
+     "more": 0
+    },
+    {
+     "kind": "Conversion recipe",
+     "names": [
+      {
+       "name": "Conversion recipe"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 73,
+   "item": 514310073,
+   "type": "Artwork",
+   "grade": "Unique",
+   "name": "Artwork: Sharp Shylak",
+   "race": "All",
+   "domains": {
+    "Destiny": 4,
+    "Illusion": 4,
+    "Wisdom": 4
+   },
+   "from": [
+    {
+     "kind": "Dropped by",
+     "names": [
+      {
+       "name": "Sharp Shylak",
+       "lv": 45
+      }
+     ],
+     "more": 0
+    },
+    {
+     "kind": "Conversion recipe",
+     "names": [
+      {
+       "name": "Conversion recipe"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 74,
+   "item": 514310074,
+   "type": "Artwork",
+   "grade": "Unique",
+   "name": "Artwork: Black Tentacle Lawa",
+   "race": "All",
+   "domains": {
+    "Destiny": 4,
+    "Illusion": 4,
+    "Wisdom": 4
+   },
+   "from": [
+    {
+     "kind": "Dropped by",
+     "names": [
+      {
+       "name": "Black Tentacle Lawa",
+       "lv": 45
+      }
+     ],
+     "more": 0
+    },
+    {
+     "kind": "Conversion recipe",
+     "names": [
+      {
+       "name": "Conversion recipe"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 75,
+   "item": 514310075,
+   "type": "Artwork",
+   "grade": "Epic",
+   "name": "Artwork: Heretic Layla",
+   "race": "All",
+   "domains": {
+    "Destiny": 3,
+    "Life": 3
+   },
+   "from": [
+    {
+     "kind": "Dropped by",
+     "names": [
+      {
+       "name": "Heretic Layla",
+       "lv": 45
+      }
+     ],
+     "more": 0
+    },
+    {
+     "kind": "Conversion recipe",
+     "names": [
+      {
+       "name": "Conversion recipe"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 76,
+   "item": 514310121,
+   "type": "Artwork",
+   "grade": "Unique",
+   "name": "Artwork: Centurion Demiros",
+   "race": "All",
+   "domains": {
+    "Destiny": 4,
+    "Illusion": 4,
+    "Wisdom": 4
+   },
+   "from": [
+    {
+     "kind": "Dropped by",
+     "names": [
+      {
+       "name": "Centurion Demiros",
+       "lv": 45
+      }
+     ],
+     "more": 0
+    },
+    {
+     "kind": "Conversion recipe",
+     "names": [
+      {
+       "name": "Conversion recipe"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 77,
+   "item": 514310077,
+   "type": "Artwork",
+   "grade": "Unique",
+   "name": "Artwork: Divine Ansas",
+   "race": "All",
+   "domains": {
+    "Illusion": 4,
+    "Life": 4,
+    "Wisdom": 4
+   },
+   "from": [
+    {
+     "kind": "Dropped by",
+     "names": [
+      {
+       "name": "Divine Ansas",
+       "lv": 45
+      }
+     ],
+     "more": 0
+    },
+    {
+     "kind": "Conversion recipe",
+     "names": [
+      {
+       "name": "Conversion recipe"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 78,
+   "item": 514310078,
+   "type": "Artwork",
+   "grade": "Epic",
+   "name": "Artwork: Harvest Manager Moshav",
+   "race": "All",
+   "domains": {
+    "Illusion": 3,
+    "Wisdom": 3
+   },
+   "from": [
+    {
+     "kind": "Dropped by",
+     "names": [
+      {
+       "name": "Harvest Manager Moshav",
+       "lv": 45
+      }
+     ],
+     "more": 0
+    },
+    {
+     "kind": "Conversion recipe",
+     "names": [
+      {
+       "name": "Conversion recipe"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 79,
+   "item": 514310079,
+   "type": "Artwork",
+   "grade": "Epic",
+   "name": "Artwork: Advisor Resana",
+   "race": "All",
+   "domains": {
+    "Illusion": 3,
+    "Life": 3
+   },
+   "from": [
+    {
+     "kind": "Dropped by",
+     "names": [
+      {
+       "name": "Advisor Resana",
+       "lv": 45
+      }
+     ],
+     "more": 0
+    },
+    {
+     "kind": "Conversion recipe",
+     "names": [
+      {
+       "name": "Conversion recipe"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 80,
+   "item": 514310080,
+   "type": "Artwork",
+   "grade": "Unique",
+   "name": "Artwork: Phantasm Kasia",
+   "race": "All",
+   "domains": {
+    "Illusion": 4,
+    "Life": 4,
+    "Wisdom": 4
+   },
+   "from": [
+    {
+     "kind": "Dropped by",
+     "names": [
+      {
+       "name": "Phantasm Kasia",
+       "lv": 45
+      }
+     ],
+     "more": 0
+    },
+    {
+     "kind": "Conversion recipe",
+     "names": [
+      {
+       "name": "Conversion recipe"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 81,
+   "item": 514310081,
+   "type": "Artwork",
+   "grade": "Rare",
+   "name": "Artwork: Melted Danar",
+   "race": "All",
+   "domains": {
+    "Destiny": 2,
+    "Life": 2
+   },
+   "from": [
+    {
+     "kind": "Dropped by",
+     "names": [
+      {
+       "name": "Melted Danar",
+       "lv": 45
+      }
+     ],
+     "more": 0
+    },
+    {
+     "kind": "Conversion recipe",
+     "names": [
+      {
+       "name": "Conversion recipe"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 82,
+   "item": 514310082,
+   "type": "Artwork",
+   "grade": "Rare",
+   "name": "Artwork: Black Warrior Aed",
+   "race": "All",
+   "domains": {
+    "Illusion": 2,
+    "Wisdom": 2
+   },
+   "from": [
+    {
+     "kind": "Dropped by",
+     "names": [
+      {
+       "name": "Black Warrior Aed",
+       "lv": 45
+      }
+     ],
+     "more": 0
+    },
+    {
+     "kind": "Conversion recipe",
+     "names": [
+      {
+       "name": "Conversion recipe"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 83,
+   "item": 514310083,
+   "type": "Artwork",
+   "grade": "Rare",
+   "name": "Artwork: Faithful Rajit",
+   "race": "All",
+   "domains": {
+    "Destiny": 2,
+    "Life": 2
+   },
+   "from": [
+    {
+     "kind": "Dropped by",
+     "names": [
+      {
+       "name": "Faithful Rajit",
+       "lv": 45
+      }
+     ],
+     "more": 0
+    },
+    {
+     "kind": "Conversion recipe",
+     "names": [
+      {
+       "name": "Conversion recipe"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 84,
+   "item": 514310084,
+   "type": "Artwork",
+   "grade": "Rare",
+   "name": "Artwork: Berserker Vargor",
+   "race": "All",
+   "domains": {
+    "Illusion": 2,
+    "Wisdom": 2
+   },
+   "from": [
+    {
+     "kind": "Dropped by",
+     "names": [
+      {
+       "name": "Berserker Vargor",
+       "lv": 45
+      }
+     ],
+     "more": 0
+    },
+    {
+     "kind": "Conversion recipe",
+     "names": [
+      {
+       "name": "Conversion recipe"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 85,
+   "item": 514310085,
+   "type": "Artwork",
+   "grade": "Epic",
+   "name": "Artwork: Predator Garsan",
+   "race": "All",
+   "domains": {
+    "Illusion": 3,
+    "Life": 3
+   },
+   "from": [
+    {
+     "kind": "Dropped by",
+     "names": [
+      {
+       "name": "Predator Garsan",
+       "lv": 45
+      }
+     ],
+     "more": 0
+    },
+    {
+     "kind": "Conversion recipe",
+     "names": [
+      {
+       "name": "Conversion recipe"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 86,
+   "item": 514310086,
+   "type": "Artwork",
+   "grade": "Rare",
+   "name": "Artwork: Blood Warrior Lannar",
+   "race": "All",
+   "domains": {
+    "Illusion": 2,
+    "Life": 2
+   },
+   "from": [
+    {
+     "kind": "Dropped by",
+     "names": [
+      {
+       "name": "Blood Warrior Lannar",
+       "lv": 45
+      }
+     ],
+     "more": 0
+    },
+    {
+     "kind": "Conversion recipe",
+     "names": [
+      {
+       "name": "Conversion recipe"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 87,
+   "item": 514310087,
+   "type": "Artwork",
+   "grade": "Epic",
+   "name": "Artwork: Deceiver Trid",
+   "race": "All",
+   "domains": {
+    "Destiny": 3,
+    "Wisdom": 3
+   },
+   "from": [
+    {
+     "kind": "Dropped by",
+     "names": [
+      {
+       "name": "Deceiver Trid",
+       "lv": 45
+      }
+     ],
+     "more": 0
+    },
+    {
+     "kind": "Conversion recipe",
+     "names": [
+      {
+       "name": "Conversion recipe"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 88,
+   "item": 514310088,
+   "type": "Artwork",
+   "grade": "Epic",
+   "name": "Artwork: Blue Wave Kelpina",
+   "race": "All",
+   "domains": {
+    "Destiny": 3,
+    "Wisdom": 3
+   },
+   "from": [
+    {
+     "kind": "Dropped by",
+     "names": [
+      {
+       "name": "Blue Wave Kelpina",
+       "lv": 45
+      }
+     ],
+     "more": 0
+    },
+    {
+     "kind": "Conversion recipe",
+     "names": [
+      {
+       "name": "Conversion recipe"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 89,
+   "item": 514310089,
+   "type": "Artwork",
+   "grade": "Epic",
+   "name": "Artwork: High Overseer Nutah",
+   "race": "All",
+   "domains": {
+    "Life": 3,
+    "Wisdom": 3
+   },
+   "from": [
+    {
+     "kind": "Dropped by",
+     "names": [
+      {
+       "name": "High Overseer Nutah",
+       "lv": 45
+      }
+     ],
+     "more": 0
+    },
+    {
+     "kind": "Conversion recipe",
+     "names": [
+      {
+       "name": "Conversion recipe"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 90,
+   "item": 514310090,
+   "type": "Artwork",
+   "grade": "Epic",
+   "name": "Artwork: Special Operations Leader Linx",
+   "race": "All",
+   "domains": {
+    "Life": 3,
+    "Wisdom": 3
+   },
+   "from": [
+    {
+     "kind": "Dropped by",
+     "names": [
+      {
+       "name": "Special Operations Leader Linx",
+       "lv": 45
+      }
+     ],
+     "more": 0
+    },
+    {
+     "kind": "Conversion recipe",
+     "names": [
+      {
+       "name": "Conversion recipe"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 91,
+   "item": 514310091,
+   "type": "Artwork",
+   "grade": "Unique",
+   "name": "Artwork: Desecrator Newbold",
+   "race": "All",
+   "domains": {
+    "Destiny": 4,
+    "Illusion": 4,
+    "Wisdom": 4
+   },
+   "from": [
+    {
+     "kind": "Dropped by",
+     "names": [
+      {
+       "name": "Desecrator Newbold",
+       "lv": 45
+      }
+     ],
+     "more": 0
+    },
+    {
+     "kind": "Conversion recipe",
+     "names": [
+      {
+       "name": "Conversion recipe"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 92,
+   "item": 514310092,
+   "type": "Artwork",
+   "grade": "Rare",
+   "name": "Artwork: Kernon of the West",
+   "race": "All",
+   "domains": {
+    "Destiny": 2,
+    "Wisdom": 2
+   },
+   "from": [
+    {
+     "kind": "Dropped by",
+     "names": [
+      {
+       "name": "Kernon of the West",
+       "lv": 45
+      }
+     ],
+     "more": 0
+    },
+    {
+     "kind": "Conversion recipe",
+     "names": [
+      {
+       "name": "Conversion recipe"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 93,
+   "item": 514310093,
+   "type": "Artwork",
+   "grade": "Rare",
+   "name": "Artwork: Neikel of the East",
+   "race": "All",
+   "domains": {
+    "Destiny": 2,
+    "Illusion": 2
+   },
+   "from": [
+    {
+     "kind": "Dropped by",
+     "names": [
+      {
+       "name": "Neikel of the East",
+       "lv": 45
+      }
+     ],
+     "more": 0
+    },
+    {
+     "kind": "Conversion recipe",
+     "names": [
+      {
+       "name": "Conversion recipe"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 94,
+   "item": 514310094,
+   "type": "Artwork",
+   "grade": "Rare",
+   "name": "Artwork: Rotten Kutar",
+   "race": "All",
+   "domains": {
+    "Destiny": 2,
+    "Illusion": 2
+   },
+   "from": [
+    {
+     "kind": "Dropped by",
+     "names": [
+      {
+       "name": "Rotten Kutar",
+       "lv": 45
+      }
+     ],
+     "more": 0
+    },
+    {
+     "kind": "Conversion recipe",
+     "names": [
+      {
+       "name": "Conversion recipe"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 95,
+   "item": 514310095,
+   "type": "Artwork",
+   "grade": "Rare",
+   "name": "Artwork: Blooming Korin",
+   "race": "All",
+   "domains": {
+    "Life": 2,
+    "Wisdom": 2
+   },
+   "from": [
+    {
+     "kind": "Dropped by",
+     "names": [
+      {
+       "name": "Blooming Korin",
+       "lv": 45
+      }
+     ],
+     "more": 0
+    },
+    {
+     "kind": "Conversion recipe",
+     "names": [
+      {
+       "name": "Conversion recipe"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 96,
+   "item": 514310096,
+   "type": "Artwork",
+   "grade": "Rare",
+   "name": "Artwork: Bodyguard Teegant",
+   "race": "All",
+   "domains": {
+    "Life": 2,
+    "Wisdom": 2
+   },
+   "from": [
+    {
+     "kind": "Dropped by",
+     "names": [
+      {
+       "name": "Bodyguard Teegant",
+       "lv": 45
+      }
+     ],
+     "more": 0
+    },
+    {
+     "kind": "Conversion recipe",
+     "names": [
+      {
+       "name": "Conversion recipe"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 97,
+   "item": 514310097,
+   "type": "Artwork",
+   "grade": "Epic",
+   "name": "Artwork: Kusan the Mad Gladiator",
+   "race": "All",
+   "domains": {
+    "Destiny": 3,
+    "Illusion": 3
+   },
+   "from": [
+    {
+     "kind": "Dropped by",
+     "names": [
+      {
+       "name": "Kusan the Mad Gladiator",
+       "lv": 45
+      }
+     ],
+     "more": 0
+    },
+    {
+     "kind": "Conversion recipe",
+     "names": [
+      {
+       "name": "Conversion recipe"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 98,
+   "item": 514310098,
+   "type": "Artwork",
+   "grade": "Epic",
+   "name": "Artwork: Ritualist Garshim",
+   "race": "All",
+   "domains": {
+    "Destiny": 3,
+    "Illusion": 3
+   },
+   "from": [
+    {
+     "kind": "Dropped by",
+     "names": [
+      {
+       "name": "Ritualist Garshim",
+       "lv": 45
+      }
+     ],
+     "more": 0
+    },
+    {
+     "kind": "Conversion recipe",
+     "names": [
+      {
+       "name": "Conversion recipe"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 99,
+   "item": 514310099,
+   "type": "Artwork",
+   "grade": "Epic",
+   "name": "Artwork: Bloodfang Pnyn",
+   "race": "All",
+   "domains": {
+    "Destiny": 3,
+    "Life": 3
+   },
+   "from": [
+    {
+     "kind": "Dropped by",
+     "names": [
+      {
+       "name": "Bloodfang Pnyn",
+       "lv": 45
+      }
+     ],
+     "more": 0
+    },
+    {
+     "kind": "Conversion recipe",
+     "names": [
+      {
+       "name": "Conversion recipe"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 100,
+   "item": 514310100,
+   "type": "Artwork",
+   "grade": "Epic",
+   "name": "Artwork: Furious Saursus",
+   "race": "All",
+   "domains": {
+    "Destiny": 3,
+    "Life": 3
+   },
+   "from": [
+    {
+     "kind": "Dropped by",
+     "names": [
+      {
+       "name": "Furious Saursus",
+       "lv": 45
+      }
+     ],
+     "more": 0
+    },
+    {
+     "kind": "Conversion recipe",
+     "names": [
+      {
+       "name": "Conversion recipe"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 101,
+   "item": 514310101,
+   "type": "Artwork",
+   "grade": "Epic",
+   "name": "Artwork: Scholar Aulla",
+   "race": "All",
+   "domains": {
+    "Illusion": 3,
+    "Wisdom": 3
+   },
+   "from": [
+    {
+     "kind": "Dropped by",
+     "names": [
+      {
+       "name": "Scholar Aulla",
+       "lv": 45
+      }
+     ],
+     "more": 0
+    },
+    {
+     "kind": "Conversion recipe",
+     "names": [
+      {
+       "name": "Conversion recipe"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 102,
+   "item": 514310102,
+   "type": "Artwork",
+   "grade": "Unique",
+   "name": "Artwork: Forest Warrior Aullamu",
+   "race": "All",
+   "domains": {
+    "Destiny": 4,
+    "Illusion": 4,
+    "Wisdom": 4
+   },
+   "from": [
+    {
+     "kind": "Dropped by",
+     "names": [
+      {
+       "name": "Forest Warrior Aullamu",
+       "lv": 45
+      }
+     ],
+     "more": 0
+    },
+    {
+     "kind": "Conversion recipe",
+     "names": [
+      {
+       "name": "Conversion recipe"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 103,
+   "item": 514310103,
+   "type": "Artwork",
+   "grade": "Epic",
+   "name": "Artwork: Chaser Taulo",
+   "race": "All",
+   "domains": {
+    "Illusion": 3,
+    "Wisdom": 3
+   },
+   "from": [
+    {
+     "kind": "Dropped by",
+     "names": [
+      {
+       "name": "Chaser Taulo",
+       "lv": 45
+      }
+     ],
+     "more": 0
+    },
+    {
+     "kind": "Conversion recipe",
+     "names": [
+      {
+       "name": "Conversion recipe"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 109,
+   "item": 534310109,
+   "type": "Artwork",
+   "grade": "Heroic",
+   "name": "Artwork: Abyssal Ludra",
+   "race": "All",
+   "domains": {
+    "Destiny": 5,
+    "Illusion": 5,
+    "Wisdom": 5
+   },
+   "from": [
+    {
+     "kind": "Achievement",
+     "names": [
+      {
+       "name": "Achievement"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 110,
+   "item": 514310110,
+   "type": "Artwork",
+   "grade": "Heroic",
+   "name": "Artwork: Immortal Gartua",
+   "race": "All",
+   "domains": {
+    "Illusion": 5,
+    "Life": 5,
+    "Wisdom": 5,
+    "Destiny": 5
+   },
+   "from": [
+    {
+     "kind": "Dropped by",
+     "names": [
+      {
+       "name": "Immortal Gartua",
+       "lv": 51
+      }
+     ],
+     "more": 0
+    },
+    {
+     "kind": "Conversion recipe",
+     "names": [
+      {
+       "name": "Conversion recipe"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 111,
+   "item": 514310111,
+   "type": "Artwork",
+   "grade": "Heroic",
+   "name": "Artwork: Eternal Gartua",
+   "race": "All",
+   "domains": {
+    "Destiny": 5,
+    "Life": 5,
+    "Wisdom": 5,
+    "Illusion": 5
+   },
+   "from": [
+    {
+     "kind": "Dropped by",
+     "names": [
+      {
+       "name": "Eternal Gartua",
+       "lv": 51
+      }
+     ],
+     "more": 0
+    },
+    {
+     "kind": "Conversion recipe",
+     "names": [
+      {
+       "name": "Conversion recipe"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 112,
+   "item": 514310112,
+   "type": "Artwork",
+   "grade": "Unique",
+   "name": "Artwork: Argo, the Spirit King",
+   "race": "All",
+   "domains": {
+    "Destiny": 4,
+    "Illusion": 4,
+    "Life": 4
+   },
+   "from": [
+    {
+     "kind": "Dropped by",
+     "names": [
+      {
+       "name": "Argo, the Spirit King",
+       "lv": 65
+      },
+      {
+       "name": "Executor Argo",
+       "lv": 65
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 113,
+   "item": 514310113,
+   "type": "Artwork",
+   "grade": "Unique",
+   "name": "Artwork: Soul Ruler Kashapa",
+   "race": "All",
+   "domains": {
+    "Destiny": 4,
+    "Life": 4,
+    "Wisdom": 4
+   },
+   "from": [
+    {
+     "kind": "Dropped by",
+     "names": [
+      {
+       "name": "Soul Ruler Kashapa",
+       "lv": 45
+      }
+     ],
+     "more": 0
+    },
+    {
+     "kind": "Conversion recipe",
+     "names": [
+      {
+       "name": "Conversion recipe"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 114,
+   "item": 514310114,
+   "type": "Artwork",
+   "grade": "Unique",
+   "name": "Artwork: High Commander Lagta",
+   "race": "All",
+   "domains": {
+    "Destiny": 4,
+    "Life": 4,
+    "Wisdom": 4
+   },
+   "from": [
+    {
+     "kind": "Dropped by",
+     "names": [
+      {
+       "name": "High Commander Lagta",
+       "lv": 45
+      }
+     ],
+     "more": 0
+    },
+    {
+     "kind": "Conversion recipe",
+     "names": [
+      {
+       "name": "Conversion recipe"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 115,
+   "item": 514310115,
+   "type": "Artwork",
+   "grade": "Heroic",
+   "name": "Artwork: Guardian Lord Nahma",
+   "race": "All",
+   "domains": {
+    "Destiny": 5,
+    "Illusion": 5,
+    "Life": 5
+   },
+   "from": [
+    {
+     "kind": "Dropped by",
+     "names": [
+      {
+       "name": "Guardian Lord Nahma",
+       "lv": 65
+      },
+      {
+       "name": "Enraged Guardian Lord Nahma",
+       "lv": 80
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 116,
+   "item": 514310116,
+   "type": "Artwork",
+   "grade": "Unique",
+   "name": "Artwork: Silent Dartan",
+   "race": "All",
+   "domains": {
+    "Destiny": 4,
+    "Life": 4,
+    "Wisdom": 4
+   },
+   "from": [
+    {
+     "kind": "Dropped by",
+     "names": [
+      {
+       "name": "Silent Dartan",
+       "lv": 45
+      }
+     ],
+     "more": 0
+    },
+    {
+     "kind": "Conversion recipe",
+     "names": [
+      {
+       "name": "Conversion recipe"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 117,
+   "item": 514310117,
+   "type": "Artwork",
+   "grade": "Unique",
+   "name": "Artwork: Watcher Kaira",
+   "race": "All",
+   "domains": {
+    "Destiny": 4,
+    "Illusion": 4,
+    "Wisdom": 4
+   },
+   "from": [
+    {
+     "kind": "Dropped by",
+     "names": [
+      {
+       "name": "Watcher Kaira",
+       "lv": 65
+      },
+      {
+       "name": "Executor Kaira",
+       "lv": 65
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 118,
+   "item": 514310118,
+   "type": "Artwork",
+   "grade": "Unique",
+   "name": "Artwork: Vakron Sky Island",
+   "race": "All",
+   "domains": {
+    "Illusion": 4,
+    "Life": 4,
+    "Wisdom": 4
+   },
+   "from": [
+    {
+     "kind": "Party dungeon",
+     "names": [
+      {
+       "name": "Party Dungeon"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 119,
+   "item": 514310119,
+   "type": "Artwork",
+   "grade": "Unique",
+   "name": "Artwork: Ferocious Horn Den",
+   "race": "All",
+   "domains": {
+    "Destiny": 4,
+    "Illusion": 4,
+    "Wisdom": 4
+   },
+   "from": [
+    {
+     "kind": "Party dungeon",
+     "names": [
+      {
+       "name": "Party Dungeon"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 120,
+   "item": 514310120,
+   "type": "Artwork",
+   "grade": "Unique",
+   "name": "Artwork: Krao",
+   "race": "All",
+   "domains": {
+    "Destiny": 4,
+    "Illusion": 4,
+    "Wisdom": 4
+   },
+   "from": [
+    {
+     "kind": "Party dungeon",
+     "names": [
+      {
+       "name": "Party Dungeon"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 177,
+   "item": 534310048,
+   "type": "Artwork",
+   "grade": "Epic",
+   "name": "Artwork: Cantas Valley",
+   "race": "Elyos",
+   "domains": {
+    "Illusion": 3,
+    "Wisdom": 3
+   },
+   "from": [
+    {
+     "kind": "Token shop",
+     "names": [
+      {
+       "name": "Coin Shop Festa"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 178,
+   "item": 534310049,
+   "type": "Artwork",
+   "grade": "Epic",
+   "name": "Artwork: Ellun River Marsh",
+   "race": "Elyos",
+   "domains": {
+    "Illusion": 3,
+    "Life": 3
+   },
+   "from": [
+    {
+     "kind": "Token shop",
+     "names": [
+      {
+       "name": "Coin Shop Festa"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 179,
+   "item": 534310003,
+   "type": "Artwork",
+   "grade": "Epic",
+   "name": "Artwork: Verteron Fortress Ruins",
+   "race": "Elyos",
+   "domains": {
+    "Destiny": 3,
+    "Wisdom": 3
+   },
+   "from": [
+    {
+     "kind": "Token shop",
+     "names": [
+      {
+       "name": "Coin Shop Festa"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 180,
+   "item": 534310050,
+   "type": "Artwork",
+   "grade": "Epic",
+   "name": "Artwork: Tolbas Forest",
+   "race": "Elyos",
+   "domains": {
+    "Destiny": 3,
+    "Illusion": 3
+   },
+   "from": [
+    {
+     "kind": "Token shop",
+     "names": [
+      {
+       "name": "Coin Shop Festa"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 181,
+   "item": 534310045,
+   "type": "Artwork",
+   "grade": "Epic",
+   "name": "Artwork: Ellun River Midstream",
+   "race": "Elyos",
+   "domains": {
+    "Illusion": 3,
+    "Wisdom": 3
+   },
+   "from": [
+    {
+     "kind": "Token shop",
+     "names": [
+      {
+       "name": "Coin Shop Festa"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 182,
+   "item": 534310047,
+   "type": "Artwork",
+   "grade": "Epic",
+   "name": "Artwork: Pilgrim's Ridge",
+   "race": "Elyos",
+   "domains": {
+    "Destiny": 3,
+    "Illusion": 3
+   },
+   "from": [
+    {
+     "kind": "Token shop",
+     "names": [
+      {
+       "name": "Coin Shop Festa"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 183,
+   "item": 534310001,
+   "type": "Artwork",
+   "grade": "Epic",
+   "name": "Artwork: Zumion Stone Gate",
+   "race": "Elyos",
+   "domains": {
+    "Destiny": 3,
+    "Life": 3
+   },
+   "from": [
+    {
+     "kind": "Token shop",
+     "names": [
+      {
+       "name": "Coin Shop Festa"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 184,
+   "item": 534310046,
+   "type": "Artwork",
+   "grade": "Epic",
+   "name": "Artwork: Dawn Legion Base",
+   "race": "Elyos",
+   "domains": {
+    "Illusion": 3,
+    "Life": 3
+   },
+   "from": [
+    {
+     "kind": "Token shop",
+     "names": [
+      {
+       "name": "Coin Shop Festa"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 186,
+   "item": 534310015,
+   "type": "Artwork",
+   "grade": "Epic",
+   "name": "Artwork: Shugo Alchemist",
+   "race": "All",
+   "domains": {
+    "Destiny": 3,
+    "Illusion": 3
+   },
+   "from": [
+    {
+     "kind": "Token shop",
+     "names": [
+      {
+       "name": "Coin Shop Festa"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 187,
+   "item": 534310044,
+   "type": "Artwork",
+   "grade": "Unique",
+   "name": "Artwork: Ardus Shrine",
+   "race": "Elyos",
+   "domains": {
+    "Destiny": 4,
+    "Illusion": 4,
+    "Life": 4
+   },
+   "from": [
+    {
+     "kind": "Token shop",
+     "names": [
+      {
+       "name": "Coin Shop Festa"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 188,
+   "item": 534310040,
+   "type": "Artwork",
+   "grade": "Epic",
+   "name": "Artwork: Dredgion Crash Site",
+   "race": "Asmodian",
+   "domains": {
+    "Illusion": 3,
+    "Wisdom": 3
+   },
+   "from": [
+    {
+     "kind": "Token shop",
+     "names": [
+      {
+       "name": "Coin Shop Festa"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 189,
+   "item": 534310041,
+   "type": "Artwork",
+   "grade": "Epic",
+   "name": "Artwork: Nameless Cemetery",
+   "race": "Asmodian",
+   "domains": {
+    "Illusion": 3,
+    "Life": 3
+   },
+   "from": [
+    {
+     "kind": "Token shop",
+     "names": [
+      {
+       "name": "Coin Shop Festa"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 190,
+   "item": 534310042,
+   "type": "Artwork",
+   "grade": "Epic",
+   "name": "Artwork: Sanctum Outpost",
+   "race": "Asmodian",
+   "domains": {
+    "Destiny": 3,
+    "Wisdom": 3
+   },
+   "from": [
+    {
+     "kind": "Token shop",
+     "names": [
+      {
+       "name": "Coin Shop Festa"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 191,
+   "item": 534310033,
+   "type": "Artwork",
+   "grade": "Epic",
+   "name": "Artwork: Moslan Forest",
+   "race": "Asmodian",
+   "domains": {
+    "Destiny": 3,
+    "Illusion": 3
+   },
+   "from": [
+    {
+     "kind": "Token shop",
+     "names": [
+      {
+       "name": "Coin Shop Festa"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 192,
+   "item": 534310038,
+   "type": "Artwork",
+   "grade": "Epic",
+   "name": "Artwork: Quai Campsite",
+   "race": "Asmodian",
+   "domains": {
+    "Illusion": 3,
+    "Wisdom": 3
+   },
+   "from": [
+    {
+     "kind": "Token shop",
+     "names": [
+      {
+       "name": "Coin Shop Festa"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 193,
+   "item": 534310039,
+   "type": "Artwork",
+   "grade": "Epic",
+   "name": "Artwork: Calderon Canyon",
+   "race": "Asmodian",
+   "domains": {
+    "Destiny": 3,
+    "Illusion": 3
+   },
+   "from": [
+    {
+     "kind": "Token shop",
+     "names": [
+      {
+       "name": "Coin Shop Festa"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 194,
+   "item": 534310056,
+   "type": "Artwork",
+   "grade": "Epic",
+   "name": "Artwork: Archon Underground Fortress Door",
+   "race": "Asmodian",
+   "domains": {
+    "Destiny": 3,
+    "Life": 3
+   },
+   "from": [
+    {
+     "kind": "Token shop",
+     "names": [
+      {
+       "name": "Coin Shop Festa"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 195,
+   "item": 534310036,
+   "type": "Artwork",
+   "grade": "Epic",
+   "name": "Artwork: Safe Haven",
+   "race": "Asmodian",
+   "domains": {
+    "Illusion": 3,
+    "Life": 3
+   },
+   "from": [
+    {
+     "kind": "Token shop",
+     "names": [
+      {
+       "name": "Coin Shop Festa"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 197,
+   "item": 534310055,
+   "type": "Artwork",
+   "grade": "Unique",
+   "name": "Artwork: Impetusium",
+   "race": "Asmodian",
+   "domains": {
+    "Destiny": 4,
+    "Illusion": 4,
+    "Life": 4
+   },
+   "from": [
+    {
+     "kind": "Token shop",
+     "names": [
+      {
+       "name": "Coin Shop Festa"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 1000,
+   "item": 534320001,
+   "type": "Statue",
+   "grade": "Unique",
+   "name": "Statue: Transcendent Bakarma",
+   "race": "All",
+   "domains": {
+    "Death": 12,
+    "Freedom": 12,
+    "Space": 12
+   },
+   "from": [
+    {
+     "kind": "Achievement",
+     "names": [
+      {
+       "name": "Achievement"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 1001,
+   "item": 534320002,
+   "type": "Statue",
+   "grade": "Epic",
+   "name": "Statue: Kibelisk",
+   "race": "Elyos",
+   "domains": {
+    "Freedom": 10,
+    "Space": 10
+   },
+   "from": [
+    {
+     "kind": "Achievement",
+     "names": [
+      {
+       "name": "Achievement"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 1002,
+   "item": 534320003,
+   "type": "Statue",
+   "grade": "Rare",
+   "name": "Statue: Sealing Wings",
+   "race": "Elyos",
+   "domains": {
+    "Freedom": 8,
+    "Space": 8
+   },
+   "from": [
+    {
+     "kind": "Conversion recipe",
+     "names": [
+      {
+       "name": "Conversion recipe"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 1004,
+   "item": 534320005,
+   "type": "Statue",
+   "grade": "Rare",
+   "name": "Statue: Teina",
+   "race": "Elyos",
+   "domains": {
+    "Death": 8,
+    "Space": 8
+   },
+   "from": [
+    {
+     "kind": "Quest reward",
+     "names": [
+      {
+       "name": "Time Takes Its Toll",
+       "lv": 43
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 1005,
+   "item": 534320006,
+   "type": "Statue",
+   "grade": "Rare",
+   "name": "Statue: Glorious Wings",
+   "race": "Asmodian",
+   "domains": {
+    "Freedom": 8,
+    "Space": 8
+   },
+   "from": [
+    {
+     "kind": "Conversion recipe",
+     "names": [
+      {
+       "name": "Conversion recipe"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 1006,
+   "item": 534320007,
+   "type": "Statue",
+   "grade": "Common",
+   "name": "Statue: Torn Forbidden Bookcase",
+   "race": "Elyos",
+   "domains": {
+    "Death": 6
+   },
+   "from": [
+    {
+     "kind": "Quest reward",
+     "names": [
+      {
+       "name": "Questionable Methods",
+       "lv": 22
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 1007,
+   "item": 534320008,
+   "type": "Statue",
+   "grade": "Common",
+   "name": "Statue: Urd",
+   "race": "Asmodian",
+   "domains": {
+    "Death": 6
+   },
+   "from": [
+    {
+     "kind": "Quest reward",
+     "names": [
+      {
+       "name": "An Invitation to the Past: Part 2",
+       "lv": 30
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 1008,
+   "item": 534320009,
+   "type": "Statue",
+   "grade": "Rare",
+   "name": "Statue: Dream Fragment",
+   "race": "All",
+   "domains": {
+    "Death": 8,
+    "Freedom": 8
+   },
+   "from": [],
+   "icon": true
+  },
+  {
+   "id": 1013,
+   "item": 534320014,
+   "type": "Statue",
+   "grade": "Common",
+   "name": "Statue: Selvis",
+   "race": "All",
+   "domains": {
+    "Freedom": 6
+   },
+   "from": [
+    {
+     "kind": "Quest reward",
+     "names": [
+      {
+       "name": "Creion Experiment",
+       "lv": 22
+      },
+      {
+       "name": "In the Fang Legion's Name",
+       "lv": 22
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 1020,
+   "item": 534320021,
+   "type": "Statue",
+   "grade": "Epic",
+   "name": "Statue: Kibelisk",
+   "race": "Asmodian",
+   "domains": {
+    "Freedom": 10,
+    "Space": 10
+   },
+   "from": [
+    {
+     "kind": "Achievement",
+     "names": [
+      {
+       "name": "Achievement"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 1021,
+   "item": 534320022,
+   "type": "Statue",
+   "grade": "Epic",
+   "name": "Statue: Artifact of Eternity",
+   "race": "All",
+   "domains": {
+    "Death": 10,
+    "Freedom": 10
+   },
+   "from": [],
+   "icon": true
+  },
+  {
+   "id": 1022,
+   "item": 534320023,
+   "type": "Statue",
+   "grade": "Rare",
+   "name": "Statue: Mirror of Desire",
+   "race": "All",
+   "domains": {
+    "Freedom": 8,
+    "Space": 8
+   },
+   "from": [
+    {
+     "kind": "Achievement",
+     "names": [
+      {
+       "name": "Achievement"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 1023,
+   "item": 534320024,
+   "type": "Statue",
+   "grade": "Epic",
+   "name": "Statue: Asahr's Mirror",
+   "race": "All",
+   "domains": {
+    "Death": 10,
+    "Space": 10
+   },
+   "from": [],
+   "icon": true
+  },
+  {
+   "id": 1028,
+   "item": 534320029,
+   "type": "Statue",
+   "grade": "Rare",
+   "name": "Statue: Fafnir's Poison Blood",
+   "race": "All",
+   "domains": {
+    "Death": 8,
+    "Freedom": 8
+   },
+   "from": [
+    {
+     "kind": "Token shop",
+     "names": [
+      {
+       "name": "Coin Shop Nightmare"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 1031,
+   "item": 534320032,
+   "type": "Statue",
+   "grade": "Rare",
+   "name": "Statue: Gatekeeper Pinopi",
+   "race": "All",
+   "domains": {
+    "Death": 8,
+    "Space": 8
+   },
+   "from": [
+    {
+     "kind": "Token shop",
+     "names": [
+      {
+       "name": "Coin Shop Nightmare"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 1032,
+   "item": 534320033,
+   "type": "Statue",
+   "grade": "Rare",
+   "name": "Statue: Grisilla",
+   "race": "Asmodian",
+   "domains": {
+    "Death": 8,
+    "Space": 8
+   },
+   "from": [
+    {
+     "kind": "Quest reward",
+     "names": [
+      {
+       "name": "Contaminated Sacred Tree",
+       "lv": 30
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 1034,
+   "item": 534320035,
+   "type": "Statue",
+   "grade": "Rare",
+   "name": "Statue: Furious Feruk",
+   "race": "All",
+   "domains": {
+    "Death": 8,
+    "Space": 8
+   },
+   "from": [
+    {
+     "kind": "Token shop",
+     "names": [
+      {
+       "name": "Coin Shop Nightmare"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 1046,
+   "item": 534320047,
+   "type": "Statue",
+   "grade": "Rare",
+   "name": "Statue: Wraith Giselle",
+   "race": "All",
+   "domains": {
+    "Freedom": 8,
+    "Space": 8
+   },
+   "from": [
+    {
+     "kind": "Token shop",
+     "names": [
+      {
+       "name": "Coin Shop Nightmare"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 1054,
+   "item": 534320055,
+   "type": "Statue",
+   "grade": "Epic",
+   "name": "Statue: Fortress Guardian Notun",
+   "race": "All",
+   "domains": {
+    "Death": 10,
+    "Space": 10
+   },
+   "from": [
+    {
+     "kind": "Token shop",
+     "names": [
+      {
+       "name": "Coin Shop Nightmare"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 1055,
+   "item": 534320056,
+   "type": "Statue",
+   "grade": "Epic",
+   "name": "Statue: Gerod",
+   "race": "All",
+   "domains": {
+    "Freedom": 10,
+    "Space": 10
+   },
+   "from": [
+    {
+     "kind": "Token shop",
+     "names": [
+      {
+       "name": "Coin Shop Nightmare"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 5002,
+   "item": 514330003,
+   "type": "Colossus",
+   "grade": "Heroic",
+   "name": "Colossus: Guardian Lord Nahma",
+   "race": "All",
+   "domains": {
+    "Destruction": 55,
+    "Justice": 55,
+    "Time": 55
+   },
+   "from": [
+    {
+     "kind": "Dropped by",
+     "names": [
+      {
+       "name": "Guardian Lord Nahma",
+       "lv": 65
+      },
+      {
+       "name": "Enraged Guardian Lord Nahma",
+       "lv": 80
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 5010,
+   "item": 534330011,
+   "type": "Colossus",
+   "grade": "Unique",
+   "name": "Colossus: Zikel's Apparition",
+   "race": "All",
+   "domains": {
+    "Destruction": 45,
+    "Justice": 45,
+    "Time": 45
+   },
+   "from": [
+    {
+     "kind": "Token shop",
+     "names": [
+      {
+       "name": "Coin Shop Nightmare"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 5014,
+   "item": 534330015,
+   "type": "Colossus",
+   "grade": "Rare",
+   "name": "Colossus: Warden Santras",
+   "race": "Asmodian",
+   "domains": {
+    "Justice": 35,
+    "Time": 35
+   },
+   "from": [
+    {
+     "kind": "Quest reward",
+     "names": [
+      {
+       "name": "Last of the Destruction Archons",
+       "lv": 32
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  },
+  {
+   "id": 5015,
+   "item": 534330016,
+   "type": "Colossus",
+   "grade": "Rare",
+   "name": "Colossus: Incarnated Warding Feather",
+   "race": "Elyos",
+   "domains": {
+    "Justice": 35,
+    "Time": 35
+   },
+   "from": [
+    {
+     "kind": "Quest reward",
+     "names": [
+      {
+       "name": "Zumion's Ward",
+       "lv": 35
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": true
+  }
+ ]
+}

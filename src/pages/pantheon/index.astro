@@ -1,0 +1,333 @@
+---
+import Base from '../../layouts/Base.astro';
+import { Image, getImage } from 'astro:assets';
+import data from '../../data/pantheon.json';
+import { deityOrder } from '../../data/deity-order';
+
+// Icons are NC's item icons (from the Global client), resized to webp by scripts/pantheon-snapshot.mjs.
+const art = import.meta.glob<{ default: ImageMetadata }>('../../assets/pantheon/*.webp', { eager: true });
+const icon = (item: number) => art[`../../assets/pantheon/${item}.webp`]?.default;
+
+type Item = (typeof data.items)[number];
+type Race = 'Elyos' | 'Asmodian';
+
+// Deity stats in the owner's priority order (src/data/deity-order.ts, numbered on the Stats wheel). Effects and hues follow
+// the Stats page wheel; each point gives +0.1%.
+const info: Record<string, { deity: string; hue: number; effects: string[] }> = {
+  Wisdom: { deity: 'Lumiel', hue: 48, effects: ['Double Chance', 'MP Cost reduction'] },
+  Time: { deity: 'Siel', hue: 195, effects: ['Combat Speed', 'Double Resist'] },
+  Illusion: { deity: 'Kaisinel', hue: 300, effects: ['Cooldown reduction', 'Endurance Penetration'] },
+  Destruction: { deity: 'Zikel', hue: 10, effects: ['Attack', 'Perfect Resist'] },
+  Justice: { deity: 'Nezekan', hue: 215, effects: ['Perfect Chance', 'Defense'] },
+  Death: { deity: 'Triniel', hue: 280, effects: ['Critical Hit', 'Regeneration Penetration'] },
+  Freedom: { deity: 'Vaizel', hue: 175, effects: ['Accuracy', 'Evasion'] },
+  Life: { deity: 'Yustiel', hue: 130, effects: ['HP', 'Regeneration'] },
+  Space: { deity: 'Israphel', hue: 245, effects: ['Move Speed', 'Block'] },
+  Destiny: { deity: 'Marchutan', hue: 330, effects: ['Endurance', 'MP'] },
+};
+const order = deityOrder;
+const deities = order.map((id) => ({ id, ...info[id] }));
+const deity = Object.fromEntries(deities.map((d) => [d.id, d]));
+const types = ['Colossus', 'Statue', 'Artwork'] as const;
+const slots = data.slots as Record<string, number>; // Large / Small / Frame
+const slotsOf = { Colossus: slots.Large, Statue: slots.Small, Artwork: slots.Frame };
+
+const short = (n: string) => n.replace(/^(Colossus|Statue|Artwork): /, '');
+const pts = (i: Item, d: string) => (i.domains as Record<string, number>)[d] ?? 0;
+// Priority order: more points in a higher deity stat wins, then the next.
+const byPriority = (a: Item, b: Item) => {
+  for (const d of order) if (pts(a, d) !== pts(b, d)) return pts(b, d) - pts(a, d);
+  return 0;
+};
+const GRADES = ['Heroic', 'Unique', 'Epic', 'Rare', 'Common'];
+const EASE = ['Token shop', 'Quest reward', 'Party dungeon', 'Dropped by', 'Battle Pass', 'Conversion recipe', 'Achievement'];
+const ease = (i: Item) => Math.min(...i.from.map((s) => EASE.indexOf(s.kind)).filter((n) => n >= 0), 9);
+const source = (i: Item) => i.from.map((s) => {
+  const names = s.names.slice(0, 2).map((n) => n.name).filter((n) => n && n.toLowerCase() !== s.kind.toLowerCase());
+  const lv = s.names[0]?.lv;
+  return names.length ? `${s.kind}: ${names.join(', ')}${lv ? ` (Lv ${lv})` : ''}` : s.kind;
+}).join(' / ');
+
+// Best set for one race: fill the deity stats in priority order (Wisdom first), as many points as the slots allow.
+// Items with the same points are interchangeable, so the search runs over those groups; of a group the easiest sources are taken.
+function best(type: (typeof types)[number], race: Race) {
+  const pool = data.items.filter((i) => i.type === type && (i.race === 'All' || i.race === race));
+  const doms = order.filter((d) => pool.some((i) => pts(i, d)));
+  const groups = new Map<string, Item[]>();
+  for (const i of pool) {
+    const k = doms.map((d) => pts(i, d)).join(',');
+    groups.set(k, [...(groups.get(k) ?? []), i]);
+  }
+  const gs = [...groups.entries()].map(([k, items]) => ({ vec: k.split(',').map(Number), items: items.sort((a, b) => ease(a) - ease(b)) }));
+  const cmp = (a: number[], b: number[]) => { for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return a[i] - b[i]; return 0; };
+  // Lexicographic order is additive, so the best fill of groups g.. with `left` slots is found by DP on (g, left).
+  const memo = new Map<number, { vec: number[]; cnt: number[] } | null>();
+  const solve = (g: number, left: number): { vec: number[]; cnt: number[] } | null => {
+    if (g === gs.length) return left ? null : { vec: doms.map(() => 0), cnt: [] };
+    const key = g * 100 + left;
+    if (memo.has(key)) return memo.get(key)!;
+    let out: { vec: number[]; cnt: number[] } | null = null;
+    for (let c = 0; c <= Math.min(left, gs[g].items.length); c++) {
+      const rest = solve(g + 1, left - c);
+      if (!rest) continue;
+      const vec = rest.vec.map((t, j) => t + c * gs[g].vec[j]);
+      if (!out || cmp(vec, out.vec) > 0) out = { vec, cnt: [c, ...rest.cnt] };
+    }
+    memo.set(key, out);
+    return out;
+  };
+  const bestCnt = solve(0, slotsOf[type])!.cnt;
+  return gs.flatMap((g, i) => g.items.slice(0, bestCnt[i]).map((it) => ({ it, others: g.items.slice(bestCnt[i]) }))).sort((a, b) => byPriority(a.it, b.it) || ease(a.it) - ease(b.it));
+}
+
+const races: Race[] = ['Elyos', 'Asmodian'];
+const setups = races.map((race) => {
+  const groups = types.map((type) => ({ type, picks: best(type, race) }));
+  const total: Record<string, number> = {};
+  for (const g of groups) for (const p of g.picks) for (const d of order) total[d] = (total[d] ?? 0) + pts(p.it, d);
+  return { race, groups, total: order.filter((d) => total[d]).map((d) => ({ d: deity[d], n: total[d] })) };
+});
+
+const all = [...data.items].sort((a, b) => byPriority(a, b) || GRADES.indexOf(a.grade) - GRADES.indexOf(b.grade) || a.name.localeCompare(b.name));
+// The item table is drawn by the page script in chunks (rows come from this JSON), so the page stays small as the list grows.
+const rows = await Promise.all(all.map(async (it) => ({
+  n: short(it.name), t: it.type, r: it.race, g: it.grade,
+  s: order.filter((d) => pts(it, d)).map((d) => [d, pts(it, d), deity[d].hue]),
+  f: source(it),
+  i: icon(it.item) ? (await getImage({ src: icon(it.item), width: 96, height: 96, format: 'webp' })).src : '',
+})));
+const pct = (n: number) => `+${(n / 10).toFixed(1)}%`;
+---
+<Base title="Pantheon" description="Best Pantheon setup for AION 2 Global: Colossus, Statues and Artworks by stat priority, with every decoration listed.">
+  <h1 class="page-title">Pantheon</h1>
+
+  <div class="race" role="group" aria-label="Race">
+    {races.map((r) => <button type="button" data-race={r} aria-pressed={r === 'Elyos'}>{r}</button>)}
+  </div>
+
+  <section class="panel" id="best-setup" aria-label="Best setup">
+    <header class="panel-head"><h2>Best setup</h2></header>
+    {setups.map((s) => (
+      <div class="setup" data-race={s.race} hidden={s.race !== 'Elyos'}>
+        <ul class="totals">
+          {s.total.map(({ d, n }) => (
+            <li style={`--h:${d.hue}`}>
+              <b>{d.id}</b><span class="n">{n}</span>
+              <small>{d.effects.join(', ')} {pct(n)}</small>
+            </li>
+          ))}
+        </ul>
+        {s.groups.map((g) => (
+          <div class="grp">
+            <h3>{g.type}<small>{g.picks.length} of {slotsOf[g.type]} {slotsOf[g.type] === 1 ? 'slot' : 'slots'}</small></h3>
+            <div class="cards">
+              {g.picks.map(({ it, others }) => (
+                <div class="item" data-grade={it.grade}>
+                  {icon(it.item) && <Image src={icon(it.item)} alt="" width={112} height={112} loading="lazy" />}
+                  <div class="t">
+                    <strong>{short(it.name)}<span class="gr">{it.grade}</span></strong>
+                    <span class="chips">{order.filter((d) => pts(it, d)).map((d) => <i style={`--h:${deity[d].hue}`}>{d} +{pts(it, d)}</i>)}</span>
+                    <small>{source(it) || 'Source unknown'}</small>
+                    {others.length > 0 && (
+                      <small class="same" tabindex="0">{others.length} more with the same stats
+                        <span class="pop" role="tooltip">
+                          {others.map((o) => (
+                            <span class="alt" data-grade={o.grade}>
+                              {icon(o.item) && <Image src={icon(o.item)} alt="" width={64} height={64} loading="lazy" />}
+                              <span><b>{short(o.name)}</b>{o.race !== 'All' && <i>{o.race} only</i>}<em>{source(o) || 'Source unknown'}</em></span>
+                            </span>
+                          ))}
+                        </span>
+                      </small>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    ))}
+    <p class="meta note">Filled in the order of the Daevanion priority on the Stats page, so Wisdom (Double Chance) is maxed before anything else.</p>
+  </section>
+
+  <section class="panel" id="all-items" aria-label="All items">
+    <header class="panel-head">
+      <h2>All items</h2>
+      <div class="tools">
+        <div class="seg" role="group" aria-label="Type">
+          <button type="button" data-type="All" aria-pressed="true">All</button>
+          {types.map((t) => <button type="button" data-type={t} aria-pressed="false">{t}</button>)}
+        </div>
+        <input type="search" id="q" placeholder="Search" aria-label="Search items" autocomplete="off" />
+      </div>
+    </header>
+    <table class="saving txt list" aria-label="All Pantheon items">
+      <thead><tr><th>Item</th><th>Stats</th><th>Source</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <div id="more" aria-hidden="true"></div>
+    <p class="meta empty" hidden>No item matches.</p>
+    <script type="application/json" id="items-data" set:html={JSON.stringify(rows)} />
+  </section>
+
+  <p class="meta sources">Items, stats and sources: <a href="https://aion2hub.com/tools/build-calculator">AION2 Hub</a> (Global client data, {data.builtAt}); some may not be live yet. Priority: our Stats page. Icons are from the Global client.</p>
+</Base>
+
+<style>
+  .race { display: inline-flex; margin-bottom: 14px; border: 1px solid var(--line); border-radius: 3px; overflow: hidden; }
+  .race button, .seg button { padding: 6px 16px; background: var(--panel); border: 0; color: var(--muted); font: inherit; font-size: 0.86rem; font-weight: 600; cursor: pointer; transition: color 0.15s, background 0.15s; }
+  .race button + button, .seg button + button { border-left: 1px solid var(--line); }
+  .race button:hover, .seg button:hover, .race button:focus-visible, .seg button:focus-visible { color: var(--text); outline: none; }
+  .race button[aria-pressed='true'], .seg button[aria-pressed='true'] { color: var(--text); background: radial-gradient(120% 140% at 0% 0%, var(--accent-soft), var(--panel) 70%); box-shadow: inset 0 -2px 0 var(--accent); }
+
+  .totals { list-style: none; margin: 0 0 18px; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr)); gap: 8px; }
+  .totals li { --c: hsl(var(--h) 75% 64%); display: grid; grid-template-columns: 1fr auto; align-items: baseline; gap: 0 8px; padding: 6px 10px; border-left: 3px solid hsl(var(--h) 70% 55% / 0.55); background: linear-gradient(90deg, hsl(var(--h) 60% 50% / 0.12), transparent 80%); border-radius: 3px; }
+  :root[data-theme='light'] .totals li { --c: hsl(var(--h) 85% 34%); }
+  .totals b { color: var(--c); }
+  .totals .n { font-variant-numeric: tabular-nums; font-weight: 700; }
+  .totals small { grid-column: 1 / -1; color: var(--muted); font-size: 0.74rem; }
+
+  .grp + .grp { margin-top: 20px; }
+  .grp h3 { margin: 0 0 8px; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); }
+  .grp h3 small { margin-left: 10px; color: var(--muted); font-weight: 600; letter-spacing: 0.04em; text-transform: none; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr)); gap: 8px; }
+  .item { --g: #b9b3a4; display: flex; gap: 12px; align-items: center; padding: 8px 12px 8px 8px; background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--g); border-radius: 3px; }
+  .item img { flex: none; width: 56px; height: 56px; border-radius: 3px; background: color-mix(in srgb, var(--g) 12%, transparent); }
+  .item .t { min-width: 0; display: grid; gap: 3px; }
+  .item strong { display: flex; align-items: baseline; gap: 8px; font-size: 0.92rem; }
+  .item small { color: var(--muted); font-size: 0.74rem; line-height: 1.3; }
+  .item .same { position: relative; width: fit-content; color: var(--accent); cursor: default; outline: none; }
+  .same .pop { display: none; position: absolute; left: 0; bottom: calc(100% + 6px); z-index: 5; width: max-content; max-width: min(380px, 80vw); padding: 6px; background: #0d1018; border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 3px; box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5); color: #eceff5; cursor: default; }
+  .same:hover .pop, .same:focus .pop, .same:focus-within .pop { display: grid; gap: 2px; }
+  .same .alt { display: flex; align-items: center; gap: 10px; padding: 4px 8px 4px 4px; border-left: 3px solid var(--g); border-radius: 2px; }
+  .same .alt:hover { background: rgba(255, 255, 255, 0.05); }
+  .same .alt img { flex: none; width: 32px; height: 32px; border-radius: 3px; }
+  .same .alt > span { display: grid; min-width: 0; }
+  .same .alt b { color: var(--g); font-size: 0.84rem; font-weight: 700; line-height: 1.25; }
+  .same .alt i { color: #9aa0b0; font-size: 0.68rem; font-style: normal; }
+  .same .alt em { color: #9aa0b0; font-size: 0.72rem; font-style: normal; line-height: 1.3; }
+  [data-grade='Common'] { --g: #b9b3a4; }
+  [data-grade='Heroic'] { --g: #ff4d7d; }
+  [data-grade='Unique'] { --g: #e3bd6e; }
+  [data-grade='Epic'] { --g: #4a9bf2; }
+  [data-grade='Rare'] { --g: #57c98a; }
+  :root[data-theme='light'] [data-grade='Unique'] { --g: #a8780f; }
+  :root[data-theme='light'] [data-grade='Rare'] { --g: #1f8f55; }
+  :root[data-theme='light'] [data-grade='Heroic'] { --g: #d11248; }
+  :root[data-theme='light'] [data-grade='Common'] { --g: #7d776a; }
+  .gr { color: var(--g); font-size: 0.66rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; white-space: nowrap; }
+  .chips { display: flex; flex-wrap: wrap; gap: 4px; }
+  .chips i { --c: hsl(var(--h) 75% 66%); font-style: normal; padding: 0 6px; border-left: 2px solid hsl(var(--h) 70% 55% / 0.7); background: hsl(var(--h) 60% 50% / 0.12); color: var(--c); font-size: 0.74rem; font-weight: 600; white-space: nowrap; }
+  :root[data-theme='light'] .chips i { --c: hsl(var(--h) 85% 30%); }
+  .note { margin: 18px 0 0; }
+
+  .tools { display: flex; align-items: center; gap: 10px; margin-left: auto; flex-wrap: wrap; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 3px; overflow: hidden; }
+  .tools input { width: 170px; padding: 5px 9px; background: var(--panel); border: 1px solid var(--line); border-radius: 3px; color: var(--text); font: inherit; font-size: 0.86rem; }
+  .tools input:focus { outline: none; border-color: color-mix(in srgb, var(--accent) 70%, transparent); }
+  .panel-head:has(.tools) { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .empty { margin: 14px 0 0; }
+
+  @media (max-width: 600px) {
+    .tools { margin-left: 0; width: 100%; }
+    .tools input { flex: 1; width: auto; min-width: 0; }
+    .cards { grid-template-columns: minmax(0, 1fr); }
+  }
+  @media (pointer: coarse) {
+    .race button, .seg button { padding: 10px 16px; }
+  }
+</style>
+
+<script>
+  import { sectionGlow } from '../../scripts/section-glow';
+  document.addEventListener('astro:page-load', () => {
+    if (!document.getElementById('all-items')) return;
+    const { signal } = sectionGlow(['best-setup', 'all-items']);
+    const KEY = 'a2codex-pantheon-v1';
+    let saved: { race?: string } = {};
+    try { saved = JSON.parse(localStorage.getItem(KEY) ?? '{}'); } catch {}
+
+    let race = saved.race === 'Asmodian' ? 'Asmodian' : 'Elyos';
+    let type = 'All';
+    type Row = { n: string; t: string; r: string; g: string; s: [string, number, number][]; f: string; i: string };
+    const rows: Row[] = JSON.parse(document.getElementById('items-data')!.textContent!);
+    const q = document.getElementById('q') as HTMLInputElement;
+    const empty = document.querySelector<HTMLElement>('.empty')!;
+    const tbody = document.querySelector('.list tbody')!;
+    const sentinel = document.getElementById('more')!;
+    const CHUNK = 40;
+    let list: Row[] = [];
+    let drawn = 0;
+    const esc = (t: string) => t.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
+    const rowHtml = (r: Row) =>
+      `<tr data-grade="${r.g}"><th><span class="nm">${r.i ? `<img src="${r.i}" alt="" width="96" height="96" loading="lazy">` : ''}<span><b>${esc(r.n)}</b>${r.r !== 'All' ? `<small>${r.r} only</small>` : ''}<small>${r.t}</small></span></span></th>` +
+      `<td><span class="chips">${r.s.map(([d, p, h]) => `<i style="--h:${h}">${d} +${p}</i>`).join('')}</span></td><td class="src">${esc(r.f || '—')}</td></tr>`;
+    // Icons in the first screen load eagerly, everything else lazily (Astro's loading-attribute audit).
+    const settle = (root: ParentNode) => {
+      for (const img of root.querySelectorAll<HTMLImageElement>('img')) {
+        const r = img.getBoundingClientRect();
+        img.loading = r.width > 0 && r.top < innerHeight && r.bottom > 0 ? 'eager' : 'lazy';
+      }
+    };
+    // Draw the next rows while the end of the table is within a screen or so of the viewport.
+    const fill = () => {
+      while (drawn < list.length && sentinel.getBoundingClientRect().top < innerHeight + 600) {
+        tbody.insertAdjacentHTML('beforeend', list.slice(drawn, drawn + CHUNK).map(rowHtml).join(''));
+        drawn += CHUNK;
+      }
+      settle(tbody);
+    };
+    const io = new IntersectionObserver((es) => es[0].isIntersecting && fill(), { rootMargin: '600px' });
+    io.observe(sentinel);
+    signal.addEventListener('abort', () => io.disconnect());
+    const apply = () => {
+      for (const b of document.querySelectorAll<HTMLElement>('.race button')) b.setAttribute('aria-pressed', String(b.dataset.race === race));
+      for (const b of document.querySelectorAll<HTMLElement>('.seg button')) b.setAttribute('aria-pressed', String(b.dataset.type === type));
+      for (const s of document.querySelectorAll<HTMLElement>('.setup')) s.hidden = s.dataset.race !== race;
+      const term = q.value.trim().toLowerCase();
+      list = rows.filter((r) => (r.r === 'All' || r.r === race) && (type === 'All' || r.t === type) && (!term || r.n.toLowerCase().includes(term)));
+      tbody.innerHTML = '';
+      drawn = 0;
+      empty.hidden = list.length > 0;
+      settle(document.getElementById('best-setup')!);
+      fill();
+    };
+    document.querySelectorAll<HTMLElement>('.race button').forEach((b) => b.addEventListener('click', () => {
+      race = b.dataset.race!;
+      try { localStorage.setItem(KEY, JSON.stringify({ race })); } catch {}
+      apply();
+    }, { signal }));
+    document.querySelectorAll<HTMLElement>('.seg button').forEach((b) => b.addEventListener('click', () => { type = b.dataset.type!; apply(); }, { signal }));
+    q.addEventListener('input', apply, { signal });
+    apply();
+  });
+</script>
+
+<style is:global>
+  main { max-width: 1500px; }
+  /* The table rows are made by the page script, so their styles cannot be scoped. */
+  .list .chips { display: flex; flex-wrap: wrap; gap: 4px; }
+  .list .chips i { --c: hsl(var(--h) 75% 66%); font-style: normal; padding: 0 6px; border-left: 2px solid hsl(var(--h) 70% 55% / 0.7); background: hsl(var(--h) 60% 50% / 0.12); color: var(--c); font-size: 0.74rem; font-weight: 600; white-space: nowrap; }
+  :root[data-theme='light'] .list .chips i { --c: hsl(var(--h) 85% 30%); }
+  .list .nm { display: flex; align-items: center; gap: 10px; }
+  .list .nm img { flex: none; width: 40px; height: 40px; border-radius: 3px; }
+  .list .nm > span { display: grid; min-width: 0; }
+  .list .nm small { color: var(--muted); font-size: 0.7rem; font-weight: 400; }
+  .txt th, .txt td { text-align: left; vertical-align: middle; }
+  .txt tbody th { text-transform: none; letter-spacing: normal; }
+  .txt tbody tr:hover { background: var(--panel-2); }
+  .txt th:first-child { width: 1%; white-space: nowrap; }
+  .list th:first-child { width: 30%; }
+  .list .nm b { color: var(--g, var(--text)); font-weight: 700; }
+  .list td.src { min-width: 220px; color: var(--muted); font-size: 0.8rem; }
+  .list tr[data-grade='Common'] { --g: #b9b3a4; }
+  .list tr[data-grade='Heroic'] { --g: #ff4d7d; }
+  .list tr[data-grade='Unique'] { --g: #e3bd6e; }
+  .list tr[data-grade='Epic'] { --g: #4a9bf2; }
+  .list tr[data-grade='Rare'] { --g: #57c98a; }
+  :root[data-theme='light'] .list tr[data-grade='Unique'] { --g: #a8780f; }
+  :root[data-theme='light'] .list tr[data-grade='Rare'] { --g: #1f8f55; }
+  :root[data-theme='light'] .list tr[data-grade='Heroic'] { --g: #d11248; }
+  :root[data-theme='light'] .list tr[data-grade='Common'] { --g: #7d776a; }
+</style>
