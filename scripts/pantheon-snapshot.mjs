@@ -75,6 +75,22 @@ await Promise.all(Array.from({ length: 4 }, async () => {
     });
   }
 }));
+// Hard mode artworks (patch of 2026-10-21) that aion2hub's planner does not have yet. Stats are the owner's, from the game;
+// the 5 points per stat are those of the other Heroic Artworks. Sources are from metabot.gg. Remove an entry once the planner has it.
+const extra = [
+  ['Krao', ['Wisdom', 'Illusion', 'Destiny'], 'Ultimate Berk'],
+  ['Urugugu', ['Life', 'Wisdom', 'Destiny'], 'Divine Auldor'],
+  ['Draupnir', ['Illusion', 'Life', 'Wisdom'], 'Transcendent Bakarma'],
+  ['Vakron Sky Island', ['Illusion', 'Life', 'Wisdom'], 'Vakron'],
+];
+extra.forEach(([n, d, boss], i) => {
+  const name = `Artwork: Wrathful ${n}`;
+  if (items.some((it) => it.name === name)) return;
+  items.push({
+    id: 9001 + i, item: 9001 + i, type: 'Artwork', grade: 'Heroic', name, race: 'All',
+    domains: Object.fromEntries(d.map((k) => [k, 5])), from: [{ kind: 'Dropped by', names: [{ name: boss }], more: 0 }], icon: false,
+  });
+});
 items.sort((a, b) => a.id - b.id);
 
 fs.writeFileSync(outJson, JSON.stringify({ builtAt: data.builtAt, slots: data.slots, domains: data.domains, items }, null, 1) + '\n');

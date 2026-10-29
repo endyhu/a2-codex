@@ -3444,6 +3444,106 @@
     }
    ],
    "icon": true
+  },
+  {
+   "id": 9001,
+   "item": 9001,
+   "type": "Artwork",
+   "grade": "Heroic",
+   "name": "Artwork: Wrathful Krao",
+   "race": "All",
+   "domains": {
+    "Wisdom": 5,
+    "Illusion": 5,
+    "Destiny": 5
+   },
+   "from": [
+    {
+     "kind": "Dropped by",
+     "names": [
+      {
+       "name": "Ultimate Berk"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": false
+  },
+  {
+   "id": 9002,
+   "item": 9002,
+   "type": "Artwork",
+   "grade": "Heroic",
+   "name": "Artwork: Wrathful Urugugu",
+   "race": "All",
+   "domains": {
+    "Life": 5,
+    "Wisdom": 5,
+    "Destiny": 5
+   },
+   "from": [
+    {
+     "kind": "Dropped by",
+     "names": [
+      {
+       "name": "Divine Auldor"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": false
+  },
+  {
+   "id": 9003,
+   "item": 9003,
+   "type": "Artwork",
+   "grade": "Heroic",
+   "name": "Artwork: Wrathful Draupnir",
+   "race": "All",
+   "domains": {
+    "Illusion": 5,
+    "Life": 5,
+    "Wisdom": 5
+   },
+   "from": [
+    {
+     "kind": "Dropped by",
+     "names": [
+      {
+       "name": "Transcendent Bakarma"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": false
+  },
+  {
+   "id": 9004,
+   "item": 9004,
+   "type": "Artwork",
+   "grade": "Heroic",
+   "name": "Artwork: Wrathful Vakron Sky Island",
+   "race": "All",
+   "domains": {
+    "Illusion": 5,
+    "Life": 5,
+    "Wisdom": 5
+   },
+   "from": [
+    {
+     "kind": "Dropped by",
+     "names": [
+      {
+       "name": "Vakron"
+      }
+     ],
+     "more": 0
+    }
+   ],
+   "icon": false
   }
  ]
 }
