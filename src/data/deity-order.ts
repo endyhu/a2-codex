@@ -1,0 +1,2 @@
+// Daevanion (deity) stats in the owner's priority order, best first. The Stats page shows it as a strip under the wheel and the Pantheon page fills its slots in this order. Destruction (Attack) sits above Justice (Perfect Chance) because Daevanion stats are percentages; the flat Attack stat on the Stats list is ranked below Perfect Chance.
+export const deityOrder = ['Wisdom', 'Time', 'Illusion', 'Destruction', 'Justice', 'Death', 'Freedom', 'Life', 'Space', 'Destiny'];

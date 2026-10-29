@@ -17,6 +17,7 @@ import hourglass from 'lucide-static/icons/hourglass.svg?raw';
 import orbit from 'lucide-static/icons/orbit.svg?raw';
 import sources from '../data/stat-sources.json';
 import { nav } from '../data/nav';
+import { deityOrder } from '../data/deity-order';
 
 // Lucide has no butterfly or shield-with-sword; drawn in the same style (24px grid, 2px round strokes).
 const shieldSword = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.500 20.500 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.500-1.200 6.240-2.720a1.170 1.170 0 0 1 1.520 0C14.510 3.810 17 5 19 5a1 1 0 0 1 1 1z"/><path d="M12 7v9"/><path d="M9.500 10h5"/></svg>`;
@@ -59,13 +60,15 @@ const nodes = [
   })),
   ...daevanion.map((s, i) => ({
     ...s, kind: 'deity', style: `${at(ringAngles[i], 41)};--h:${s.hue}`, title: `${s.name} [${s.deity}]`,
-    text: `Each point gives +0.1% ${s.effects.join(' and ')}.`,
+    text: `Daevanion priority ${deityOrder.indexOf(s.name) + 1} of ${deityOrder.length}. Each point gives +0.1% ${s.effects.join(' and ')}.`,
   })),
 ];
 // The stats that matter most for damage, in order. Order and notes follow aion2bible.com (its Stat Value Index and
 // "How Stats Work" chapter); descriptions are the in-game text from aion2data.com. [[x]] in text shows red.
 // Combat Speed is placed second because the Bible calls it a stat to stack as much as you can; it does not rank it
-// against the others. Accuracy, Critical Hit and Endurance are not ranked by the Bible, so they sit last.
+// against the others. The stats that come from Daevanion stats (Double Chance, Combat Speed, Cooldown, Perfect Chance,
+// Critical Hit, Accuracy, Endurance) follow the owner's Daevanion order (src/data/deity-order.ts), except Attack: Destruction
+// ranks above Justice because Daevanion stats are percentages, while the Attack stat here is flat and ranks below Perfect Chance.
 const ranked = [
   { name: 'Double Chance', from: ['Wisdom'], text: 'Increases Double activation chance. Affected by target\'s Double Resist.', note: 'A Double hit deals 2x damage in PvE, which makes this the strongest damage stat. Every extra point is worth a little less than the last.' },
   { name: 'Combat Speed', from: ['Time'], text: 'Increases Attack Speed and Spell Action Speed.', note: 'Faster casts and attacks mean more hits. Stack as much as you can. High ping or low FPS cuts into what it gives you.' },
@@ -74,13 +77,13 @@ const ranked = [
   { name: 'Critical Damage Boost', text: 'Boosts Critical Hit Damage. Affected by target\'s Critical Damage Tolerance.', note: 'Crit damage starts at 50%, and class passives that raise it lower what this stat is worth. It is worth more if your class has none.' },
   { name: 'Damage Boost', text: 'Boosts Damage. Affected by target\'s Damage Tolerance.', note: 'Adds together with PvE, Boss and Species Damage Boost, so each point gives less than the stats above.' },
   { name: 'Multi-hit Chance', text: 'Increases Multi-hit Chance. Adds up to 4 hits, inflicting damage proportional to Attack.', note: 'Each extra hit does only a small share of the original hit. How exactly it stacks with your other damage is still being tested.' },
-  { name: 'Perfect Chance', from: ['Justice'], text: 'Increases Perfect activation chance. Affected by target\'s Perfect Resist.', note: 'A Perfect hit rolls the top of your weapon\'s damage range. That range is usually narrow, so it adds less than it sounds.' },
   { name: 'Cooldown', from: ['Illusion'], text: 'Skill Cooldown duration. Negative value reduces Cooldown. Cooldown reduction is capped at [[60%]].', note: 'Most classes only need around 30-40% to keep their key buffs rolling. Find your class\'s number and stop there instead of stacking it.' },
+  { name: 'Perfect Chance', from: ['Justice'], text: 'Increases Perfect activation chance. Affected by target\'s Perfect Resist.', note: 'A Perfect hit rolls the top of your weapon\'s damage range. That range is usually narrow, so it adds less than it sounds.' },
   { name: 'Attack', from: ['Might', 'Destruction'], text: 'Basic Attack. Higher Attack deals more damage.', note: 'The best of the flat Attack stats, because Weapon Damage Boost multiplies it directly. The Attack number on your Stat Info does not include that bonus.' },
   { name: 'Max Attack', text: 'Max Attack of the weapon. Perfect scales with Max Attack.', note: 'Raises the top of your weapon\'s damage range and its average. The second best flat Attack stat.' },
   { name: 'Attack Bonus', text: 'Basic Attack. Affects Damage.', note: 'Added after Weapon Damage Boost is applied. Weaker per point than Attack and Max Attack, but still a top stat.' },
-  { name: 'Accuracy', from: ['Precision', 'Freedom'], text: 'Prevents attack from missing. Offset by target\'s Evasion and Block.', note: 'Each point cancels a point of the target\'s Block, so once you cover their Block every hit lands. Value drops off as you stack more.' },
   { name: 'Critical Hit', from: ['Precision', 'Death'], text: 'Increases Critical Hit Rate. Max Critical Hit Rate is [[50%]], and this is reduced by target\'s Critical Hit Resist.', note: 'Skill passives add to it, so check how much crit your class already gets before stacking more.' },
+  { name: 'Accuracy', from: ['Precision', 'Freedom'], text: 'Prevents attack from missing. Offset by target\'s Evasion and Block.', note: 'Each point cancels a point of the target\'s Block, so once you cover their Block every hit lands. Value drops off as you stack more.' },
   { name: 'Endurance', from: ['Destiny'], text: 'Increases Endurance activation chance. Affected by target\'s Endurance Penetration.', note: 'When it triggers you take half damage. Bosses have no Endurance Penetration, so the % on your sheet is your real chance.' },
 ];
 
@@ -152,6 +155,12 @@ const rows = ranked.map((s) => ({ ...s, gets: tagsFor(s) }));
         </button>
       ))}
     </div>
+    <ol class="order" aria-label="Daevanion stat priority">
+      {deityOrder.map((name, i) => {
+        const n = nodes.find((x) => x.name === name)!;
+        return <li class="tip-src" tabindex="0" style={`--h:${n.hue}`} data-title={n.title} data-text={n.text} data-name={name} data-hue={n.hue}><b>{i + 1}</b>{name}</li>;
+      })}
+    </ol>
     </section>
     </div>
 
@@ -197,7 +206,7 @@ const rows = ranked.map((s) => ({ ...s, gets: tagsFor(s) }));
     </section>
   </div>
 
-  <p class="meta sources">Descriptions: <a href="https://aion2data.com/stats">aion2data.com</a>, <a href="https://metabot.gg/en/aion-2/stats">metabot.gg</a> (both read the Global client data). Order and notes: <a href="https://www.aion2bible.com">Aion 2 Bible</a>, a community guide. Get it from: Global client data, rebuilt from metabot.gg; dashed tags come from community guides.</p>
+  <p class="meta sources">Descriptions: <a href="https://aion2data.com/stats">aion2data.com</a>, <a href="https://metabot.gg/en/aion-2/stats">metabot.gg</a> (both read the Global client data). Order and notes: <a href="https://www.aion2bible.com">Aion 2 Bible</a>, a community guide; stats that come from Daevanion stats follow our Daevanion order. Get it from: Global client data, rebuilt from metabot.gg; dashed tags come from community guides.</p>
 
   <div id="tip" role="tooltip" hidden></div>
 </Base>
@@ -234,26 +243,30 @@ const rows = ranked.map((s) => ({ ...s, gets: tagsFor(s) }));
     const nodeEls = [...document.querySelectorAll<HTMLElement>('.node')];
     const rowEls = [...document.querySelectorAll<HTMLElement>('.stat-row')];
     const fromOf = (row: HTMLElement) => (row.dataset.from ?? '').split(',').filter(Boolean);
-    const clearLinks = () => [...nodeEls, ...rowEls].forEach((x) => x.classList.remove('hl'));
+    const orderEls = [...document.querySelectorAll<HTMLElement>('.order li')];
+    const clearLinks = () => [...nodeEls, ...rowEls, ...orderEls].forEach((x) => x.classList.remove('hl'));
     // A row glows in the colour of the wheel stat that raises it; a hovered row uses its first source's colour.
     const hueOf = (name: string) => nodeEls.find((n) => n.dataset.name === name)?.dataset.hue;
     const setHues = (r: HTMLElement, a: string, b = a) => {
       r.style.setProperty('--hl', a);
       r.style.setProperty('--hl2', b);
     };
-    const linkNode = (n: HTMLElement) =>
+    const linkNode = (n: HTMLElement) => {
+      // The wheel node and its entry in the priority strip light together, whichever one you touch.
+      [...nodeEls, ...orderEls].forEach((x) => x.classList.toggle('hl', x.dataset.name === n.dataset.name));
       rowEls.forEach((r) => {
         const on = fromOf(r).includes(n.dataset.name!);
         r.classList.toggle('hl', on);
         if (on) setHues(r, n.dataset.hue!);
       });
+    };
     // A row with two sources glows as a gradient between their colours.
     const linkRow = (r: HTMLElement) => {
       const names = fromOf(r);
       const hues = names.map(hueOf).filter((h): h is string => !!h);
       r.classList.add('hl');
       setHues(r, hues[0] ?? '250', hues[1] ?? hues[0] ?? '250');
-      nodeEls.forEach((n) => n.classList.toggle('hl', names.includes(n.dataset.name!)));
+      [...nodeEls, ...orderEls].forEach((n) => n.classList.toggle('hl', names.includes(n.dataset.name!)));
     };
     const hideAll = () => { hide(); clearLinks(); };
     document.querySelectorAll<HTMLElement>('.tip-src').forEach((el) => {
@@ -335,6 +348,14 @@ const rows = ranked.map((s) => ({ ...s, gets: tagsFor(s) }));
   .node.deity { width: 10cqw; height: 10cqw; }
   .node.deity .dia { border-radius: 22%; transform: rotate(45deg); }
   .node.deity .glyph { transform: rotate(-45deg); }
+  /* Daevanion priority: the ten deity stats in order under the wheel. */
+  .order { list-style: none; margin: 18px auto 0; padding: 0; max-width: 540px; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px 6px; }
+  .order li { --c: hsl(var(--h) 75% 64%); display: flex; align-items: baseline; gap: 5px; padding: 3px 0 3px 7px; border-left: 2px solid hsl(var(--h) 70% 55% / 0.6); font-size: 0.74rem; font-weight: 600; white-space: nowrap; color: var(--text); }
+  :root[data-theme='light'] .order li { --c: hsl(var(--h) 85% 34%); }
+  .order li { cursor: default; outline: none; transition: border-color 0.15s, background 0.15s, box-shadow 0.15s; }
+  .order li:hover, .order li:focus-visible, .order li.hl { border-left-color: var(--c); background: linear-gradient(90deg, hsl(var(--h) 70% 55% / 0.22), transparent 90%); box-shadow: 0 0 18px -6px hsl(var(--h) 80% 55% / 0.6); }
+  .order b { color: var(--c); font-size: 0.7rem; font-variant-numeric: tabular-nums; }
+  @media (max-width: 420px) { .order { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   .node .nm { font-size: max(9px, 2.3cqw); font-weight: 600; line-height: 1; white-space: nowrap; color: var(--text); }
   .node.deity .nm { position: absolute; top: calc(100% + 2.4cqw); left: 50%; transform: translateX(-50%); font-size: max(8.5px, 2.1cqw); }
   .glyph { display: block; flex: none; width: 5.4cqw; height: 5.4cqw; line-height: 0; }
