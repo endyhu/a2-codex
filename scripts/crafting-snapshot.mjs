@@ -52,7 +52,8 @@ const used = new Set();
 const recipes = props.recipes.map((r) => {
   used.add(r.product);
   r.parts.forEach(([id]) => used.add(id));
-  return { product: r.product, qty: r.qty, mastery: r.mastery, profession: r.category, level: levels.get(props.items[r.product].name), type: typeOf(r), combo: r.combo, rate: r.rate, parts: r.parts };
+  // Recipe ids pair up per faction (215016003 Elyos / 225016003 Asmodian): the second digit is the faction (checked: 0 mismatches over the 398 single-recipe items).
+  return { product: r.product, qty: r.qty, mastery: r.mastery, profession: r.category, level: levels.get(props.items[r.product].name), type: typeOf(r), combo: r.combo, rate: r.rate, parts: r.parts, faction: String(r.id)[1] === '1' ? 'Elyos' : 'Asmodian' };
 });
 const items = {};
 for (const id of [...used].sort((a, b) => a - b)) {
@@ -61,29 +62,6 @@ for (const id of [...used].sort((a, b) => a - b)) {
   items[id] = [it.name, it.grade];
 }
 
-// Faction of each recipe, from the item pages' recipe rows ("Blacksmithing · Lv. 55 · Asmodian", or "Blacksmithing · Asmodian" when no mastery is needed). A page lists one row for a
-// faction-only item and one row per faction for an item both factions craft. The rows are NOT in a fixed faction order, but the
-// header chip of the page ("Item Level 18 · Elyos") is the faction of the lowest product id, so in a same-name pair the lowest id gets the
-// header faction and the other id the opposite one (checked against which factions' servers list each id: 64 of 64 pairs with listings).
-const byHref = new Map();
-for (const r of recipes) (byHref.get(props.items[r.product].href) ?? byHref.set(props.items[r.product].href, []).get(props.items[r.product].href)).push(r);
-const hrefs = [...byHref.keys()];
-let next = 0;
-await Promise.all(Array.from({ length: 6 }, async () => {
-  for (let h; (h = hrefs[next++]); ) {
-    const res = await fetch('https://metabot.gg/en/aion-2' + h.replace(/^\/aion-2/, ''), { headers: { 'User-Agent': 'a2codex-snapshot (a2codex.prezenith.com)' } });
-    if (!res.ok) { console.warn(`faction: ${h} HTTP ${res.status}`); continue; }
-    const t = textOf(await res.text());
-    const rows = t.map((l) => l.match(/^[A-Za-z]+(?: · Lv\. \d+)? · (Elyos|Asmodian)$/)?.[1]).filter(Boolean);
-    const head = t[t.findIndex((l) => /^Item Level \d+$/.test(l)) + 1];
-    const rs = byHref.get(h).sort((a, b) => a.product - b.product);
-    const ids = [...new Set(rs.map((r) => r.product))], uniq = [...new Set(rows)];
-    if (uniq.length === 1) rs.forEach((r) => (r.faction = uniq[0]));
-    else if (ids.length === 2 && (head === 'Elyos' || head === 'Asmodian')) rs.forEach((r) => (r.faction = r.product === ids[0] ? head : head === 'Elyos' ? 'Asmodian' : 'Elyos'));
-    else if (rows.length === rs.length) rs.forEach((r, i) => (r.faction = rows[i]));
-  }
-}));
-console.log('faction-specific recipes:', recipes.filter((r) => r.faction).length);
 
 // Dragon Lord "Splendent X" recipes (114, all mastery 0): the client table lists only the extra materials (e.g. 11 Fine Thick Balaur Horn
 // + 4 Wrathful Mind), but the item X itself is consumed too (owner, in game: Splendent Star Dragon Lord Greatsword needs a Star Dragon Lord
@@ -94,6 +72,14 @@ for (const r of recipes) {
   const base = recipes.find((b) => props.items[b.product].name === nm.replace(/^Splendent /, '') && b.faction === r.faction && b.type === r.type);
   if (base && !r.parts.some(([id]) => id === base.product)) r.parts = [[base.product, 1], ...r.parts];
 }
+
+// An item both factions craft with the same recipe has one Elyos and one Asmodian recipe id: keep a single recipe without a faction.
+const twin = (r) => JSON.stringify([r.product, r.qty, r.mastery, r.profession, r.combo, r.rate, r.parts]);
+const both = new Map();
+for (const r of recipes) (both.get(twin(r)) ?? both.set(twin(r), []).get(twin(r))).push(r);
+const merged = new Set();
+for (const g of both.values()) if (g.length === 2 && g[0].faction !== g[1].faction) { delete g[0].faction; merged.add(g[1]); }
+recipes.splice(0, recipes.length, ...recipes.filter((r) => !merged.has(r)));
 
 // Kina prices of NPC shops, for materials that are only bought from merchants (the "(Bound)" items). Cheapest shop wins.
 // Shop pages list rows as: name | grade | price | currency (some shops add a faction column), between the "Price" header and "Where to find it".
