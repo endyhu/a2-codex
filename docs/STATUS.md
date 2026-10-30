@@ -81,7 +81,7 @@
 - **Not done / open:** multi-recipe list (owner will decide later); plain recipes are shown at 100% success (the success chance is shown above the table, but not used in plain-craft costs); guides say a failed craft consumes its materials (the combo expected cost relies on it) but that is from secondary sites, not NCsoft; all 470 recipes were diffed against their metabot item pages (faction, profession, mastery, output, materials; 0 differences, Splendent base ingredient excluded); the combo item name rule is inferred; the tree visuals were checked at 360, 1920 and 3440 in an emulated viewport, not on a real phone.
 
 ## SEO (done)
-Sitemap via `@astrojs/sitemap`, `public/robots.txt`, canonical + Open Graph + Twitter tags in `Base.astro`, `public/og.png` (1200x630). Page titles start with "AION 2" plus the search phrase; `Base` appends "· AION 2 Codex" unless the title already contains "Codex". Submit the sitemap in Google Search Console / Bing Webmaster Tools after deploy.
+Sitemap via `@astrojs/sitemap`, `public/robots.txt`, canonical + Open Graph + Twitter tags in `Base.astro`, `public/og.png` (1200x630). Page titles start with "AION 2" plus the search phrase; `Base` appends "· AION 2 Codex" unless the title already contains "Codex". Submit the sitemap in Google Search Console / Bing Webmaster Tools after deploy. Google Search Console is verified by `public/googlecc61892ff083411c.html`; keep that file.
 
 ## Phone usability (done; desktop unchanged)
 - **Menu:** a tap outside the slide-in menu, a tap on one of its links or Escape closes it (the outside tap does not reach the page); the page behind does not scroll while it is open; the menu takes the visible height (no `100vh`, so the theme and GitHub buttons are not under a phone toolbar).
