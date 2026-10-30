@@ -1,10 +1,10 @@
 name: Refresh market prices
 
-# Rebuilds and deploys the site with a fresh public/market.json every 6 hours. Nothing is committed:
+# Rebuilds and deploys the site with a fresh public/market.json every 3 hours. Nothing is committed:
 # the snapshot in the repo is only the fallback used when the API is down.
 on:
   schedule:
-    - cron: '17 */6 * * *'
+    - cron: '17 */3 * * *'
   workflow_dispatch:
 
 permissions:
