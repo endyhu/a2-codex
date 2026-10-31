@@ -94,7 +94,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
     </div>
   </div>
 
-  <p class="meta sources">Recipes: the Global client's crafting tables, via <a href="https://metabot.gg/en/aion-2/crafting">metabot.gg</a>. Prices: the median over 7 days of the cheapest listed unit price per item and server (or the current cheapest, when set to Now), from the <a href="https://aion2.exchange/">Aion2Market</a> public API (same snapshot as Market). Merchant prices (Kina): the crafting, general and substance morph NPC shops, via <a href="https://metabot.gg/en/aion-2/shops">metabot.gg</a>. Craftable components can be crafted or bought. A combo item you craft counts at its expected cost; failed crafts are not counted. Profit and Margin sort by what the product sells for on your server (capped at the median of the servers that list it, minus the 10% tax and 2% listing fee) minus the cheaper of buying or crafting each material there.</p>
+  <p class="meta sources">Recipes: the Global client's crafting tables, via <a href="https://metabot.gg/en/aion-2/crafting">metabot.gg</a>. Prices: the median over 7 days of the cheapest listed unit price per item and server (or the current cheapest, when set to Now), from the <a href="https://aion2.exchange/">Aion2Market</a> public API (same snapshot as Market). Merchant prices (Kina): the crafting, general and substance morph NPC shops, via <a href="https://metabot.gg/en/aion-2/shops">metabot.gg</a>. Craftable components can be crafted or bought. A combo item you craft counts at its expected cost; failed crafts are not counted. Profit and Margin sort by what the product sells for on your server (capped at 2x the median of the servers that list it, minus the 10% tax and 2% listing fee) minus the cheaper of buying or crafting each material there.</p>
 </Base>
 
 <style is:global>
@@ -279,6 +279,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
     // Items with the same name can have different ids (one per faction), so names map to lists of ids.
     let idsByName = new Map<string, number[]>();
     const splendent = (nm: string) => (/^(Artisan's|Expert's) /.test(nm) ? nm.replace(/^(Artisan's|Expert's) /, '$1 Splendent ') : `Splendent ${nm}`);
+    const CAP = 2; // a sale price counts at most CAP x the pool median (server prices spread widely: a quarter of them are 1.3x the median or more, a tenth 1.9x)
     const KEEP = 0.88; // a sale keeps 88%: 10% tax and 2% listing fee
     const MERCHANT: Server = [0, 'Merchant', '', '', '', '', 0];
     let market: Market, craft: Craft, regionsEl = () => {};
@@ -368,7 +369,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
     type Sale = { units: number; avg: number; min: number; max: number; twin: boolean };
     type Gain = { profit: number; margin: number; stale?: number; capped?: boolean; ref?: Sale | null };
     // What the product is counted at: your server's price, but never above the median of the pool's servers (a lone high ask is not a sale). `over` = how far your server is above it.
-    const capAsk = (p: { me: Hit | null; med: Ref | null }) => { const m = p.me, over = m && p.med && m.price >= p.med.m * 1.1 ? m.price / p.med.m - 1 : undefined; return m ? { price: over ? p.med!.m : m.price, over, scope: p.med?.scope, stale: m.stale } : null; };
+    const capAsk = (p: { me: Hit | null; med: Ref | null }) => { const m = p.me, over = m && p.med && m.price > p.med.m * CAP ? m.price / p.med.m - 1 : undefined; return m ? { price: over ? p.med!.m * CAP : m.price, over, scope: p.med?.scope, stale: m.stale } : null; };
     // Sales of the product in the API's 28-day window (EU Kaisinel, an Elyos server, is the only server with them). A product with none uses the other faction's twin recipe of the same tier (Star Dragon Lord <-> True Dragon Lord).
     const soldFor = (ri: number): Sale | null => {
       const look = (pid: number, twin: boolean): Sale | null => {
@@ -636,7 +637,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
         else stat('Splendent: buy', kin(hit.price));
       }
       // the Splendent is counted at your server's price, but never above the median of the pool, like the base item
-      const spPrice = hit ? (() => { const m = priceOf(cid!).med; return m && hit.price >= m.m * 1.1 ? m.m : hit.price; })() : 0;
+      const spPrice = hit ? (() => { const m = priceOf(cid!).med; return m ? Math.min(hit.price, m.m * CAP) : hit.price; })() : 0;
       const money = (v: number) => `${v >= 0 ? '+' : '−'}${kin(Math.abs(v))}`;
       if (sell.me || sell.lo) {
         const mine = sell.me, eff = saleFor(ri), gross = (eff ? eff.price : sell.lo!.price) * made;
