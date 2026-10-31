@@ -355,7 +355,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
       count.textContent = `${nf.format(shown.length)} recipes`;
       listEl.innerHTML = shown.length ? shown.map((i) => {
         const r = craft.recipes[i], v = shown.filter((j) => craft.recipes[j].product === r.product), g = gain.get(i);
-        const gl = g ? `<small class="gain ${g.profit >= 0 ? 'ok' : 'warn'}"><span>${g.profit >= 0 ? '+' : '−'}${kin(Math.abs(g.profit))} · ${g.margin < 0 ? '−' : ''}${Math.abs(Math.round(g.margin))}%</span>${g.ref ? `<em>${nf.format(g.ref.units)} sold</em>` : ''}</small>` : '';
+        const gl = g ? `<small class="gain ${g.profit >= 0 ? 'ok' : 'warn'}"><span>${g.profit >= 0 ? '+' : '−'}${kin(Math.abs(g.profit))} · ${g.margin < 0 ? '−' : ''}${Math.abs(Math.round(g.margin))}%</span></small>` : '';
         return `<button type="button" data-i="${i}" aria-pressed="${keys[i] === state.sel}"><b>${esc(name(r.product))}</b><small>${r.profession}${r.level ? ` · Item level ${r.level}` : ""}${r.mastery ? ` · Mastery ${r.mastery}` : ""}${r.qty > 1 ? ` · makes ${r.qty}` : ''}${v.length > 1 ? ` · Recipe ${v.indexOf(i) + 1} of ${v.length}` : ''}</small>${gl}</button>`;
       }).join('') : '<p class="empty">No recipe matches.</p>';
     };
@@ -366,29 +366,16 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
     let pool = new Map<number, Server>();
     let priced = new Map<number, Record<Col, Hit | null> & { med: Ref | null }>();
     // Profit ranking: one craft sold on your server minus the materials there (cheaper of buy or craft, your Craft / Buy picks ignored).
-    type Sale = { units: number; avg: number; min: number; max: number; twin: boolean };
-    type Gain = { profit: number; margin: number; stale?: number; capped?: boolean; ref?: Sale | null };
+    type Gain = { profit: number; margin: number; stale?: number; capped?: boolean };
     // What the product is counted at: your server's price, but never above the median of the pool's servers (a lone high ask is not a sale). `over` = how far your server is above it.
     const capAsk = (p: { me: Hit | null; med: Ref | null }) => { const m = p.me, over = m && p.med && m.price > p.med.m * CAP ? m.price / p.med.m - 1 : undefined; return m ? { price: over ? p.med!.m * CAP : m.price, over, scope: p.med?.scope, stale: m.stale } : null; };
-    // Sales of the product in the API's 28-day window (EU Kaisinel, an Elyos server, is the only server with them). A product with none uses the other faction's twin recipe of the same tier (Star Dragon Lord <-> True Dragon Lord).
-    const soldFor = (ri: number): Sale | null => {
-      const look = (pid: number, twin: boolean): Sale | null => {
-        for (const id of [pid, ...(idsByName.get(name(pid)) ?? [])]) { const x = market.sold?.[id]; if (x) return { units: x[0], avg: x[1], min: x[2], max: x[3], twin }; }
-        return null;
-      };
-      const r = craft.recipes[ri], own = look(r.product, false);
-      if (own || !r.faction) return own;
-      const tw = craft.recipes.filter((t) => t.faction && t.faction !== r.faction && t.profession === r.profession && t.type === r.type && t.level === r.level && t.mastery === r.mastery);
-      return tw.length === 1 ? look(tw[0].product, true) : null;
-    };
-    // The sale price: your server's price, capped at the median ask of the servers that list it, and at the 28-day sales average when there is one.
+    // The sale price: your server's price, capped at the median ask of the servers that list it.
     // `est`: with no listing on your server, the pool median (else its cheapest listing) stands in.
     const saleFor = (ri: number, est = false) => {
-      const p = priceOfName(craft.recipes[ri].product), ref = soldFor(ri);
+      const p = priceOfName(craft.recipes[ri].product);
       const ask = capAsk(p) ?? (est && (p.med || p.lo) ? { price: p.med ? p.med.m : p.lo!.price, over: undefined, scope: p.med?.scope, stale: undefined } : null);
       if (!ask) return null;
-      const byAvg = !!ref && ref.avg < ask.price;
-      return { ...ask, price: byAvg ? ref!.avg : ask.price, byAvg, ref, mine: p.me };
+      return { ...ask, mine: p.me };
     };
     let ranking = false, gains = new Map<number, Gain | null>(), gainSig = '';
     const gainOf = (ri: number): Gain | null => {
@@ -402,7 +389,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
       ranking = true;
       try {
         const cost = !sell || (state.mast[r.profession] && r.mastery > state.mast[r.profession]) ? null : ownCost(ri, 'me');
-        if (sell && cost !== null && cost > 0) g = { profit: (sell.price * KEEP - cost) * r.qty, margin: (sell.price * KEEP - cost) / cost * 100, stale: sell.stale, capped: !!sell.over || sell.byAvg, ref: sell.ref };
+        if (sell && cost !== null && cost > 0) g = { profit: (sell.price * KEEP - cost) * r.qty, margin: (sell.price * KEEP - cost) / cost * 100, stale: sell.stale, capped: !!sell.over };
       } finally { ranking = false; }
       gains.set(ri, g);
       return g;
