@@ -94,7 +94,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
     </div>
   </div>
 
-  <p class="meta sources">Recipes: the Global client's crafting tables, via <a href="https://metabot.gg/en/aion-2/crafting">metabot.gg</a>. Prices: the median over 7 days of the cheapest listed unit price per item and server (or the current cheapest, when set to Now), from the <a href="https://aion2.exchange/">Aion2Market</a> public API (same snapshot as Market). Merchant prices (Kina): the crafting, general and substance morph NPC shops, via <a href="https://metabot.gg/en/aion-2/shops">metabot.gg</a>. Craftable components can be crafted or bought. A combo item you craft counts at its expected cost; failed crafts are not counted. Profit and Margin sort by what the product sells for on your server (capped at the median of the servers that list it) minus the cheaper of buying or crafting each material there.</p>
+  <p class="meta sources">Recipes: the Global client's crafting tables, via <a href="https://metabot.gg/en/aion-2/crafting">metabot.gg</a>. Prices: the median over 7 days of the cheapest listed unit price per item and server (or the current cheapest, when set to Now), from the <a href="https://aion2.exchange/">Aion2Market</a> public API (same snapshot as Market). Merchant prices (Kina): the crafting, general and substance morph NPC shops, via <a href="https://metabot.gg/en/aion-2/shops">metabot.gg</a>. Craftable components can be crafted or bought. A combo item you craft counts at its expected cost; failed crafts are not counted. Profit and Margin sort by what the product sells for on your server (capped at the median of the servers that list it, minus the 10% tax and 2% listing fee) minus the cheaper of buying or crafting each material there.</p>
 </Base>
 
 <style is:global>
@@ -277,6 +277,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
     // Items with the same name can have different ids (one per faction), so names map to lists of ids.
     let idsByName = new Map<string, number[]>();
     const splendent = (nm: string) => (/^(Artisan's|Expert's) /.test(nm) ? nm.replace(/^(Artisan's|Expert's) /, '$1 Splendent ') : `Splendent ${nm}`);
+    const KEEP = 0.88; // a sale keeps 88%: 10% tax and 2% listing fee
     const MERCHANT: Server = [0, 'Merchant', '', '', '', '', 0];
     let market: Market, craft: Craft, regionsEl = () => {};
     let keys: string[] = [], producers = new Map<number, number[]>(), comboSrc = new Map<string, number[]>(), shown: number[] = [];
@@ -396,7 +397,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
       ranking = true;
       try {
         const cost = !sell || (state.mast[r.profession] && r.mastery > state.mast[r.profession]) ? null : craftCost(ri, 'me');
-        if (sell && cost !== null && cost > 0) g = { profit: (sell.price - cost) * r.qty, margin: (sell.price - cost) / cost * 100, stale: sell.stale, capped: !!sell.over || sell.byAvg, ref: sell.ref };
+        if (sell && cost !== null && cost > 0) g = { profit: (sell.price * KEEP - cost) * r.qty, margin: (sell.price * KEEP - cost) / cost * 100, stale: sell.stale, capped: !!sell.over || sell.byAvg, ref: sell.ref };
       } finally { ranking = false; }
       gains.set(ri, g);
       return g;
@@ -605,32 +606,32 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
       else if (sc !== null) rateEl.innerHTML = `<b class="ok">${pc(sc)} success</b> at mastery ${lv}${lv > r.mastery ? ` (+${lv - r.mastery})` : ''}${cb !== null && r.combo > 0 ? ` · <span>Combo: ${pc(r.combo)} to activate, then ${pc(cb)} to succeed, about ${pc((sc * r.combo * cb) / 1e4)} of crafts end in the combo result</span>` : ''}`;
       else rateEl.textContent = '';
 
-      // Summary: craft or buy, what the product sells for, profit.
+      // Summary: craft or buy, the Splendent version that combos, what it sells for, profit.
       const stats: string[] = [];
       const stat = (label: string, value: string, cls = '', sub = '') => stats.push(`<div class="stat"><span>${label}</span><b${cls ? ` class="${cls}"` : ''}>${value}</b>${sub ? `<small>${sub}</small>` : ''}</div>`);
       // Crafting against buying: the cheaper side, what it saves, and both prices.
       const verdict = (label: string, craftC: number, buyC: number, note = '') => {
-        const d = buyC - craftC, win = d >= 0 ? 'Craft' : 'Buy';
-        stat(label, `${win} · saves ${kin(Math.abs(d))} (${Math.round(Math.abs(d) / Math.max(1, d >= 0 ? buyC : craftC) * 100)}%)`, 'ok', `Craft ${kin(craftC)}${note} · Buy ${kin(buyC)}`);
+        const d = buyC - craftC;
+        stat(label, d >= 0 ? 'Craft' : 'Buy', 'ok', `Saves ${kin(Math.abs(d))} (${Math.round(Math.abs(d) / Math.max(1, d >= 0 ? buyC : craftC) * 100)}%)<br>Craft ${kin(craftC)}${note} · Buy ${kin(buyC)}`);
       };
       const sell = priceOfName(r.product), buyNow = sell[ref];
-      if (buyNow && sum[ref] > 0 && !miss[ref]) verdict(`${esc(name(r.product))}${made > 1 ? ` ×${made}` : ''}`, sum[ref], buyNow.price * made);
-      if (sell.me || sell.lo) {
-        const mine = sell.me, eff = saleFor(ri);
-        stat('Sells for', eff ? kin(eff.price * made) : kin(sell.lo!.price * made));
-        if (mine && state.server && !miss.me) {
-          const profit = eff!.price * made - sum.me;
-          stat('Profit', `${profit >= 0 ? '+' : '−'}${kin(Math.abs(profit))}`, profit >= 0 ? 'ok' : 'warn');
-        }
-      }
+      if (buyNow && sum[ref] > 0 && !miss[ref]) verdict('Craft or buy', sum[ref], buyNow.price * made);
       // A combo swaps the output for the Splendent version of the item (one grade up), when the client has one:
       // its crafting cost is one craft's materials divided by the combo chance.
       const cids = r.combo > 0 ? idsByName.get(splendent(name(r.product))) ?? [] : [];
       const cid = cids.find((x) => priceOf(x)[ref]), hit = cid ? priceOf(cid)[ref] : null;
       if (cid && hit) {
         const p = comboChance(ri), one = craftCost(ri, ref);
-        if (p > 0 && one !== null) verdict(esc(splendent(name(r.product))), (one * r.qty) / p, hit.price, ` (${pc(p * 100)} combo)`);
-        else stat('If it combos', kin(hit.price));
+        if (p > 0 && one !== null) verdict('Splendent: craft or buy', (one * r.qty) / p, hit.price, ` (${pc(p * 100)} combo)`);
+        else stat('Splendent: buy', kin(hit.price));
+      }
+      if (sell.me || sell.lo) {
+        const mine = sell.me, eff = saleFor(ri), gross = (eff ? eff.price : sell.lo!.price) * made;
+        stat('Sells for', kin(gross), '', `${kin(gross * KEEP)} after fees`);
+        if (mine && state.server && !miss.me) {
+          const profit = gross * KEEP - sum.me;
+          stat('Profit', `${profit >= 0 ? '+' : '−'}${kin(Math.abs(profit))}`, profit >= 0 ? 'ok' : 'warn');
+        }
       }
       $('#stats').innerHTML = stats.join('');
     };
