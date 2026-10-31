@@ -382,8 +382,10 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
       return tw.length === 1 ? look(tw[0].product, true) : null;
     };
     // The sale price: your server's price, capped at the median ask of the servers that list it, and at the 28-day sales average when there is one.
-    const saleFor = (ri: number) => {
-      const p = priceOfName(craft.recipes[ri].product), ask = capAsk(p), ref = soldFor(ri);
+    // `est`: with no listing on your server, the pool median (else its cheapest listing) stands in.
+    const saleFor = (ri: number, est = false) => {
+      const p = priceOfName(craft.recipes[ri].product), ref = soldFor(ri);
+      const ask = capAsk(p) ?? (est && (p.med || p.lo) ? { price: p.med ? p.med.m : p.lo!.price, over: undefined, scope: p.med?.scope, stale: undefined } : null);
       if (!ask) return null;
       const byAvg = !!ref && ref.avg < ask.price;
       return { ...ask, price: byAvg ? ref!.avg : ask.price, byAvg, ref, mine: p.me };
@@ -474,8 +476,8 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
     // The market can list a product under another id than the recipe's (38 products, e.g. Splendent Star Dragon Lord Greatsword is 110130100 in the recipe and 110130021 on the market), so look it up by name too.
     const priceOfName = (id: number) => {
       const own = priceOf(id);
-      if (own.me || own.lo) return own;
-      for (const x of idsByName.get(name(id)) ?? []) { const p = priceOf(x); if (p.me || p.lo) return p; }
+      if (own.me || own.lo || own.med) return own;
+      for (const x of idsByName.get(name(id)) ?? []) { const p = priceOf(x); if (p.me || p.lo || p.med) return p; }
       return own;
     };
     // Cost of one unit of an item, taking the cheaper of buying and crafting it (or your Craft / Buy choice); null when something has no price.
@@ -618,10 +620,14 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
         const d = buyC - craftC;
         stat(label, d >= 0 ? 'Craft' : 'Buy', d >= 0 ? 'craft' : 'buy', `Saves ${kin(Math.abs(d))} (${Math.round(Math.abs(d) / Math.max(1, d >= 0 ? buyC : craftC) * 100)}%)<br>Craft ${kin(craftC)}${note} · Buy ${kin(buyC)}${buyNote}`);
       };
-      const sell = priceOfName(r.product), buyNow = sell[ref];
+      const sell = priceOfName(r.product);
+      // no listing on your server: the pool median (else the cheapest listing there is) stands in for the product's price
+      const sellEst = !!state.server && !sell.me && !!(sell.med || sell.lo);
+      const sellNote = sellEst ? (sell.med ? ' · median' : ' · cheapest elsewhere') : '';
+      const buyNow = sell[ref] ?? (sellEst ? { price: sell.med ? sell.med.m : sell.lo!.price, s: pool.get(state.server) ?? MERCHANT } : null);
       // whole cost of the crafts, whatever you already have, so the comparison stays fair
       const full = craftCost(ri, ref);
-      if (buyNow && full) verdict('Craft or buy', full * made, buyNow.price * made);
+      if (buyNow && full) verdict('Craft or buy', full * made, buyNow.price * made, '', sellNote);
       // A combo swaps the output for the Splendent version of the item (one grade up), when the client has one:
       // its crafting cost is one craft's materials divided by the combo chance.
       const cids = r.combo > 0 ? idsByName.get(splendent(name(r.product))) ?? [] : [];
@@ -632,7 +638,13 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
         const m = cid ? priceOf(cid).med : null;
         if (m) { hit = { price: m.m, s: pool.get(state.server) ?? MERCHANT }; est = true; }
       }
-      const estNote = est ? ' · median' : '';
+      // fewer than 3 listings, so no median: its cheapest listing on another server
+      let estNote = est ? ' · median' : '';
+      if (!hit) {
+        cid = cids.find((x) => priceOf(x).lo);
+        const l = cid ? priceOf(cid).lo : null;
+        if (l) { hit = { price: l.price, s: pool.get(state.server) ?? MERCHANT }; est = true; estNote = ' · cheapest elsewhere'; }
+      }
       let comboP = 0;
       if (cid && hit) {
         const p = comboChance(ri), one = craftCost(ri, ref);
@@ -647,18 +659,18 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
       // the Splendent is counted at your server's price, but never above the median of the pool, like the base item
       const spPrice = hit ? (() => { const m = priceOf(cid!).med; return m ? Math.min(hit.price, m.m * CAP) : hit.price; })() : 0;
       const money = (v: number) => `${v >= 0 ? '+' : '−'}${kin(Math.abs(v))}`;
-      if (sell.me || sell.lo) {
-        const mine = sell.me, eff = saleFor(ri), gross = (eff ? eff.price : sell.lo!.price) * made;
-        stat('Sells for · after fees', kin(gross * KEEP), '', `Listed at ${kin(gross)}${hit && comboP > 0 ? `<br>Splendent ${kin(spPrice * made * KEEP)} · listed at ${kin(spPrice * made)}${estNote}` : ''}`);
-        if (mine && state.server && !miss.me) {
+      if (sell.me || sell.lo || sellEst) {
+        const mine = sell.me, eff = saleFor(ri, sellEst), gross = (eff ? eff.price : sell.lo!.price) * made;
+        stat('Sells for · after fees', kin(gross * KEEP), '', `Listed at ${kin(gross)}${sellNote}${hit && comboP > 0 ? `<br>Splendent ${kin(spPrice * made * KEEP)} · listed at ${kin(spPrice * made)}${estNote}` : ''}`);
+        if ((mine || sellEst) && state.server && !miss.me) {
           const profit = gross * KEEP - sum.me;
           const cls = (v: number) => (v >= 0 ? 'ok' : 'warn');
           // Selling the Splendent item instead, and the average of both over the combo chance.
           const spl = hit && hit.s[0] === state.server && comboP > 0 ? spPrice * made * KEEP : 0;
           if (spl) {
             const win = spl - sum.me, avg = comboP * spl + (1 - comboP) * gross * KEEP - sum.me;
-            stat('Expected profit', money(avg), cls(avg), `Base item ${money(profit)}<br>If it combos ${money(win)} (${pc(comboP * 100)})`);
-          } else stat('Profit', money(profit), cls(profit));
+            stat('Expected profit', money(avg), cls(avg), `Base item ${money(profit)}<br>If it combos ${money(win)} (${pc(comboP * 100)})${sellNote ? `<br>Base item sale${sellNote}` : ''}`);
+          } else stat('Profit', money(profit), cls(profit), sellNote ? `Sale${sellNote}` : '');
         }
       }
       $('#stats').innerHTML = stats.join('');
