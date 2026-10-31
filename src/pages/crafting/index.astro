@@ -139,12 +139,6 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
   .cft .stat b { display: block; margin-top: 2px; font-size: 1.15rem; font-variant-numeric: tabular-nums; }
   .cft .stat b.ok { color: var(--ok); }
   .cft .stat b.warn { color: var(--warn); }
-  .cft .stat dl { display: grid; gap: 2px; margin: 4px 0 0; }
-  .cft .stat dl div { display: flex; justify-content: space-between; gap: 12px; font-variant-numeric: tabular-nums; }
-  .cft .stat dt { color: var(--muted); font-size: 0.8rem; }
-  .cft .stat dd { margin: 0; font-weight: 700; }
-  .cft .stat dd.ok { color: var(--ok); }
-  .cft .stat dd.warn { color: var(--warn); }
   .cft .stat small { display: block; margin-top: 1px; color: var(--muted); font-size: 0.76rem; }
   .cft .qty { display: flex; align-items: stretch; color: var(--muted); font-size: 0.74rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
   .cft .qty span { align-self: center; margin-right: 12px; }
@@ -644,8 +638,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
           const spl = hit && hit.s[0] === state.server && comboP > 0 ? hit.price * made * KEEP : 0;
           if (spl) {
             const win = spl - sum.me, avg = comboP * spl + (1 - comboP) * gross * KEEP - sum.me;
-            const row = (l: string, v: number) => `<div><dt>${l}</dt><dd class="${cls(v)}">${money(v)}</dd></div>`;
-            stats.push(`<div class="stat"><span>Profit</span><dl>${row('Base item', profit)}${row('If it combos', win)}${row(`Expected · ${pc(comboP * 100)} combo`, avg)}</dl></div>`);
+            stat('Expected profit', money(avg), cls(avg), `Base item ${money(profit)} · If it combos ${money(win)}<br>${pc(comboP * 100)} combo chance`);
           } else stat('Profit', money(profit), cls(profit));
         }
       }
