@@ -613,9 +613,9 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
       const stats: string[] = [];
       const stat = (label: string, value: string, cls = '', sub = '') => stats.push(`<div class="stat"><span>${label}</span><b${cls ? ` class="${cls}"` : ''}>${value}</b>${sub ? `<small>${sub}</small>` : ''}</div>`);
       // Crafting against buying: the cheaper side, what it saves, and both prices.
-      const verdict = (label: string, craftC: number, buyC: number, note = '') => {
+      const verdict = (label: string, craftC: number, buyC: number, note = '', buyNote = '') => {
         const d = buyC - craftC;
-        stat(label, d >= 0 ? 'Craft' : 'Buy', d >= 0 ? 'craft' : 'buy', `Saves ${kin(Math.abs(d))} (${Math.round(Math.abs(d) / Math.max(1, d >= 0 ? buyC : craftC) * 100)}%)<br>Craft ${kin(craftC)}${note} · Buy ${kin(buyC)}`);
+        stat(label, d >= 0 ? 'Craft' : 'Buy', d >= 0 ? 'craft' : 'buy', `Saves ${kin(Math.abs(d))} (${Math.round(Math.abs(d) / Math.max(1, d >= 0 ? buyC : craftC) * 100)}%)<br>Craft ${kin(craftC)}${note} · Buy ${kin(buyC)}${buyNote}`);
       };
       const sell = priceOfName(r.product), buyNow = sell[ref];
       // whole cost of the crafts, whatever you already have, so the comparison stays fair
@@ -624,7 +624,14 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
       // A combo swaps the output for the Splendent version of the item (one grade up), when the client has one:
       // its crafting cost is one craft's materials divided by the combo chance.
       const cids = r.combo > 0 ? idsByName.get(splendent(name(r.product))) ?? [] : [];
-      const cid = cids.find((x) => priceOf(x)[ref]), hit = cid ? priceOf(cid)[ref] : null;
+      // no listing on your server: counted at the pool median instead
+      let cid = cids.find((x) => priceOf(x)[ref]), hit = cid ? priceOf(cid)[ref] : null, est = false;
+      if (!hit) {
+        cid = cids.find((x) => priceOf(x).med);
+        const m = cid ? priceOf(cid).med : null;
+        if (m) { hit = { price: m.m, s: pool.get(state.server) ?? MERCHANT }; est = true; }
+      }
+      const estNote = est ? ' · median' : '';
       let comboP = 0;
       if (cid && hit) {
         const p = comboChance(ri), one = craftCost(ri, ref);
@@ -632,16 +639,16 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
         // two ways to craft it: the combo, or its own recipe (Dragon Lord Splendents: the item plus extra materials); the cheaper one counts
         const fac = myFaction(), own = cids.flatMap((x) => producers.get(x) ?? []).find((i) => !fac || !craft.recipes[i].faction || craft.recipes[i].faction === fac);
         const viaCombo = p > 0 && one !== null ? (one * r.qty) / p : null, viaRecipe = own === undefined ? null : craftCost(own, ref);
-        if (viaCombo !== null && (viaRecipe === null || viaCombo <= viaRecipe)) verdict('Splendent: craft or buy', viaCombo, hit.price, ` (${pc(p * 100)} combo)`);
-        else if (viaRecipe !== null) verdict('Splendent: craft or buy', viaRecipe, hit.price);
-        else stat('Splendent: buy', kin(hit.price));
+        if (viaCombo !== null && (viaRecipe === null || viaCombo <= viaRecipe)) verdict('Splendent: craft or buy', viaCombo, hit.price, ` (${pc(p * 100)} combo)`, estNote);
+        else if (viaRecipe !== null) verdict('Splendent: craft or buy', viaRecipe, hit.price, '', estNote);
+        else stat('Splendent: buy', kin(hit.price), '', est ? 'Median' : '');
       }
       // the Splendent is counted at your server's price, but never above the median of the pool, like the base item
       const spPrice = hit ? (() => { const m = priceOf(cid!).med; return m ? Math.min(hit.price, m.m * CAP) : hit.price; })() : 0;
       const money = (v: number) => `${v >= 0 ? '+' : '−'}${kin(Math.abs(v))}`;
       if (sell.me || sell.lo) {
         const mine = sell.me, eff = saleFor(ri), gross = (eff ? eff.price : sell.lo!.price) * made;
-        stat('Sells for · after fees', kin(gross * KEEP), '', `Listed at ${kin(gross)}${hit && comboP > 0 ? `<br>Splendent ${kin(spPrice * made * KEEP)} · listed at ${kin(spPrice * made)}` : ''}`);
+        stat('Sells for · after fees', kin(gross * KEEP), '', `Listed at ${kin(gross)}${hit && comboP > 0 ? `<br>Splendent ${kin(spPrice * made * KEEP)} · listed at ${kin(spPrice * made)}${estNote}` : ''}`);
         if (mine && state.server && !miss.me) {
           const profit = gross * KEEP - sum.me;
           const cls = (v: number) => (v >= 0 ? 'ok' : 'warn');
