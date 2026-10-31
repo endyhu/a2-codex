@@ -632,7 +632,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
         const fac = myFaction(), own = cids.flatMap((x) => producers.get(x) ?? []).find((i) => !fac || !craft.recipes[i].faction || craft.recipes[i].faction === fac);
         const viaCombo = p > 0 && one !== null ? (one * r.qty) / p : null, viaRecipe = own === undefined ? null : craftCost(own, ref);
         if (viaCombo !== null && (viaRecipe === null || viaCombo <= viaRecipe)) verdict('Splendent: craft or buy', viaCombo, hit.price, ` (${pc(p * 100)} combo)`);
-        else if (viaRecipe !== null) verdict('Splendent: craft or buy', viaRecipe, hit.price, ' (its recipe)');
+        else if (viaRecipe !== null) verdict('Splendent: craft or buy', viaRecipe, hit.price);
         else stat('Splendent: buy', kin(hit.price));
       }
       // the Splendent is counted at your server's price, but never above the median of the pool, like the base item
