@@ -620,17 +620,27 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
       // its crafting cost is one craft's materials divided by the combo chance.
       const cids = r.combo > 0 ? idsByName.get(splendent(name(r.product))) ?? [] : [];
       const cid = cids.find((x) => priceOf(x)[ref]), hit = cid ? priceOf(cid)[ref] : null;
+      let comboP = 0;
       if (cid && hit) {
         const p = comboChance(ri), one = craftCost(ri, ref);
+        comboP = p;
         if (p > 0 && one !== null) verdict('Splendent: craft or buy', (one * r.qty) / p, hit.price, ` (${pc(p * 100)} combo)`);
         else stat('Splendent: buy', kin(hit.price));
       }
+      const money = (v: number) => `${v >= 0 ? '+' : '−'}${kin(Math.abs(v))}`;
       if (sell.me || sell.lo) {
         const mine = sell.me, eff = saleFor(ri), gross = (eff ? eff.price : sell.lo!.price) * made;
         stat('Sells for', kin(gross), '', `${kin(gross * KEEP)} after fees`);
         if (mine && state.server && !miss.me) {
           const profit = gross * KEEP - sum.me;
-          stat('Profit', `${profit >= 0 ? '+' : '−'}${kin(Math.abs(profit))}`, profit >= 0 ? 'ok' : 'warn');
+          stat('Profit', money(profit), profit >= 0 ? 'ok' : 'warn');
+          // Selling the Splendent item instead, and the average of both over the combo chance.
+          const spl = hit && hit.s[0] === state.server && comboP > 0 ? hit.price * made * KEEP : 0;
+          if (spl) {
+            const win = spl - sum.me, avg = comboP * spl + (1 - comboP) * gross * KEEP - sum.me;
+            stat('Profit if it combos', money(win), win >= 0 ? 'ok' : 'warn');
+            stat('Expected profit', money(avg), avg >= 0 ? 'ok' : 'warn', `${pc(comboP * 100)} combo`);
+          }
         }
       }
       $('#stats').innerHTML = stats.join('');
