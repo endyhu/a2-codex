@@ -433,8 +433,9 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
       for (let i = 0; i < p.length; i += 3) {
         const s = pool.get(p[i]);
         if (!s) continue;
-        const typ = state.basis === 'median' ? typical(id, s[0]) : undefined, hit: Hit = { price: typ ?? p[i + 1], s };
-        if (typ !== undefined && Math.abs(typ - p[i + 1]) >= typ * 0.1) hit.now = p[i + 1];
+        // the median never counts above the listing you could buy right now
+        const typ = state.basis === 'median' ? typical(id, s[0]) : undefined, hit: Hit = { price: typ === undefined ? p[i + 1] : Math.min(typ, p[i + 1]), s };
+        if (typ !== undefined && p[i + 1] - typ >= typ * 0.1) hit.now = p[i + 1];
         if (s[0] === state.server) me = hit;
         list.push(hit);
       }
