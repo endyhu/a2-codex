@@ -401,7 +401,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
       let g: Gain | null = null;
       ranking = true;
       try {
-        const cost = !sell || (state.mast[r.profession] && r.mastery > state.mast[r.profession]) ? null : craftCost(ri, 'me');
+        const cost = !sell || (state.mast[r.profession] && r.mastery > state.mast[r.profession]) ? null : ownCost(ri, 'me');
         if (sell && cost !== null && cost > 0) g = { profit: (sell.price * KEEP - cost) * r.qty, margin: (sell.price * KEEP - cost) / cost * 100, stale: sell.stale, capped: !!sell.over || sell.byAvg, ref: sell.ref };
       } finally { ranking = false; }
       gains.set(ri, g);
@@ -466,13 +466,20 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
       const cands = comboSrc.get(name(id)) ?? [], bi = cands.find(mine) ?? cands[0], p = bi === undefined ? 0 : comboChance(bi);
       return bi !== undefined && p > 0 ? { ri: bi, p, combo: true } : undefined;
     };
-    // Expected cost of one item made this way (a combo takes 1 / p crafts of the base recipe per item).
+    // Chance that a craft succeeds at your mastery (1 for recipes with no success rate). A failed craft loses its materials.
+    const successOf = (ri: number) => {
+      const r = craft.recipes[ri], sc = rateAt(r.rate?.[0], r.mastery, state.mast[r.profession] || r.mastery);
+      return sc ? sc / 100 : 1;
+    };
+    // Expected cost of one item made this way (a combo takes 1 / p crafts of the base recipe per item, a plain craft 1 / success).
     const makeCost = (id: number, col: Col, depth = 0): number | null => {
       const src = source(id);
       if (!src) return null;
       const c = craftCost(src.ri, col, depth);
-      return c === null ? null : src.combo ? (c * craft.recipes[src.ri].qty) / src.p : c;
+      return c === null ? null : src.combo ? (c * craft.recipes[src.ri].qty) / src.p : c / successOf(src.ri);
     };
+    // Expected cost of one item of a recipe, failed crafts included.
+    const ownCost = (ri: number, col: Col) => { const c = craftCost(ri, col); return c === null ? null : c / successOf(ri); };
     // The market can list a product under another id than the recipe's (38 products, e.g. Splendent Star Dragon Lord Greatsword is 110130100 in the recipe and 110130021 on the market), so look it up by name too.
     const priceOfName = (id: number) => {
       const own = priceOf(id);
@@ -562,7 +569,8 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
       const body = nodes.map((x, i) => {
         if (cover >= 0 && x.depth <= cover) cover = -1;
         const qs = x.src ? craft.recipes[x.src.ri].qty : 1, part_ = x.kind === 'craft' && !x.src?.combo && x.n > 0 && x.n % qs !== 0;
-        const inc = cover >= 0, ev = x.kind === 'craft' && (!!x.src?.combo || part_) && !inc;
+        const fails = x.kind === 'craft' && !x.src?.combo && x.n > 0 && successOf(x.src!.ri) < 1;
+        const inc = cover >= 0, ev = x.kind === 'craft' && (!!x.src?.combo || part_ || fails) && !inc;
         if (ev) cover = x.depth;
         const name_ = name(x.id), p_ = priceOf(x.id);
         const bound = / \(Bound\)$/.test(name_) && !p_.lo;
@@ -580,7 +588,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
             if (x.n <= 0) return `<td class="na${cls ? ' ' + cls : ''}">—</td>`;
             if (u === null) { miss[col]++; return `<td class="na${cls ? ' ' + cls : ''}">—</td>`; }
             sum[col] += u * x.n;
-            return `<td class="made ev${cls ? ' ' + cls : ''}"><b>${kin(u * x.n)}</b><small>${part_ ? `${x.n}/${qs} of ${x.n < qs ? 'a craft' : 'crafts'} · makes ${qs}` : `expected · ${pc(x.src!.p * 100)} combo chance`}</small></td>`;
+            return `<td class="made ev${cls ? ' ' + cls : ''}"><b>${kin(u * x.n)}</b><small>${part_ ? `${x.n}/${qs} of ${x.n < qs ? 'a craft' : 'crafts'} · makes ${qs}` : x.src!.combo ? `expected · ${pc(x.src!.p * 100)} combo chance` : `expected · ${pc(successOf(x.src!.ri) * 100)} success`}</small></td>`;
           };
           return row + part(ref, '') + '</tr>';
         }
@@ -594,7 +602,8 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
       const total = (key: Col, cls = '') => `<td${cls ? ` class="${cls}"` : ''}>${sum[key] ? kin(sum[key]) : '—'}<small>${miss[key] ? `${miss[key]} without a price` : ''}</small></td>`;
       rowsEl.innerHTML = body.join('');
       const assumes = nodes.some((x) => x.kind === 'craft' && x.src?.combo), shares = nodes.some((x) => x.kind === 'craft' && !x.src?.combo && x.n > 0 && x.n % craft.recipes[x.src!.ri].qty !== 0);
-      foot.innerHTML = `<tr class="sum big"><th scope="row">Total${assumes || shares ? `<small class="cmb">${assumes ? 'Combo items count at expected cost' : 'Items from a craft that makes several count their share'}; the rows under them are one whole craft</small>` : ''}</th>${total(ref)}</tr>`;
+      const fails = nodes.some((x) => x.kind === 'craft' && !x.src?.combo && x.n > 0 && successOf(x.src!.ri) < 1);
+      foot.innerHTML = `<tr class="sum big"><th scope="row">Total${assumes || shares || fails ? `<small class="cmb">${fails ? 'Crafted items count at expected cost' : assumes ? 'Combo items count at expected cost' : 'Items from a craft that makes several count their share'}; the rows under them are one whole craft</small>` : ''}</th>${total(ref)}</tr>`;
       resetBtn.hidden = ![...have.values()].some((v) => v > 0);
       $('#title').textContent = name(r.product);
       const crafts = steps.get(ri)!, made = crafts * r.qty;
@@ -626,7 +635,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
       const sellNote = sellEst ? (sell.med ? ' · median' : ' · cheapest elsewhere') : '';
       const buyNow = sell[ref] ?? (sellEst ? { price: sell.med ? sell.med.m : sell.lo!.price, s: pool.get(state.server) ?? MERCHANT } : null);
       // whole cost of the crafts, whatever you already have, so the comparison stays fair
-      const full = craftCost(ri, ref);
+      const full = ownCost(ri, ref);
       if (buyNow && full) verdict('Craft or buy', full * made, buyNow.price * made, '', sellNote);
       // A combo swaps the output for the Splendent version of the item (one grade up), when the client has one:
       // its crafting cost is one craft's materials divided by the combo chance.
@@ -651,7 +660,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
         comboP = p;
         // two ways to craft it: the combo, or its own recipe (Dragon Lord Splendents: the item plus extra materials); the cheaper one counts
         const fac = myFaction(), own = cids.flatMap((x) => producers.get(x) ?? []).find((i) => !fac || !craft.recipes[i].faction || craft.recipes[i].faction === fac);
-        const viaCombo = p > 0 && one !== null ? (one * r.qty) / p : null, viaRecipe = own === undefined ? null : craftCost(own, ref);
+        const viaCombo = p > 0 && one !== null ? (one * r.qty) / p : null, viaRecipe = own === undefined ? null : ownCost(own, ref);
         if (viaCombo !== null && (viaRecipe === null || viaCombo <= viaRecipe)) verdict('Splendent: craft or buy', viaCombo, hit.price, ` (${pc(p * 100)} combo)`, estNote);
         else if (viaRecipe !== null) verdict('Splendent: craft or buy', viaRecipe, hit.price, '', estNote);
         else stat('Splendent: buy', kin(hit.price), '', est ? 'Median' : '');
@@ -662,15 +671,20 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
       if (sell.me || sell.lo || sellEst) {
         const mine = sell.me, eff = saleFor(ri, sellEst), gross = (eff ? eff.price : sell.lo!.price) * made;
         stat('Sells for · after fees', kin(gross * KEEP), '', `Listed at ${kin(gross)}${sellNote}${hit && comboP > 0 ? `<br>Splendent ${kin(spPrice * made * KEEP)} · listed at ${kin(spPrice * made)}${estNote}` : ''}`);
-        if ((mine || sellEst) && state.server && !miss.me) {
-          const profit = gross * KEEP - sum.me;
+        // the materials of every craft, whatever you already have (profit does not depend on your "have" counts)
+        const batch = (mine || sellEst) && state.server ? craftCost(ri, ref) : null;
+        if (batch !== null) {
+          const mats = batch * made, sc = successOf(ri);
           const cls = (v: number) => (v >= 0 ? 'ok' : 'warn');
-          // Selling the Splendent item instead, and the average of both over the combo chance.
+          // Selling the Splendent item instead, and the average of all outcomes of a craft: failed (nothing), base item, combo. A combo that fails is not credited.
           const spl = hit && hit.s[0] === state.server && comboP > 0 ? spPrice * made * KEEP : 0;
           if (spl) {
-            const win = spl - sum.me, avg = comboP * spl + (1 - comboP) * gross * KEEP - sum.me;
-            stat('Expected profit', money(avg), cls(avg), `Base item ${money(profit)}<br>If it combos ${money(win)} (${pc(comboP * 100)})${sellNote ? `<br>Base item sale${sellNote}` : ''}`);
-          } else stat('Profit', money(profit), cls(profit), sellNote ? `Sale${sellNote}` : '');
+            const base = gross * KEEP - mats, win = spl - mats, avg = comboP * spl + sc * (1 - r.combo / 100) * gross * KEEP - mats;
+            stat('Expected profit', money(avg), cls(avg), `Base item ${money(base)}<br>If it combos ${money(win)} (${pc(comboP * 100)})${sellNote ? `<br>Base item sale${sellNote}` : ''}`);
+          } else {
+            const profit = gross * KEEP - mats / sc;
+            stat('Profit', money(profit), cls(profit), sellNote ? `Sale${sellNote}` : '');
+          }
         }
       }
       $('#stats').innerHTML = stats.join('');
