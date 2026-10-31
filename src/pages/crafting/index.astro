@@ -18,7 +18,7 @@ typeIcons.Swords = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="2
 const professions:[string, string, string][] = [['all', 'All', layoutGrid], ['Blacksmithing', 'Blacksmithing', anvil], ['Armorsmithing', 'Armorsmithing', shield], ['Handicrafting', 'Handicrafting', gem], ['Alchemy', 'Alchemy', flask], ['Cooking', 'Cooking', pot]];
 const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asmodian', 'Asmodian']];
 ---
-<Base title="AION 2 Crafting Cost and Profit"description="Material cost of every AION 2 Global recipe on your server, the cheapest server and the most expensive one.">
+<Base title="AION 2 Crafting Cost and Profit"description="Material cost of every AION 2 Global recipe on your server, and whether crafting or buying the item is cheaper.">
   <h1 class="page-title">Crafting</h1>
 
   <div class="cft">
@@ -83,9 +83,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
             <thead>
               <tr>
                 <th scope="col"><div class="mh"><span>Material</span><span class="mh-r"><button type="button" class="rst" id="reset-have" title="Reset counts" aria-label="Reset counts" hidden set:html={rotateCcw} /></span></div></th>
-                <th scope="col" class="c-me">Your server</th>
-                <th scope="col">Cheapest</th>
-                <th scope="col">Most expensive</th>
+                <th scope="col" id="price-h">Your server</th>
               </tr>
             </thead>
             <tbody id="rows"></tbody>
@@ -160,9 +158,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
   .cft .lead { margin: 0 0 8px; }
   .cft .scroll { overflow-x: auto; }
   .cf { table-layout: fixed; width: 100%; --pad: 10px; --step: 26px; --c1: 255 85% 70%; --c2: 190 70% 52%; --c3: 38 90% 58%; --c4: 330 75% 66%; }
-  .cf th:nth-child(n+2) { width: 18%; }
-  .cf[data-me='0'] .c-me { display: none; }
-  .cf[data-me='0'] th:nth-child(n+2) { width: 22%; }
+  .cf th:nth-child(n+2) { width: 22%; }
   .cf td, .cf tbody th { overflow-wrap: anywhere; }
   .cf tbody th { text-transform: none; letter-spacing: normal; font-size: inherit; color: var(--text); text-align: left; }
   .cf td b, .cf th b { display: block; font-weight: 600; }
@@ -183,8 +179,6 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
   .cf .have:focus-visible { outline: none; box-shadow: inset 0 -2px 0 var(--accent); }
   .cf td.stale b { opacity: 0.6; }
   .cf td.stale small { font-style: italic; }
-  .cf td.lo b { color: var(--ok); }
-  .cf td.hi b { color: var(--warn); }
   /* one colour per nesting level: sub, sub-sub, ... */
   .cf tr.d1 { --c: var(--c1); }
   .cf tr.d2 { --c: var(--c2); }
@@ -234,7 +228,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
     .cf thead th { text-transform: none; letter-spacing: 0; font-size: 0.72rem; line-height: 1.25; vertical-align: bottom; }
     .cf { display: table; font-size: 0.78rem; --pad: 4px; --step: 9px; }
     .cf th, .cf td { padding: 6px 4px; }
-    .cf th:nth-child(n+2) { width: 20%; }
+    .cf th:nth-child(n+2) { width: 26%; }
     .cf .mat { gap: 4px 8px; }
     .cf tr.nest .mat { padding-left: 7px; }
     .cf .nm small.of { display: none; }
@@ -362,7 +356,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
       }).join('') : '<p class="empty">No recipe matches.</p>';
     };
 
-    type Col = 'me' | 'lo' | 'hi';
+    type Col = 'me' | 'lo';
     const modes = new Map<number, 'craft' | 'buy'>();
     const refCol = (): Col => (state.server ? 'me' : 'lo');
     let pool = new Map<number, Server>();
@@ -425,8 +419,8 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
       }
       return null;
     };
-    // What an item costs to buy in each column (your server, cheapest, most expensive). A merchant sells it at one price
-    // on every server, so it caps all three.
+    // What an item costs to buy: on your server, or the cheapest server of the filters when none is picked. A merchant sells it at one price
+    // on every server, so it caps both.
     const priceOf = (id: number): Record<Col, Hit | null> & { med: Ref | null } => {
       let got = priced.get(id);
       if (got) return got;
@@ -448,7 +442,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
       for (let i = 0; i < l.length; i += 3) { const s = pool.get(l[i]); if (s) old.push({ price: l[i + 1], s, stale: Math.max(1, Math.round(nowH - l[i + 2])) }); }
       old.sort((a, b) => a.price - b.price);
       if (!me) me = old.find((h) => h.s[0] === state.server) ?? null;
-      got = { med: refMedian(id), me: cap(me), lo: cap(list[0] ?? old[0] ?? null), hi: cap(list[list.length - 1] ?? old[old.length - 1] ?? null) };
+      got = { med: refMedian(id), me: cap(me), lo: cap(list[0] ?? old[0] ?? null) };
       priced.set(id, got);
       return got;
     };
@@ -475,8 +469,8 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
     // The market can list a product under another id than the recipe's (38 products, e.g. Splendent Star Dragon Lord Greatsword is 110130100 in the recipe and 110130021 on the market), so look it up by name too.
     const priceOfName = (id: number) => {
       const own = priceOf(id);
-      if (own.me || own.hi) return own;
-      for (const x of idsByName.get(name(id)) ?? []) { const p = priceOf(x); if (p.me || p.hi) return p; }
+      if (own.me || own.lo) return own;
+      for (const x of idsByName.get(name(id)) ?? []) { const p = priceOf(x); if (p.me || p.lo) return p; }
       return own;
     };
     // Cost of one unit of an item, taking the cheaper of buying and crafting it (or your Craft / Buy choice); null when something has no price.
@@ -545,8 +539,8 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
       priced = new Map();
       const steps = new Map<number, number>();
       const nodes = flat(build(ri, state.qty, 1, 0, '', steps));
-      const sum = { me: 0, lo: 0, hi: 0 };
-      const miss = { me: 0, lo: 0, hi: 0 };
+      const sum = { me: 0, lo: 0 };
+      const miss = { me: 0, lo: 0 };
       const cell = (hit: Hit | null, n: number, key: Col, cls: string, label: boolean, inc = false) => {
         if (n <= 0) return `<td class="na${cls ? ' ' + cls : ''}">—</td>`;
         if (!hit) { if (!inc) miss[key]++; return `<td class="na${cls ? ' ' + cls : ''}">—</td>`; }
@@ -556,15 +550,15 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
         return `<td class="${cls}${old ? ' stale' : ''}${inc ? ' inc' : ''}"><b>${kin(hit.price * n)}</b><small>${sub}</small></td>`;
       };
       const ref = refCol();
-      const need = new Map<number, number>(); // what is bought, for the best single server
+      $('#price-h').textContent = state.server ? 'Your server' : 'Cheapest server';
       let cover = -1; // depth of the combo item whose expected cost covers the rows below it
       const body = nodes.map((x, i) => {
         if (cover >= 0 && x.depth <= cover) cover = -1;
         const qs = x.src ? craft.recipes[x.src.ri].qty : 1, part_ = x.kind === 'craft' && !x.src?.combo && x.n > 0 && x.n % qs !== 0;
         const inc = cover >= 0, ev = x.kind === 'craft' && (!!x.src?.combo || part_) && !inc;
         if (ev) cover = x.depth;
-        const name_ = name(x.id), { me, lo, hi } = priceOf(x.id);
-        const bound = / \(Bound\)$/.test(name_) && !lo;
+        const name_ = name(x.id), p_ = priceOf(x.id);
+        const bound = / \(Bound\)$/.test(name_) && !p_.lo;
         let line = '';
         if (x.src) {
           const buy = priceOf(x.id)[ref]?.price ?? null, c = makeCost(x.id, ref), one = x.src.combo ? craftCost(x.src.ri, ref) : null, first = one === null ? c : one * craft.recipes[x.src.ri].qty;
@@ -581,21 +575,19 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
             sum[col] += u * x.n;
             return `<td class="made ev${cls ? ' ' + cls : ''}"><b>${kin(u * x.n)}</b><small>${part_ ? `${x.n}/${qs} of ${x.n < qs ? 'a craft' : 'crafts'} · makes ${qs}` : `expected · ${pc(x.src!.p * 100)} combo chance`}</small></td>`;
           };
-          return row + part('me', 'c-me') + part('lo', '') + part('hi', '') + '</tr>';
+          return row + part(ref, '') + '</tr>';
         }
         if (x.kind === 'craft') {
           const part = (col: Col, cls: string) => { const t = subtotal(x, col); return `<td class="made${cls ? ' ' + cls : ''}">${x.n > 0 && t ? `<b>${kin(t)}</b><small>${x.src?.combo ? 'first try' : 'crafted'} · ${nf.format(x.crafts)} ${x.crafts === 1 ? 'craft' : 'crafts'}</small>` : '—'}</td>`; };
-          return row + part('me', 'c-me') + part('lo', '') + part('hi', '') + '</tr>';
+          return row + part(ref, '') + '</tr>';
         }
-        if (x.n > 0 && priceOf(x.id).lo) need.set(x.id, (need.get(x.id) ?? 0) + x.n);
-        if (bound) { if (x.n > 0 && !inc) { miss.me++; miss.lo++; miss.hi++; } return row + `<td class="na c-me">—</td><td class="na">—</td><td class="na">—</td></tr>`; }
-        return row + cell(me, x.n, 'me', 'c-me', false, inc) + cell(lo, x.n, 'lo', 'lo', true, inc) + cell(hi, x.n, 'hi', 'hi', true, inc) + '</tr>';
+        if (bound) { if (x.n > 0 && !inc) miss[ref]++; return row + `<td class="na">—</td></tr>`; }
+        return row + cell(p_[ref], x.n, ref, '', ref === 'lo', inc) + '</tr>';
       });
       const total = (key: Col, cls = '') => `<td${cls ? ` class="${cls}"` : ''}>${sum[key] ? kin(sum[key]) : '—'}<small>${miss[key] ? `${miss[key]} without a price` : ''}</small></td>`;
       rowsEl.innerHTML = body.join('');
       const assumes = nodes.some((x) => x.kind === 'craft' && x.src?.combo), shares = nodes.some((x) => x.kind === 'craft' && !x.src?.combo && x.n > 0 && x.n % craft.recipes[x.src!.ri].qty !== 0);
-      foot.innerHTML = `<tr class="sum big"><th scope="row">Total${assumes || shares ? `<small class="cmb">${assumes ? 'Combo items count at expected cost' : 'Items from a craft that makes several count their share'}; the rows under them are one whole craft</small>` : ''}</th>${total('me', 'c-me')}${total('lo')}${total('hi')}</tr>`;
-      table.dataset.me = String(state.server ? 1 : 0);
+      foot.innerHTML = `<tr class="sum big"><th scope="row">Total${assumes || shares ? `<small class="cmb">${assumes ? 'Combo items count at expected cost' : 'Items from a craft that makes several count their share'}; the rows under them are one whole craft</small>` : ''}</th>${total(ref)}</tr>`;
       resetBtn.hidden = ![...have.values()].some((v) => v > 0);
       $('#title').textContent = name(r.product);
       const crafts = steps.get(ri)!, made = crafts * r.qty;
@@ -613,40 +605,33 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
       else if (sc !== null) rateEl.innerHTML = `<b class="ok">${pc(sc)} success</b> at mastery ${lv}${lv > r.mastery ? ` (+${lv - r.mastery})` : ''}${cb !== null && r.combo > 0 ? ` · <span>Combo: ${pc(r.combo)} to activate, then ${pc(cb)} to succeed, about ${pc((sc * r.combo * cb) / 1e4)} of crafts end in the combo result</span>` : ''}`;
       else rateEl.textContent = '';
 
-      // Summary: best single server, what the product sells for, profit.
+      // Summary: craft or buy, what the product sells for, profit.
       const stats: string[] = [];
-      const stat = (label: string, value: string, cls = '') => stats.push(`<div class="stat"><span>${label}</span><b${cls ? ` class="${cls}"` : ''}>${value}</b></div>`);
-      let best: { s: Server; sum: number; miss: number } | null = null;
-      if (need.size) {
-        for (const s of pool.values()) {
-          let t = 0, m = 0;
-          for (const [id, n] of need) {
-            const p = market.prices[id] ?? [], shop = craft.vendor[id];
-            let price = shop ?? Infinity;
-            for (let i = 0; i < p.length; i += 3) if (p[i] === s[0]) price = Math.min(price, (state.basis === 'median' ? typical(id, s[0]) : undefined) ?? p[i + 1]);
-            if (price === Infinity) m++; else t += price * n;
-          }
-          if (!best || m < best.miss || (m === best.miss && t < best.sum)) best = { s, sum: t, miss: m };
-        }
-      }
-      const sell = priceOfName(r.product);
-      if (sell.me || sell.hi) {
+      const stat = (label: string, value: string, cls = '', sub = '') => stats.push(`<div class="stat"><span>${label}</span><b${cls ? ` class="${cls}"` : ''}>${value}</b>${sub ? `<small>${sub}</small>` : ''}</div>`);
+      // Crafting against buying: the cheaper side, what it saves, and both prices.
+      const verdict = (label: string, craftC: number, buyC: number, note = '') => {
+        const d = buyC - craftC, win = d >= 0 ? 'Craft' : 'Buy';
+        stat(label, `${win} · saves ${kin(Math.abs(d))} (${Math.round(Math.abs(d) / Math.max(1, d >= 0 ? buyC : craftC) * 100)}%)`, 'ok', `Craft ${kin(craftC)}${note} · Buy ${kin(buyC)}`);
+      };
+      const sell = priceOfName(r.product), buyNow = sell[ref];
+      if (buyNow && sum[ref] > 0 && !miss[ref]) verdict(`${esc(name(r.product))}${made > 1 ? ` ×${made}` : ''}`, sum[ref], buyNow.price * made);
+      if (sell.me || sell.lo) {
         const mine = sell.me, eff = saleFor(ri);
-        stat('Sells for', eff ? kin(eff.price * made) : kin(sell.hi!.price * made));
+        stat('Sells for', eff ? kin(eff.price * made) : kin(sell.lo!.price * made));
         if (mine && state.server && !miss.me) {
           const profit = eff!.price * made - sum.me;
           stat('Profit', `${profit >= 0 ? '+' : '−'}${kin(Math.abs(profit))}`, profit >= 0 ? 'ok' : 'warn');
         }
       }
-      // A combo swaps the output for the Splendent version of the item (one grade up), when the client has one.
+      // A combo swaps the output for the Splendent version of the item (one grade up), when the client has one:
+      // its crafting cost is one craft's materials divided by the combo chance.
       const cids = r.combo > 0 ? idsByName.get(splendent(name(r.product))) ?? [] : [];
-      const cid = cids.find((x) => priceOf(x).me || priceOf(x).hi), cmb = cid ? priceOf(cid) : null;
-      if (cid && cmb && (cmb.me || cmb.hi)) {
-        const hit = cmb.me ?? cmb.hi!;
-        stat('If it combos', kin(hit.price));
+      const cid = cids.find((x) => priceOf(x)[ref]), hit = cid ? priceOf(cid)[ref] : null;
+      if (cid && hit) {
+        const p = comboChance(ri), one = craftCost(ri, ref);
+        if (p > 0 && one !== null) verdict(esc(splendent(name(r.product))), (one * r.qty) / p, hit.price, ` (${pc(p * 100)} combo)`);
+        else stat('If it combos', kin(hit.price));
       }
-      // last: it matters least
-      if (best) stat(`Cheapest server · ${esc(best.s[1])}`, kin(best.sum));
       $('#stats').innerHTML = stats.join('');
     };
 
