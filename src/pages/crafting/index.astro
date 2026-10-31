@@ -632,7 +632,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
       const money = (v: number) => `${v >= 0 ? '+' : '−'}${kin(Math.abs(v))}`;
       if (sell.me || sell.lo) {
         const mine = sell.me, eff = saleFor(ri), gross = (eff ? eff.price : sell.lo!.price) * made;
-        stat('Sells for', kin(gross), '', `${kin(gross * KEEP)} after fees${hit && comboP > 0 ? `<br>Splendent ${kin(hit.price * made)} · ${kin(hit.price * made * KEEP)} after fees` : ''}`);
+        stat('Sells for · after fees', kin(gross * KEEP), '', `Listed at ${kin(gross)}${hit && comboP > 0 ? `<br>Splendent ${kin(hit.price * made * KEEP)} · listed at ${kin(hit.price * made)}` : ''}`);
         if (mine && state.server && !miss.me) {
           const profit = gross * KEEP - sum.me;
           const cls = (v: number) => (v >= 0 ? 'ok' : 'warn');
