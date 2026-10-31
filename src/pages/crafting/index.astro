@@ -615,7 +615,9 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
         stat(label, d >= 0 ? 'Craft' : 'Buy', 'ok', `Saves ${kin(Math.abs(d))} (${Math.round(Math.abs(d) / Math.max(1, d >= 0 ? buyC : craftC) * 100)}%)<br>Craft ${kin(craftC)}${note} · Buy ${kin(buyC)}`);
       };
       const sell = priceOfName(r.product), buyNow = sell[ref];
-      if (buyNow && sum[ref] > 0 && !miss[ref]) verdict('Craft or buy', sum[ref], buyNow.price * made);
+      // whole cost of the crafts, whatever you already have, so the comparison stays fair
+      const full = craftCost(ri, ref);
+      if (buyNow && full) verdict('Craft or buy', full * made, buyNow.price * made);
       // A combo swaps the output for the Splendent version of the item (one grade up), when the client has one:
       // its crafting cost is one craft's materials divided by the combo chance.
       const cids = r.combo > 0 ? idsByName.get(splendent(name(r.product))) ?? [] : [];
