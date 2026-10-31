@@ -134,6 +134,8 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
   .cft .rate b.warn { color: var(--warn); }
   .cft .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 8px; margin: 0 0 14px; }
   .cft .stats:empty { display: none; }
+  .cft .stats .grp { grid-column: 1 / -1; margin: 4px 0 -2px; color: var(--muted); font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+  .cft .stats .grp:first-child { margin-top: 0; }
   .cft .stat { padding: 9px 12px; background: var(--panel); border: 1px solid var(--line); border-radius: 3px; min-width: 0; }
   .cft .stat span { display: block; color: var(--muted); font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
   .cft .stat b { display: block; margin-top: 2px; font-size: 1.15rem; font-variant-numeric: tabular-nums; }
@@ -607,12 +609,14 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
       else rateEl.textContent = '';
 
       // Summary: craft or buy, the Splendent version that combos, what it sells for, profit.
-      const stats: string[] = [];
+      // two groups: what it costs to get the item, and what you earn selling it
+      const get: string[] = [], earn: string[] = [];
+      let stats = get;
       const stat = (label: string, value: string, cls = '', sub = '') => stats.push(`<div class="stat"><span>${label}</span><b${cls ? ` class="${cls}"` : ''}>${value}</b>${sub ? `<small>${sub}</small>` : ''}</div>`);
       // Crafting against buying: the cheaper side, what it saves, and both prices.
       const verdict = (label: string, craftC: number, buyC: number, note = '') => {
         const d = buyC - craftC;
-        stat(label, d >= 0 ? 'Craft' : 'Buy', 'ok', `Saves ${kin(Math.abs(d))} (${Math.round(Math.abs(d) / Math.max(1, d >= 0 ? buyC : craftC) * 100)}%)<br>Craft ${kin(craftC)}${note} · Buy ${kin(buyC)}`);
+        stat(label, d >= 0 ? 'Craft' : 'Buy', '', `Saves ${kin(Math.abs(d))} (${Math.round(Math.abs(d) / Math.max(1, d >= 0 ? buyC : craftC) * 100)}%)<br>Craft ${kin(craftC)}${note} · Buy ${kin(buyC)}`);
       };
       const sell = priceOfName(r.product), buyNow = sell[ref];
       // whole cost of the crafts, whatever you already have, so the comparison stays fair
@@ -629,22 +633,26 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
         if (p > 0 && one !== null) verdict('Splendent: craft or buy', (one * r.qty) / p, hit.price, ` (${pc(p * 100)} combo)`);
         else stat('Splendent: buy', kin(hit.price));
       }
+      stats = earn;
+      // the Splendent is counted at your server's price, but never above the median of the pool, like the base item
+      const spPrice = hit ? (() => { const m = priceOf(cid!).med; return m && hit.price >= m.m * 1.1 ? m.m : hit.price; })() : 0;
       const money = (v: number) => `${v >= 0 ? '+' : '−'}${kin(Math.abs(v))}`;
       if (sell.me || sell.lo) {
         const mine = sell.me, eff = saleFor(ri), gross = (eff ? eff.price : sell.lo!.price) * made;
-        stat('Sells for · after fees', kin(gross * KEEP), '', `Listed at ${kin(gross)}${hit && comboP > 0 ? `<br>Splendent ${kin(hit.price * made * KEEP)} · listed at ${kin(hit.price * made)}` : ''}`);
+        stat('Sells for · after fees', kin(gross * KEEP), '', `Listed at ${kin(gross)}${hit && comboP > 0 ? `<br>Splendent ${kin(spPrice * made * KEEP)} · listed at ${kin(spPrice * made)}` : ''}`);
         if (mine && state.server && !miss.me) {
           const profit = gross * KEEP - sum.me;
           const cls = (v: number) => (v >= 0 ? 'ok' : 'warn');
           // Selling the Splendent item instead, and the average of both over the combo chance.
-          const spl = hit && hit.s[0] === state.server && comboP > 0 ? hit.price * made * KEEP : 0;
+          const spl = hit && hit.s[0] === state.server && comboP > 0 ? spPrice * made * KEEP : 0;
           if (spl) {
             const win = spl - sum.me, avg = comboP * spl + (1 - comboP) * gross * KEEP - sum.me;
             stat('Expected profit', money(avg), cls(avg), `Base item ${money(profit)}<br>If it combos ${money(win)} (${pc(comboP * 100)})`);
           } else stat('Profit', money(profit), cls(profit));
         }
       }
-      $('#stats').innerHTML = stats.join('');
+      const grp = (t: string, l: string[]) => (l.length ? `<p class="grp">${t}</p>${l.join('')}` : '');
+      $('#stats').innerHTML = grp('Get it', get) + grp('Sell it', earn);
     };
 
     const syncServers = () => {
