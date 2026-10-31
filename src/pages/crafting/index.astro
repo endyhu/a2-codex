@@ -117,7 +117,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
   .cft .rl small.gain { display: flex; justify-content: space-between; gap: 8px; margin-top: 1px; font-weight: 600; font-variant-numeric: tabular-nums; }
   .cft .rl small.gain em { flex: none; color: var(--muted); font-style: normal; font-weight: 400; }
   .cft .rl small.gain.ok { color: var(--ok); }
-  .cft .rl small.gain.warn { color: var(--warn); }
+  .cft .rl small.gain.warn { color: var(--loss); }
   .cft .rl { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: 4px 8px; max-height: 300px; overflow-y: auto; overscroll-behavior: contain; padding-right: 4px; }
   .cft .rl button { display: block; min-width: 0; padding: 6px 10px; text-align: left; background: var(--panel); border: 1px solid var(--line); border-radius: 3px; color: var(--text); font: inherit; cursor: pointer; transition: border-color 0.15s, background 0.15s; }
   .cft .rl button:hover, .cft .rl button:focus-visible { background: var(--panel-2); border-color: color-mix(in srgb, var(--accent) 55%, transparent); outline: none; }
@@ -138,9 +138,9 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
   .cft .stat span { display: block; color: var(--muted); font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
   .cft .stat b { display: block; margin-top: 2px; font-size: 1.15rem; font-variant-numeric: tabular-nums; }
   .cft .stat b.ok { color: var(--ok); }
-  .cft .stat b.warn { color: var(--warn); }
-  .cft .stat b.craft { color: var(--ok); }
-  .cft .stat b.buy { color: var(--accent); }
+  .cft .stat b.warn { color: var(--loss); }
+  .cft .stat b.craft { color: var(--cyan); }
+  .cft .stat b.buy { color: var(--ok); }
   .cft .stat small { display: block; margin-top: 1px; color: var(--muted); font-size: 0.76rem; }
   .cft .qty { display: flex; align-items: stretch; color: var(--muted); font-size: 0.74rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
   .cft .qty span { align-self: center; margin-right: 12px; }

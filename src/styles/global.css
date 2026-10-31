@@ -9,6 +9,8 @@
   --accent-soft: rgba(139, 123, 255, 0.14);
   --ok: #4fd1a1;
   --warn: #f2b84b;
+  --loss: #f26d6d;
+  --cyan: #4cc6e6;
   --radius: 14px;
   --side: 248px;
   color-scheme: dark;
@@ -24,6 +26,8 @@
   --accent-soft: rgba(91, 71, 232, 0.1);
   --ok: #0f8a5f;
   --warn: #9a6200;
+  --loss: #c93a3a;
+  --cyan: #0a7ea0;
   color-scheme: light;
 }
 * { box-sizing: border-box; }
