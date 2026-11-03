@@ -62,8 +62,9 @@ export function prep(b: RawBoard): Board {
 // PvE scores the remaining standard stats in one soft-weighted tier; PvP gives each its own strict tier and counts every orange.
 // Azphel and Ariel stats always get one strict tier per stat. Each pool is solved on its own, so pools may share tier slots.
 // Ignored skills score nothing, so they are never a reason to take a tile.
-// A must-have tile in `uncounted` (past its skill's level limit) scores like any other skill tile.
-export function weigh(boards: Board[], mode: Mode, mustHave: string[], D: GameData, ignored: string[] = [], uncounted: Set<Node> = new Set()) {
+// `limits` (skill key -> levels wanted) makes a must-have count only its first N levels. Its tiles then weigh like any other skill tile
+// and `bonus` holds the correction per counted level (must-have tier up, ordinary tier down), which solve() applies to the first N levels only.
+export function weigh(boards: Board[], mode: Mode, mustHave: string[], D: GameData, ignored: string[] = [], limits: Record<string, number> = {}) {
   const pvp = mode === 'pvp';
   const AZPHEL_ATTACK = 0, AZPHEL_DEFENSE = 1, ARIEL_ATTACK = 2, ARIEL_DEFENSE = 3, keyStart = 4;
   // The Aion 2 Bible: key actives first, then the important orange tiles; key passives come after.
@@ -73,6 +74,8 @@ export function weigh(boards: Board[], mode: Mode, mustHave: string[], D: GameDa
   const crit = attack + 1, otherPassive = attack + 2, otherActive = attack + 3, statStart = attack + 4;
   const T = statStart + Math.max(STAT_ORDER.length, AZPHEL_STAT_ORDER.length, ARIEL_STAT_ORDER.length);
   const keyTier = Object.fromEntries([...keyActives.map((k, i) => [k, keyStart + i]), ...keyPassives.map((k, i) => [k, passiveStart + i])]);
+  const bonus: Record<string, Float64Array> = {};
+  for (const k of mustHave) if (limits[k] > 0) { bonus[k] = new Float64Array(T); bonus[k][keyTier[k]] = 1; bonus[k][isActive(k) ? otherActive : otherPassive] = -1; }
   const present = (pool: Pool) => {
     const s = new Set<string>();
     for (const b of boards) if (b.p === pool) for (const o of b.N) if (o.cost && o.cost < 4) for (const [k] of o.e) if (!isSkill(k)) s.add(k);
@@ -98,7 +101,7 @@ export function weigh(boards: Board[], mode: Mode, mustHave: string[], D: GameDa
       if (isSkill(k)) {
         if (ignored.includes(k)) continue;
         const active = D.skc[k.slice(2)] === 'active';
-        o.w[(uncounted.has(o) ? undefined : keyTier[k]) ?? (active ? otherActive : otherPassive)] += x;
+        o.w[(k in bonus ? undefined : keyTier[k]) ?? (active ? otherActive : otherPassive)] += x;
         continue;
       }
       const std = b.p === 'c', i = orders[b.p].indexOf(k);
@@ -108,7 +111,7 @@ export function weigh(boards: Board[], mode: Mode, mustHave: string[], D: GameDa
       else if (i >= 0) o.w[statStart + i] += x / D.ref[k];
     }
   }
-  return T;
+  return { T, bonus };
 }
 
 // Sweep orders for the frontier plan.
@@ -295,46 +298,60 @@ const vecCmp = (a: ArrayLike<number>, b: ArrayLike<number>) => { for (let i = 0;
 // How long the solver may run before it hands control back to the page (ms).
 const YIELD_AFTER = 40;
 
-interface Option { cost: number; S: Uint8Array; v: Float64Array }
+// cnt: levels taken of each limited skill (saturating at its limit), in the order of the pool's `caps`.
+interface Option { cost: number; S: Uint8Array; v: Float64Array; cnt: number[] }
+// A limited must-have on one pool: x is the most levels that count (never above the tiles the pool has).
+interface Cap { key: string; x: number; bonus: Float64Array }
+const tilesOf = (b: Board, key: string) => b.N.filter((o) => o.cost && o.e.some(([k]) => k === key));
 
 // Per-board DP: best route for every exact crystal cost, then the Pareto front over cost.
-async function boardOptions(b: Board, T: number, cap: number, stale: () => boolean): Promise<Option[]> {
+// Limited skills add a counter to the state (levels taken, saturating at the limit), so every (cost, counts) pair gets its own best route.
+async function boardOptions(b: Board, T: number, cap: number, caps: Cap[], stale: () => boolean): Promise<Option[]> {
   const n = b.N.length, cost = Int32Array.from(b.N, (o) => o.cost);
   const sumVec = (sel: Uint8Array) => { const v = new Float64Array(T); for (let j = 0; j < n; j++) if (sel[j]) for (let k = 0; k < T; k++) v[k] += b.N[j].w[k]; return v; };
   const startOnly = new Uint8Array(n);
   startOnly[b.start] = 1;
-  const opts: Option[] = [{ cost: 0, S: startOnly, v: sumVec(startOnly) }];
+  const opts: Option[] = [{ cost: 0, S: startOnly, v: sumVec(startOnly), cnt: caps.map(() => 0) }];
   if (cap <= 0) return opts;
   const plan = getPlan(b), { W, nodeWords } = packBoard(b, T);
-  const BackT = plan.maxStates * 2 + 2 < 65535 ? Uint16Array : Int32Array;
+  const digs = caps.map((c) => Math.min(c.x, tilesOf(b, c.key).length)), stride: number[] = [];
+  let R = 1;
+  for (const d of digs) { stride.push(R); R *= d + 1; }
+  // Which limited skill each tile belongs to (-1 none).
+  const skillOf = Int32Array.from(b.N, (o) => (o.cost ? caps.findIndex((c, i) => digs[i] > 0 && o.e.some(([k]) => k === c.key)) : -1));
+  const BackT = plan.maxStates * 2 * R + 2 < 65535 ? Uint16Array : Int32Array;
   const zero = new Float64Array(W), backs: { back: Uint16Array | Int32Array; Kn: number }[] = [];
   // Two reusable value buffers (ping-pong) instead of one allocation per layer.
   let maxLen = 1, cum = 0;
-  for (let t = 0; t < n; t++) { cum += cost[plan.layers[t].v]; maxLen = Math.max(maxLen, plan.layers[t].nNew * (Math.min(cap, cum) + 1) * W); }
+  for (let t = 0; t < n; t++) { cum += cost[plan.layers[t].v]; maxLen = Math.max(maxLen, plan.layers[t].nNew * R * (Math.min(cap, cum) + 1) * W); }
   let bufA = new Float64Array(maxLen), bufB = new Float64Array(maxLen);
-  let pv = new Float64Array(W), Kp = 0;
+  let pv = new Float64Array(R * W).fill(-1), Kp = 0;
+  pv.fill(0, 0, W);
   cum = 0;
   let lastYield = Date.now();
   for (let t = 0; t < n; t++) {
     const layer = plan.layers[t], v = layer.v, cv = cost[v];
     cum += cv;
     const Kn = Math.min(cap, cum), stN = Kn + 1, stP = Kp + 1;
-    const nv = bufA.subarray(0, layer.nNew * stN * W).fill(-1), back = new BackT(layer.nNew * stN);
+    const nv = bufA.subarray(0, layer.nNew * R * stN * W).fill(-1), back = new BackT(layer.nNew * R * stN);
     const { trans, nPrev } = layer, add = nodeWords.subarray(v * W, v * W + W);
     for (let sp = 0; sp < nPrev; sp++) {
       for (let c = 0; c < 2; c++) {
         const sn = trans[sp * 2 + c];
         if (sn < 0) continue;
-        const dc = c ? cv : 0, kmax = Math.min(Kp, Kn - dc), a = c ? add : zero, code = sp * 2 + c;
-        for (let k = 0; k <= kmax; k++) {
-          const po = (sp * stP + k) * W;
-          if (pv[po] < 0) continue;
-          const idx = sn * stN + k + dc, no = idx * W;
-          let better = nv[no] < 0;
-          if (!better) {
-            for (let i = 0; i < W; i++) { const d = pv[po + i] + a[i] - nv[no + i]; if (d > EPS) { better = true; break; } if (d < -EPS) break; }
+        const dc = c ? cv : 0, kmax = Math.min(Kp, Kn - dc), a = c ? add : zero, si = c ? skillOf[v] : -1;
+        for (let r = 0; r < R; r++) {
+          const nr = si >= 0 && Math.floor(r / stride[si]) % (digs[si] + 1) < digs[si] ? r + stride[si] : r, code = (sp * 2 + c) * R + r;
+          for (let k = 0; k <= kmax; k++) {
+            const po = ((sp * R + r) * stP + k) * W;
+            if (pv[po] < 0) continue;
+            const idx = (sn * R + nr) * stN + k + dc, no = idx * W;
+            let better = nv[no] < 0;
+            if (!better) {
+              for (let i = 0; i < W; i++) { const d = pv[po + i] + a[i] - nv[no + i]; if (d > EPS) { better = true; break; } if (d < -EPS) break; }
+            }
+            if (better) { for (let i = 0; i < W; i++) nv[no + i] = pv[po + i] + a[i]; back[idx] = code; }
           }
-          if (better) { for (let i = 0; i < W; i++) nv[no + i] = pv[po + i] + a[i]; back[idx] = code; }
         }
       }
     }
@@ -344,62 +361,87 @@ async function boardOptions(b: Board, T: number, cap: number, stale: () => boole
     [bufA, bufB] = [bufB, bufA];
     if (Date.now() - lastYield > YIELD_AFTER) { await tick(); if (stale()) throw new Stale(); lastYield = Date.now(); }
   }
-  // pv now holds the single final state: pv[k] = best route with cost exactly k.
-  const trace = (k0: number) => {
+  // pv now holds the single final state: pv[r][k] = best route with cost exactly k and counter r.
+  const trace = (k0: number, r0: number) => {
     const sel = new Uint8Array(n);
-    let s = 0, k = k0;
+    let s = 0, k = k0, r = r0;
     for (let t = n - 1; t >= 0; t--) {
-      const { back, Kn } = backs[t], code = back[s * (Kn + 1) + k], v = plan.layers[t].v;
-      if (code & 1) { sel[v] = 1; k -= cost[v]; }
-      s = code >> 1;
+      const { back, Kn } = backs[t], code = back[(s * R + r) * (Kn + 1) + k], v = plan.layers[t].v, rp = code % R, q = (code - rp) / R;
+      if (q & 1) { sel[v] = 1; k -= cost[v]; }
+      s = q >> 1;
+      r = rp;
     }
     return sel;
   };
-  // Keep only routes that strictly beat every cheaper route.
-  let best = pv.slice(0, W);                         // cost-0 route (start tile only)
-  for (let k = 1; k <= Kp; k++) {
-    const o = k * W;
-    if (pv[o] < 0) continue;
-    let better = false;
-    for (let i = 0; i < W; i++) { const d = pv[o + i] - best[i]; if (d > EPS) { better = true; break; } if (d < -EPS) break; }
-    if (!better) continue;
-    best = pv.slice(o, o + W);
-    const S = trace(k);
-    opts.push({ cost: k, S, v: sumVec(S) });
+  // Per counter value, keep only routes that strictly beat every cheaper route.
+  for (let r = 0; r < R; r++) {
+    let best: Float64Array | null = null;
+    for (let k = 0; k <= Kp; k++) {
+      const o = (r * (Kp + 1) + k) * W;
+      if (pv[o] < 0) continue;
+      if (!best && r === 0 && k === 0) { best = pv.slice(o, o + W); continue; }       // start tile only
+      let better = !best;
+      for (let i = 0; !better && i < W; i++) { const d = pv[o + i] - best![i]; if (d > EPS) better = true; else if (d < -EPS) break; }
+      if (!better) continue;
+      best = pv.slice(o, o + W);
+      const S = trace(k, r);
+      opts.push({ cost: k, S, v: sumVec(S), cnt: digs.map((d, i) => Math.floor(r / stride[i]) % (d + 1)) });
+    }
   }
-  return opts;
+  return opts.sort((a, b2) => a.cost - b2.cost);
 }
 
-// Per-pool multiple-choice knapsack over the boards' cost -> route tables.
-function combinePool(optionLists: Option[][], budget: number, T: number) {
+// Per-pool multiple-choice knapsack over the boards' option tables. The state is (crystals spent, levels counted per limited skill),
+// and a limited skill's bonus is added once at the end for the levels it counted (at most its limit).
+function combinePool(optionLists: Option[][], budget: number, T: number, caps: Cap[]) {
   const maxSpend = optionLists.reduce((s, o) => s + o[o.length - 1].cost, 0), cap = Math.max(0, Math.min(budget, maxSpend));
-  let A: (Float64Array | null)[] = new Array(cap + 1).fill(null);
+  const stride: number[] = [];
+  let G = 1;
+  for (const c of caps) { stride.push(G); G *= c.x + 1; }
+  const digit = (g: number, i: number) => Math.floor(g / stride[i]) % (caps[i].x + 1);
+  const add = (g: number, cnt: number[]) => { let g2 = 0; caps.forEach((c, i) => { g2 += Math.min(c.x, digit(g, i) + cnt[i]) * stride[i]; }); return g2; };
+  let A: (Float64Array | null)[] = new Array((cap + 1) * G).fill(null);
   A[0] = new Float64Array(T);
-  const choices: Int32Array[] = [];
+  const choices: { oi: Int32Array; pg: Int32Array }[] = [];
   for (const opts of optionLists) {
-    const B: (Float64Array | null)[] = new Array(cap + 1).fill(null), ch = new Int32Array(cap + 1).fill(-1);
-    for (let c = 0; c <= cap; c++) {
-      const base = A[c];
+    const B: (Float64Array | null)[] = new Array((cap + 1) * G).fill(null), oi = new Int32Array((cap + 1) * G).fill(-1), pg = new Int32Array((cap + 1) * G);
+    const gmap = opts.map((o) => (o.cnt.some(Boolean) ? Int32Array.from({ length: G }, (_, g) => add(g, o.cnt)) : null));
+    for (let c = 0; c <= cap; c++) for (let g = 0; g < G; g++) {
+      const base = A[c * G + g];
       if (!base) continue;
-      for (let oi = 0; oi < opts.length; oi++) {
-        const o = opts[oi], c2 = c + o.cost;
+      for (let q = 0; q < opts.length; q++) {
+        const o = opts[q], c2 = c + o.cost;
         if (c2 > cap) break;
-        const cur = B[c2];
-        if (!cur) { const cand = new Float64Array(T); for (let k = 0; k < T; k++) cand[k] = base[k] + o.v[k]; B[c2] = cand; ch[c2] = oi; continue; }
-        // Replace B[c2] only if base + o.v is strictly better (lexicographic, tolerance EPS).
+        const at = c2 * G + (gmap[q] ? gmap[q]![g] : g), cur = B[at];
+        if (!cur) { const cand = new Float64Array(T); for (let k = 0; k < T; k++) cand[k] = base[k] + o.v[k]; B[at] = cand; oi[at] = q; pg[at] = g; continue; }
+        // Replace B[at] only if base + o.v is strictly better (lexicographic, tolerance EPS).
         let cmp = 0;
         for (let k = 0; k < T; k++) { const d = base[k] + o.v[k] - cur[k]; if (d > EPS) { cmp = 1; break; } if (d < -EPS) { cmp = -1; break; } }
-        if (cmp > 0) { for (let k = 0; k < T; k++) cur[k] = base[k] + o.v[k]; ch[c2] = oi; }
+        if (cmp > 0) { for (let k = 0; k < T; k++) cur[k] = base[k] + o.v[k]; oi[at] = q; pg[at] = g; }
       }
     }
     A = B;
-    choices.push(ch);
+    choices.push({ oi, pg });
   }
-  let bc = -1;
-  for (let c = 0; c <= cap; c++) if (A[c] && (bc < 0 || vecCmp(A[c]!, A[bc]!) > 0)) bc = c;
+  const total = (at: number) => {
+    const v = Float64Array.from(A[at]!), g = at % G;
+    caps.forEach((c, i) => { const d = digit(g, i); for (let k = 0; k < T; k++) v[k] += d * c.bonus[k]; });
+    return v;
+  };
+  let bt = -1, bv: Float64Array | null = null;
+  for (let at = 0; at < A.length; at++) {
+    if (!A[at]) continue;
+    const v = total(at);
+    if (!bv || vecCmp(v, bv) > 0) { bt = at; bv = v; }
+  }
   const pick = new Array<number>(optionLists.length);
-  let c = bc;
-  for (let j = optionLists.length - 1; j >= 0; j--) { const oi = choices[j][c]; pick[j] = oi; c -= optionLists[j][oi].cost; }
+  let c = Math.floor(bt / G), g = bt % G;
+  for (let j = optionLists.length - 1; j >= 0; j--) {
+    const at = c * G + g, q = choices[j].oi[at];
+    pick[j] = q;
+    g = choices[j].pg[at];
+    c -= optionLists[j][q].cost;
+  }
   return pick;
 }
 
@@ -407,66 +449,23 @@ function combinePool(optionLists: Option[][], budget: number, T: number) {
 export class Stale extends Error {}
 
 // Best route for every board (one Uint8Array of taken tiles each). `pools` is the crystal budget per pool.
-export async function solve(B: Board[], pools: Record<Pool, number>, T: number, stale: () => boolean) {
+export async function solve(B: Board[], pools: Record<Pool, number>, T: number, stale: () => boolean, limits: Record<string, number> = {}, bonus: Record<string, Float64Array> = {}) {
   const S = new Array<Uint8Array>(B.length);
   for (const pool of POOLS) {
     const idx: number[] = [];
     B.forEach((b, i) => { if (b.p === pool) idx.push(i); });
     if (!idx.length) continue;
     const budget = Math.max(0, Math.floor(Number(pools[pool]) || 0)), lists: Option[][] = [];
+    const caps: Cap[] = Object.keys(bonus).map((key) => ({ key, x: Math.min(limits[key], idx.reduce((n, i) => n + tilesOf(B[i], key).length, 0)), bonus: bonus[key] })).filter((c) => c.x > 0);
     for (const i of idx) {
       if (stale()) throw new Stale();
       const b = B[i], total = b.N.reduce((s, o) => s + o.cost, 0);
-      lists.push(await boardOptions(b, T, Math.min(budget, total), stale));
+      lists.push(await boardOptions(b, T, Math.min(budget, total), caps, stale));
     }
-    const pick = combinePool(lists, budget, T);
+    const pick = combinePool(lists, budget, T, caps);
     idx.forEach((bi, q) => { S[bi] = lists[q][pick[q]].S; });
   }
   return S;
-}
-
-// Most solves a level limit may cost; past it the result is a good route, not a proven best.
-const MAX_LIMIT_SOLVES = 24;
-const combos = <T>(a: T[], n: number): T[][] => (n <= 0 ? [[]] : a.length < n ? [] : [...combos(a.slice(1), n - 1).map((c) => [a[0], ...c]), ...combos(a.slice(1), n)]);
-
-// Solve with per-skill level limits (key -> most levels that still count as a must-have; the rest score as ordinary skill tiles).
-// A limit makes the score non-additive, so it is split: for each choice of which tiles count, the problem is additive again.
-// The best of those solves is exactly optimal, because any route's own counted tiles are one of the choices.
-export async function solveLimited(all: Board[], B: Board[], mode: Mode, mustHave: string[], D: GameData, ignored: string[], limits: Record<string, number>, pools: Record<Pool, number>, stale: () => boolean) {
-  const run = async (uncounted: Set<Node>) => {
-    const T = weigh(all, mode, mustHave, D, ignored, uncounted);
-    const S = await solve(B, pools, T, stale);
-    const v = new Float64Array(T);
-    B.forEach((b, i) => b.N.forEach((o, j) => { if (S[i][j]) for (let k = 0; k < T; k++) v[k] += o.w[k]; }));
-    return { S, v };
-  };
-  const first = await run(new Set());
-  const tilesOf = (k: string) => B.flatMap((b, i) => b.N.filter((o) => o.cost && o.e.some(([e]) => e === k)).map((o) => ({ i, o })));
-  const capped = mustHave.filter((k) => limits[k] > 0 && tilesOf(k).length > limits[k]);
-  if (!capped.some((k) => tilesOf(k).filter(({ i, o }) => first.S[i][o.j]).length > limits[k])) return { S: first.S, exact: true };
-  const choices = capped.map((k) => combos(tilesOf(k), limits[k]));
-  const total = choices.reduce((n, c) => n * c.length, 1);
-  const rest = (k: string, keep: { o: Node }[]) => tilesOf(k).filter((t) => !keep.some((x) => x.o === t.o)).map((t) => t.o);
-  if (total > MAX_LIMIT_SOLVES) {
-    // Too many ways to choose: count the tiles the unlimited route took (cheapest first), then fill up from the rest.
-    const uncounted = new Set<Node>();
-    capped.forEach((k) => {
-      const t = tilesOf(k).sort((a, b) => Number(!!first.S[b.i][b.o.j]) - Number(!!first.S[a.i][a.o.j]) || a.o.cost - b.o.cost);
-      rest(k, t.slice(0, limits[k])).forEach((o) => uncounted.add(o));
-    });
-    return { S: (await run(uncounted)).S, exact: false };
-  }
-  let best: Awaited<ReturnType<typeof run>> | null = null;
-  const pick = async (n: number, keep: { o: Node }[][]) => {
-    if (n === capped.length) {
-      const r = await run(new Set(capped.flatMap((k, q) => rest(k, keep[q]))));
-      if (!best || vecCmp(r.v, best.v) > 0) best = r;
-      return;
-    }
-    for (const c of choices[n]) await pick(n + 1, [...keep, c]);
-  };
-  await pick(0, []);
-  return { S: best!.S, exact: true };
 }
 
 // Result checks: start tile, connectivity and budgets. A failure discards the result.

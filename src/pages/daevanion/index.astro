@@ -226,7 +226,7 @@ const groups = [
 
 <script>
   import data from '../../data/daevanion.json';
-  import { STAT_RANK, isIgnoredOrange, isSkill, prep, solveLimited, verify, Stale } from '../../scripts/daevanion-solver';
+  import { STAT_RANK, isIgnoredOrange, isSkill, prep, solve, verify, weigh, Stale } from '../../scripts/daevanion-solver';
   import swords from 'lucide-static/icons/swords.svg?raw';
   import crosshair from 'lucide-static/icons/crosshair.svg?raw';
   import sparkles from 'lucide-static/icons/sparkles.svg?raw';
@@ -281,7 +281,7 @@ const groups = [
   const ORDER_NOTE = 'Ariel and Azphel score their orange rewards first (Damage Boost, then Damage Tolerance), then their own stats in a fixed order.';
 
   interface Saved { cls: string; mode: Mode; boards: string[]; pools: Record<string, Record<Pool, number>>; skills: Record<string, string[]>; ignored: Record<string, string[]>; limits: Record<string, Record<string, number>> }
-  interface Result { cls: string; mode: Mode; B: Board[]; S: Uint8Array[]; pools: Record<Pool, number>; must: string[]; ms: number; exact: boolean }
+  interface Result { cls: string; mode: Mode; B: Board[]; S: Uint8Array[]; pools: Record<Pool, number>; must: string[]; ms: number }
 
   const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
   const label = (k: string) => (isSkill(k) ? k.slice(2) : LABELS[k] ?? D.lab[k] ?? k);
@@ -395,13 +395,16 @@ const groups = [
       const must = mustOf().slice(), pools = { ...poolsOf() }, limits = { ...limitsOf() };
       try {
         const t0 = performance.now();
-        const { S, exact } = await solveLimited(all, B, state.mode, must, D, ignoredOf(), limits, pools, stale);
+        // A limit only matters where the boards hold more tiles of the skill than it allows.
+        const binding = Object.fromEntries(Object.entries(limits).filter(([k, n]) => must.includes(k) && B.reduce((c, b) => c + b.N.filter((o) => o.cost && o.e.some(([e]) => e === k)).length, 0) > n));
+        const { T, bonus } = weigh(all, state.mode, must, D, ignoredOf(), binding);
+        const S = await solve(B, pools, T, stale, binding, bonus);
         if (stale()) return;
         verify(B, S, pools);
-        result = { cls: state.cls, mode: state.mode, B, S, pools, must, ms: performance.now() - t0, exact };
+        result = { cls: state.cls, mode: state.mode, B, S, pools, must, ms: performance.now() - t0 };
         cur = Math.min(cur, B.length - 1);
         drawRoute();
-        setStatus(`${result.exact ? 'Optimal' : 'Best found'} · ${(result.ms / 1000).toFixed(2)} s`, 'ok');
+        setStatus(`Optimal · ${(result.ms / 1000).toFixed(2)} s`, 'ok');
       } catch (err) {
         if (err instanceof Stale) return;
         console.error(err);
