@@ -142,7 +142,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
   .cft .qty { display: flex; align-items: stretch; color: var(--muted); font-size: 0.74rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
   .cft .qty > span { align-self: center; margin-right: 8px; }
   .cft .qty .box { position: relative; display: flex; }
-  .cft .qty input { width: 4.2em; padding: 4px 14px; text-align: center; background: var(--bg); border: 1px solid var(--line); border-radius: 3px; color: var(--text); font: inherit; font-size: 0.88rem; letter-spacing: 0; font-variant-numeric: tabular-nums; appearance: textfield; -moz-appearance: textfield; transition: border-color 0.15s; }
+  .cft .qty input { width: 3.8em; padding: 4px 10px; text-align: center; background: var(--bg); border: 1px solid var(--line); border-radius: 3px; color: var(--text); font: inherit; font-size: 0.88rem; letter-spacing: 0; font-variant-numeric: tabular-nums; appearance: textfield; -moz-appearance: textfield; transition: border-color 0.15s; }
   .cft .qty input::-webkit-outer-spin-button, .cft .qty input::-webkit-inner-spin-button { appearance: none; margin: 0; }
   .cft .qty input:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
   .cft .qty input:focus-visible { outline: none; border-color: var(--accent); }
@@ -153,7 +153,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
   .cft .rst svg { width: 16px; height: 16px; }
   .cft .rst:hover, .cft .rst:focus-visible { color: var(--text); outline: none; }
   /* Up / down arrows appear inside the box on hover or focus (always on touch). */
-  .cft .qty .spin { position: absolute; top: 1px; right: 1px; bottom: 1px; display: flex; flex-direction: column; width: 14px; opacity: 0; transition: opacity 0.15s; }
+  .cft .qty .spin { position: absolute; top: 1px; right: 1px; bottom: 1px; display: flex; flex-direction: column; width: 12px; opacity: 0; transition: opacity 0.15s; }
   .cft .qty .box:hover .spin, .cft .qty .box:focus-within .spin { opacity: 1; }
   .cft .qty .step { display: grid; place-items: center; flex: 1; min-height: 0; padding: 0; background: none; border: 0; color: var(--muted); cursor: pointer; transition: color 0.15s; }
   .cft .qty .step svg { width: 8px; height: 5px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
