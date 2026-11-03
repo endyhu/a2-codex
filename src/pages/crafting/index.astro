@@ -65,15 +65,11 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
           <div class="ctl">
             <div class="qty" role="group" aria-label="Your mastery">
               <span id="mast-l">Mastery</span>
-              <button type="button" class="step" data-mast="-1" aria-label="One level less">−</button>
-              <input id="mast" type="number" min="1" max="100" inputmode="numeric" aria-label="Your mastery" />
-              <button type="button" class="step" data-mast="1" aria-label="One level more">+</button>
+              <div class="box"><input id="mast" type="number" min="1" max="100" inputmode="numeric" aria-label="Your mastery" /><div class="spin"><button type="button" class="step" data-mast="1" aria-label="One level more" tabindex="-1"><svg viewBox="0 0 10 6" aria-hidden="true"><path d="M1 5l4-4 4 4"/></svg></button><button type="button" class="step" data-mast="-1" aria-label="One level less" tabindex="-1"><svg viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg></button></div></div>
             </div>
             <div class="qty" role="group" aria-label="Amount">
               <span>Amount</span>
-              <button type="button" class="step" data-d="-1" aria-label="One less">−</button>
-              <input id="qty" type="number" min="1" max="9999" value="1" inputmode="numeric" aria-label="Amount" />
-              <button type="button" class="step" data-d="1" aria-label="One more">+</button>
+              <div class="box"><input id="qty" type="number" min="1" max="9999" value="1" inputmode="numeric" aria-label="Amount" /><div class="spin"><button type="button" class="step" data-d="1" aria-label="One more" tabindex="-1"><svg viewBox="0 0 10 6" aria-hidden="true"><path d="M1 5l4-4 4 4"/></svg></button><button type="button" class="step" data-d="-1" aria-label="One less" tabindex="-1"><svg viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg></button></div></div>
             </div>
           </div>
         </header>
@@ -144,8 +140,9 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
   .cft .stat b.buy { color: var(--ok); }
   .cft .stat small { display: block; margin-top: 1px; color: var(--muted); font-size: 0.76rem; }
   .cft .qty { display: flex; align-items: stretch; color: var(--muted); font-size: 0.74rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
-  .cft .qty span { align-self: center; margin-right: 8px; }
-  .cft .qty input { width: 3.1em; padding: 3px 2px; text-align: center; background: var(--bg); border: 1px solid var(--line); border-width: 1px 0; border-radius: 0; color: var(--text); font: inherit; font-size: 0.88rem; letter-spacing: 0; font-variant-numeric: tabular-nums; appearance: textfield; -moz-appearance: textfield; transition: border-color 0.15s; }
+  .cft .qty > span { align-self: center; margin-right: 8px; }
+  .cft .qty .box { position: relative; display: flex; }
+  .cft .qty input { width: 4.2em; padding: 4px 14px; text-align: center; background: var(--bg); border: 1px solid var(--line); border-radius: 3px; color: var(--text); font: inherit; font-size: 0.88rem; letter-spacing: 0; font-variant-numeric: tabular-nums; appearance: textfield; -moz-appearance: textfield; transition: border-color 0.15s; }
   .cft .qty input::-webkit-outer-spin-button, .cft .qty input::-webkit-inner-spin-button { appearance: none; margin: 0; }
   .cft .qty input:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
   .cft .qty input:focus-visible { outline: none; border-color: var(--accent); }
@@ -155,10 +152,12 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
   .cft .rst[hidden] { display: none; }
   .cft .rst svg { width: 16px; height: 16px; }
   .cft .rst:hover, .cft .rst:focus-visible { color: var(--text); outline: none; }
-  .cft .qty .step { width: 26px; padding: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 0; color: var(--text); font: inherit; font-size: 1.05rem; line-height: 1; cursor: pointer; transition: border-color 0.15s, color 0.15s; }
-  .cft .qty .step:first-of-type { border-radius: 3px 0 0 3px; }
-  .cft .qty .step:last-of-type { border-radius: 0 3px 3px 0; }
-  .cft .qty .step:hover, .cft .qty .step:focus-visible { border-color: var(--accent); color: var(--accent); outline: none; }
+  /* Up / down arrows appear inside the box on hover or focus (always on touch). */
+  .cft .qty .spin { position: absolute; top: 1px; right: 1px; bottom: 1px; display: flex; flex-direction: column; width: 14px; opacity: 0; transition: opacity 0.15s; }
+  .cft .qty .box:hover .spin, .cft .qty .box:focus-within .spin { opacity: 1; }
+  .cft .qty .step { display: grid; place-items: center; flex: 1; min-height: 0; padding: 0; background: none; border: 0; color: var(--muted); cursor: pointer; transition: color 0.15s; }
+  .cft .qty .step svg { width: 8px; height: 5px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .cft .qty .step:hover { color: var(--accent); }
   .cft .lead { margin: 0 0 8px; }
   .cft .scroll { overflow-x: auto; }
   .cf { table-layout: fixed; width: 100%; --pad: 10px; --step: 26px; --c1: 255 85% 70%; --c2: 190 70% 52%; --c3: 38 90% 58%; --c4: 330 75% 66%; }
@@ -219,7 +218,8 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
     .cf .mh-r { width: auto; }
     .cft .rst { margin-left: 0; }
     .cf .mode button { padding: 6px 12px; }
-    .cft .qty .step { width: 38px; }
+    .cft .qty .spin { opacity: 1; width: 26px; }
+    .cft .qty input { padding: 4px 26px; width: 5.6em; }
   }
   @media (max-width: 600px) {
     .cft .pf { grid-template-columns: repeat(2, minmax(0, 1fr)); }
