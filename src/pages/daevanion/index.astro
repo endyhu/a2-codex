@@ -135,6 +135,8 @@ const groups = [
   img.sk { width: 26px; height: 26px; flex: none; border-radius: 3px; object-fit: cover; }
   .picked { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 3px; }
   .picked li { display: flex; align-items: center; gap: 8px; padding: 3px 4px 3px 8px; border-left: 3px solid hsl(var(--h) 75% 58% / 0.5); background: linear-gradient(90deg, hsl(var(--h) 75% 55% / 0.14), transparent 80%); font-size: 0.86rem; }
+  .picked li { cursor: grab; touch-action: pan-y; }
+  .picked li.drag { position: relative; z-index: 1; cursor: grabbing; user-select: none; box-shadow: 0 4px 14px -4px rgba(0, 0, 0, 0.6); }
   .picked li:first-child { border-left-color: hsl(var(--h) 75% 58%); font-weight: 600; }
   .picked li b { width: 1.1em; color: hsl(var(--h) 80% 65%); font-size: 0.78rem; font-variant-numeric: tabular-nums; }
   .picked li .nm { flex: 1; min-width: 0; }
@@ -554,6 +556,34 @@ const groups = [
       if (Number.isFinite(n) && n > 0) limitsOf()[inp.dataset.lim] = n; else delete limitsOf()[inp.dataset.lim];
       change();
     }, { signal });
+    // Drag a must-have row (mouse or pen) to reorder it within its list; touch uses the arrow buttons.
+    let drag: { li: HTMLElement; ol: HTMLElement } | null = null;
+    $('#skills').addEventListener('pointerdown', (e) => {
+      const t = e.target as HTMLElement, li = t.closest<HTMLElement>('.picked li');
+      if (!li || e.button !== 0 || e.pointerType === 'touch' || t.closest('input, button')) return;
+      drag = { li, ol: li.parentElement! };
+      li.setPointerCapture(e.pointerId);
+      li.classList.add('drag');
+      e.preventDefault();
+    }, { signal });
+    $('#skills').addEventListener('pointermove', (e) => {
+      if (!drag) return;
+      const rest = [...drag.ol.children].filter((x) => x !== drag!.li);
+      const next = rest.find((x) => { const r = x.getBoundingClientRect(); return e.clientY < r.top + r.height / 2; });
+      if (next !== drag.li.nextElementSibling) drag.ol.insertBefore(drag.li, next ?? null);
+    }, { signal });
+    const drop = () => {
+      if (!drag) return;
+      drag.li.classList.remove('drag');
+      drag = null;
+      // Actives and passives are separate tiers, so only the order inside each list matters.
+      const now = [...document.querySelectorAll<HTMLElement>('#skills .picked li')].map((x) => x.dataset.k!);
+      const was = [...mustOf().filter((k) => D.skc[label(k)] === 'active'), ...mustOf().filter((k) => D.skc[label(k)] !== 'active')];
+      if (now.join('|') !== was.join('|')) { state.skills[state.cls] = now; change(); }
+      drawSkills();
+    };
+    $('#skills').addEventListener('pointerup', drop, { signal });
+    $('#skills').addEventListener('pointercancel', drop, { signal });
     $('#tabs').addEventListener('click', (e) => {
       const b = (e.target as HTMLElement).closest<HTMLElement>('button[data-i]');
       if (!b) return;
