@@ -143,9 +143,9 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
   .cft .stat b.craft { color: var(--cyan); }
   .cft .stat b.buy { color: var(--ok); }
   .cft .stat small { display: block; margin-top: 1px; color: var(--muted); font-size: 0.76rem; }
-  .cft .qty { display: flex; align-items: stretch; gap: 4px; color: var(--muted); font-size: 0.74rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+  .cft .qty { display: flex; align-items: stretch; color: var(--muted); font-size: 0.74rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
   .cft .qty span { align-self: center; margin-right: 8px; }
-  .cft .qty input { width: 3.1em; padding: 3px 2px; text-align: center; background: var(--bg); border: 1px solid var(--line); border-radius: 3px; color: var(--text); font: inherit; font-size: 0.88rem; letter-spacing: 0; font-variant-numeric: tabular-nums; appearance: textfield; -moz-appearance: textfield; transition: border-color 0.15s; }
+  .cft .qty input { width: 3.1em; padding: 3px 2px; text-align: center; background: var(--bg); border: 1px solid var(--line); border-width: 1px 0; border-radius: 0; color: var(--text); font: inherit; font-size: 0.88rem; letter-spacing: 0; font-variant-numeric: tabular-nums; appearance: textfield; -moz-appearance: textfield; transition: border-color 0.15s; }
   .cft .qty input::-webkit-outer-spin-button, .cft .qty input::-webkit-inner-spin-button { appearance: none; margin: 0; }
   .cft .qty input:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
   .cft .qty input:focus-visible { outline: none; border-color: var(--accent); }
@@ -155,7 +155,9 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
   .cft .rst[hidden] { display: none; }
   .cft .rst svg { width: 16px; height: 16px; }
   .cft .rst:hover, .cft .rst:focus-visible { color: var(--text); outline: none; }
-  .cft .qty .step { width: 26px; padding: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 3px; color: var(--text); font: inherit; font-size: 1.05rem; line-height: 1; cursor: pointer; transition: border-color 0.15s, color 0.15s; }
+  .cft .qty .step { width: 26px; padding: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 0; color: var(--text); font: inherit; font-size: 1.05rem; line-height: 1; cursor: pointer; transition: border-color 0.15s, color 0.15s; }
+  .cft .qty .step:first-of-type { border-radius: 3px 0 0 3px; }
+  .cft .qty .step:last-of-type { border-radius: 0 3px 3px 0; }
   .cft .qty .step:hover, .cft .qty .step:focus-visible { border-color: var(--accent); color: var(--accent); outline: none; }
   .cft .lead { margin: 0 0 8px; }
   .cft .scroll { overflow-x: auto; }
