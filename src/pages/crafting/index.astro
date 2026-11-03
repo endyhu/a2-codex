@@ -65,7 +65,9 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
           <div class="ctl">
             <div class="qty" role="group" aria-label="Your mastery">
               <span id="mast-l">Mastery</span>
-              <input id="mast" class="solo" type="number" min="1" max="100" inputmode="numeric" aria-label="Your mastery" />
+              <button type="button" class="step" data-mast="-1" aria-label="One level less">−</button>
+              <input id="mast" type="number" min="1" max="100" inputmode="numeric" aria-label="Your mastery" />
+              <button type="button" class="step" data-mast="1" aria-label="One level more">+</button>
             </div>
             <div class="qty" role="group" aria-label="Amount">
               <span>Amount</span>
@@ -128,7 +130,6 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
   .cft .sub { grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); margin-top: 6px; }
   .cft .sub[hidden] { display: none; }
   .cft .ctl { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px 20px; }
-  .cft .qty input.solo { width: 4.2em; border-width: 1px; border-radius: 3px; }
   .cft .rate { margin: 0 0 12px; color: var(--muted); }
   .cft .rate b.ok { color: var(--ok); }
   .cft .rate b.warn { color: var(--warn); }
@@ -144,19 +145,17 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
   .cft .stat small { display: block; margin-top: 1px; color: var(--muted); font-size: 0.76rem; }
   .cft .qty { display: flex; align-items: stretch; color: var(--muted); font-size: 0.74rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
   .cft .qty span { align-self: center; margin-right: 12px; }
-  .cft .qty input { width: 4.2em; padding: 5px 4px; text-align: center; background: var(--bg); border: 1px solid var(--line); border-width: 1px 0; color: var(--text); font: inherit; font-size: 0.9rem; letter-spacing: 0; font-variant-numeric: tabular-nums; appearance: textfield; -moz-appearance: textfield; }
+  .cft .qty input { width: 3.4em; padding: 3px 2px; text-align: center; background: transparent; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; color: var(--text); font: inherit; font-size: 0.88rem; letter-spacing: 0; font-variant-numeric: tabular-nums; appearance: textfield; -moz-appearance: textfield; transition: border-color 0.15s; }
   .cft .qty input::-webkit-outer-spin-button, .cft .qty input::-webkit-inner-spin-button { appearance: none; margin: 0; }
-  .cft .qty input:focus-visible { outline: none; box-shadow: inset 0 -2px 0 var(--accent); }
+  .cft .qty input:hover, .cft .qty input:focus-visible { outline: none; border-bottom-color: var(--accent); }
   .cft .rst { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; margin-left: 26px; padding: 0; background: none; border: 0; color: var(--muted); cursor: pointer; transition: color 0.15s; }
   .cf .mh { display: flex; align-items: center; justify-content: space-between; }
   .cf .mh-r { width: 9.5em; }
   .cft .rst[hidden] { display: none; }
   .cft .rst svg { width: 16px; height: 16px; }
   .cft .rst:hover, .cft .rst:focus-visible { color: var(--text); outline: none; }
-  .cft .qty .step { padding: 0; background: var(--panel); border: 1px solid var(--line); color: var(--muted); font: inherit; font-size: 1rem; line-height: 1; cursor: pointer; transition: border-color 0.15s, color 0.15s; }
-  .cft .qty .step:first-of-type { border-radius: 3px 0 0 3px; }
-  .cft .qty .step:last-of-type { border-radius: 0 3px 3px 0; }
-  .cft .qty .step:hover, .cft .qty .step:focus-visible { border-color: color-mix(in srgb, var(--accent) 55%, transparent); color: var(--text); outline: none; }
+  .cft .qty .step { width: 22px; padding: 0; background: none; border: 0; color: var(--muted); font: inherit; font-size: 1rem; line-height: 1; cursor: pointer; transition: color 0.15s; }
+  .cft .qty .step:hover, .cft .qty .step:focus-visible { color: var(--accent); outline: none; }
   .cft .lead { margin: 0 0 8px; }
   .cft .scroll { overflow-x: auto; }
   .cf { table-layout: fixed; width: 100%; --pad: 10px; --step: 26px; --c1: 255 85% 70%; --c2: 190 70% 52%; --c3: 38 90% 58%; --c4: 330 75% 66%; }
@@ -712,7 +711,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
       if (!b) return;
       state.sub = b.dataset.v!; checked('sub', state.sub); persist(); renderList(); listEl.scrollTop = 0;
     }, { signal });
-    document.querySelectorAll<HTMLElement>('.qty .step').forEach((b) => b.addEventListener('click', () => {
+    document.querySelectorAll<HTMLElement>('.qty .step[data-d]').forEach((b) => b.addEventListener('click', () => {
       state.qty = Math.min(9999, Math.max(1, state.qty + Number(b.dataset.d))); qtyEl.value = String(state.qty); persist(); renderResult();
     }, { signal }));
     let t = 0;
@@ -724,6 +723,13 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
       if (n >= 1) state.mast[r.profession] = Math.min(n, 100); else delete state.mast[r.profession];
       persist(); renderResult();
     }, { signal });
+    document.querySelectorAll<HTMLElement>('.qty .step[data-mast]').forEach((b) => b.addEventListener('click', () => {
+      const r = craft.recipes[keys.indexOf(state.sel)];
+      if (!r) return;
+      state.mast[r.profession] = Math.min(100, Math.max(1, (state.mast[r.profession] || r.mastery || 1) + Number(b.dataset.mast)));
+      mastEl.value = String(state.mast[r.profession]);
+      persist(); renderResult();
+    }, { signal }));
     rowsEl.addEventListener('click', (e) => {
       const b = (e.target as HTMLElement).closest<HTMLButtonElement>('.mode button');
       if (!b || b.disabled) return;
