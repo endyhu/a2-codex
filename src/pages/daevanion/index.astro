@@ -138,6 +138,8 @@ const groups = [
   .picked li:first-child { border-left-color: hsl(var(--h) 75% 58%); font-weight: 600; }
   .picked li b { width: 1.1em; color: hsl(var(--h) 80% 65%); font-size: 0.78rem; font-variant-numeric: tabular-nums; }
   .picked li .nm { flex: 1; min-width: 0; }
+  .picked li .lim { width: 3.6em; padding: 2px 4px; background: var(--panel); border: 1px solid var(--line); border-radius: 3px; color: var(--text); font: inherit; font-size: 0.8rem; text-align: center; }
+  .picked li .lim:focus-visible { border-color: var(--accent); outline: none; }
   .picked li .ac { display: flex; gap: 2px; }
   .ib { display: grid; place-items: center; width: 26px; height: 26px; padding: 0; background: transparent; border: 1px solid transparent; border-radius: 3px; color: var(--muted); cursor: pointer; transition: color 0.15s, border-color 0.15s; }
   .ib svg { width: 14px; height: 14px; }
@@ -224,7 +226,7 @@ const groups = [
 
 <script>
   import data from '../../data/daevanion.json';
-  import { STAT_RANK, isIgnoredOrange, isSkill, prep, solve, verify, weigh, Stale } from '../../scripts/daevanion-solver';
+  import { STAT_RANK, isIgnoredOrange, isSkill, prep, solveLimited, verify, Stale } from '../../scripts/daevanion-solver';
   import swords from 'lucide-static/icons/swords.svg?raw';
   import crosshair from 'lucide-static/icons/crosshair.svg?raw';
   import sparkles from 'lucide-static/icons/sparkles.svg?raw';
@@ -278,8 +280,8 @@ const groups = [
   };
   const ORDER_NOTE = 'Ariel and Azphel score their orange rewards first (Damage Boost, then Damage Tolerance), then their own stats in a fixed order.';
 
-  interface Saved { cls: string; mode: Mode; boards: string[]; pools: Record<string, Record<Pool, number>>; skills: Record<string, string[]>; ignored: Record<string, string[]> }
-  interface Result { cls: string; mode: Mode; B: Board[]; S: Uint8Array[]; pools: Record<Pool, number>; must: string[]; ms: number }
+  interface Saved { cls: string; mode: Mode; boards: string[]; pools: Record<string, Record<Pool, number>>; skills: Record<string, string[]>; ignored: Record<string, string[]>; limits: Record<string, Record<string, number>> }
+  interface Result { cls: string; mode: Mode; B: Board[]; S: Uint8Array[]; pools: Record<Pool, number>; must: string[]; ms: number; exact: boolean }
 
   const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
   const label = (k: string) => (isSkill(k) ? k.slice(2) : LABELS[k] ?? D.lab[k] ?? k);
@@ -322,6 +324,7 @@ const groups = [
       pools: typeof (saved.pools as any)?.c === 'number' ? { [saved.cls ?? 'Gladiator']: { ...DEFAULT_POOLS, ...(saved.pools as any) } } : saved.pools ?? {},
       skills: saved.skills ?? {},
       ignored: saved.ignored ?? {},
+      limits: saved.limits ?? {},
     };
     const persist = () => { try { localStorage.setItem(STORE, JSON.stringify(state)); } catch {} };
 
@@ -330,6 +333,7 @@ const groups = [
     const poolsOf = () => (state.pools[state.cls] ??= { ...DEFAULT_POOLS });
     const mustOf = () => (state.skills[state.cls] ??= []);
     const ignoredOf = () => (state.ignored[state.cls] ??= []);
+    const limitsOf = () => (state.limits[state.cls] ??= {});
     const skillKeys = () => {
       const ks = new Set<string>();
       for (const b of all) for (const o of b.N) for (const [k] of o.e) if (isSkill(k)) ks.add(k);
@@ -365,7 +369,7 @@ const groups = [
       const group = (title: string, kind: string) => {
         const picked = must.filter((k) => D.skc[label(k)] === kind), list = ks.filter((k) => D.skc[label(k)] === kind && !must.includes(k));
         if (!picked.length && !list.length) return '';
-        const rows = picked.map((k, i) => `<li data-k="${esc(k)}"><b>${i + 1}</b>${badge(k)}<span class="nm">${esc(label(k))}</span><span class="ac">${btn('up', label(k), ICON.up)}${btn('down', label(k), ICON.down)}${btn('x', label(k), ICON.x)}</span></li>`).join('');
+        const rows = picked.map((k, i) => `<li data-k="${esc(k)}"><b>${i + 1}</b>${badge(k)}<span class="nm">${esc(label(k))}</span><input type="number" class="lim" min="1" step="1" inputmode="numeric" placeholder="all" value="${limitsOf()[k] ?? ''}" data-lim="${esc(k)}" aria-label="Levels wanted for ${esc(label(k))}" title="Levels wanted. Empty takes as many as the route allows"><span class="ac">${btn('up', label(k), ICON.up)}${btn('down', label(k), ICON.down)}${btn('x', label(k), ICON.x)}</span></li>`).join('');
         const chip = (k: string) => `<button type="button" class="chip${ign.includes(k) ? ' off' : ''}" data-add="${esc(k)}" title="${ign.includes(k) ? 'Ignored, scores nothing. Right-click to use it again' : 'Click to add. Right-click to ignore'}">${badge(k)}${esc(label(k))}</button>`;
         return `<div class="kind" data-kind="${kind}"><h4>${title}</h4>${rows ? `<ol class="picked">${rows}</ol>` : ''}${list.length ? `<div class="chipset">${list.map(chip).join('')}</div>` : ''}</div>`;
       };
@@ -388,17 +392,16 @@ const groups = [
       const id = ++run, stale = () => id !== run;
       const B = all.filter(included);
       if (!B.length) { result = null; drawRoute(); setStatus('No board selected'); return; }
-      const must = mustOf().slice(), pools = { ...poolsOf() };
+      const must = mustOf().slice(), pools = { ...poolsOf() }, limits = { ...limitsOf() };
       try {
-        const T = weigh(all, state.mode, must, D, ignoredOf());
         const t0 = performance.now();
-        const S = await solve(B, pools, T, stale);
+        const { S, exact } = await solveLimited(all, B, state.mode, must, D, ignoredOf(), limits, pools, stale);
         if (stale()) return;
         verify(B, S, pools);
-        result = { cls: state.cls, mode: state.mode, B, S, pools, must, ms: performance.now() - t0 };
+        result = { cls: state.cls, mode: state.mode, B, S, pools, must, ms: performance.now() - t0, exact };
         cur = Math.min(cur, B.length - 1);
         drawRoute();
-        setStatus(`Optimal · ${(result.ms / 1000).toFixed(2)} s`, 'ok');
+        setStatus(`${result.exact ? 'Optimal' : 'Best found'} · ${(result.ms / 1000).toFixed(2)} s`, 'ok');
       } catch (err) {
         if (err instanceof Stale) return;
         console.error(err);
@@ -523,7 +526,7 @@ const groups = [
         must.push(k);
       } else if (mv) {
         const k = mv.closest('li')!.dataset.k!, i = must.indexOf(k);
-        if (mv.dataset.a === 'x') must.splice(i, 1);
+        if (mv.dataset.a === 'x') { must.splice(i, 1); delete limitsOf()[k]; }
         else {
           // Move within the same skill type: swap with the neighbouring pick of that type.
           const same = must.filter((x) => D.skc[label(x)] === D.skc[label(k)]), j = same.indexOf(k) + (mv.dataset.a === 'up' ? -1 : 1);
@@ -533,6 +536,13 @@ const groups = [
         }
       } else return;
       drawSkills();
+      change();
+    }, { signal });
+    $('#skills').addEventListener('input', (e) => {
+      const inp = e.target as HTMLInputElement;
+      if (!inp.dataset.lim) return;
+      const n = Math.floor(Number(inp.value));
+      if (Number.isFinite(n) && n > 0) limitsOf()[inp.dataset.lim] = n; else delete limitsOf()[inp.dataset.lim];
       change();
     }, { signal });
     $('#tabs').addEventListener('click', (e) => {

@@ -62,7 +62,8 @@ export function prep(b: RawBoard): Board {
 // PvE scores the remaining standard stats in one soft-weighted tier; PvP gives each its own strict tier and counts every orange.
 // Azphel and Ariel stats always get one strict tier per stat. Each pool is solved on its own, so pools may share tier slots.
 // Ignored skills score nothing, so they are never a reason to take a tile.
-export function weigh(boards: Board[], mode: Mode, mustHave: string[], D: GameData, ignored: string[] = []) {
+// A must-have tile in `uncounted` (past its skill's level limit) scores like any other skill tile.
+export function weigh(boards: Board[], mode: Mode, mustHave: string[], D: GameData, ignored: string[] = [], uncounted: Set<Node> = new Set()) {
   const pvp = mode === 'pvp';
   const AZPHEL_ATTACK = 0, AZPHEL_DEFENSE = 1, ARIEL_ATTACK = 2, ARIEL_DEFENSE = 3, keyStart = 4;
   // The Aion 2 Bible: key actives first, then the important orange tiles; key passives come after.
@@ -97,7 +98,7 @@ export function weigh(boards: Board[], mode: Mode, mustHave: string[], D: GameDa
       if (isSkill(k)) {
         if (ignored.includes(k)) continue;
         const active = D.skc[k.slice(2)] === 'active';
-        o.w[keyTier[k] ?? (active ? otherActive : otherPassive)] += x;
+        o.w[(uncounted.has(o) ? undefined : keyTier[k]) ?? (active ? otherActive : otherPassive)] += x;
         continue;
       }
       const std = b.p === 'c', i = orders[b.p].indexOf(k);
@@ -422,6 +423,50 @@ export async function solve(B: Board[], pools: Record<Pool, number>, T: number, 
     idx.forEach((bi, q) => { S[bi] = lists[q][pick[q]].S; });
   }
   return S;
+}
+
+// Most solves a level limit may cost; past it the result is a good route, not a proven best.
+const MAX_LIMIT_SOLVES = 24;
+const combos = <T>(a: T[], n: number): T[][] => (n <= 0 ? [[]] : a.length < n ? [] : [...combos(a.slice(1), n - 1).map((c) => [a[0], ...c]), ...combos(a.slice(1), n)]);
+
+// Solve with per-skill level limits (key -> most levels that still count as a must-have; the rest score as ordinary skill tiles).
+// A limit makes the score non-additive, so it is split: for each choice of which tiles count, the problem is additive again.
+// The best of those solves is exactly optimal, because any route's own counted tiles are one of the choices.
+export async function solveLimited(all: Board[], B: Board[], mode: Mode, mustHave: string[], D: GameData, ignored: string[], limits: Record<string, number>, pools: Record<Pool, number>, stale: () => boolean) {
+  const run = async (uncounted: Set<Node>) => {
+    const T = weigh(all, mode, mustHave, D, ignored, uncounted);
+    const S = await solve(B, pools, T, stale);
+    const v = new Float64Array(T);
+    B.forEach((b, i) => b.N.forEach((o, j) => { if (S[i][j]) for (let k = 0; k < T; k++) v[k] += o.w[k]; }));
+    return { S, v };
+  };
+  const first = await run(new Set());
+  const tilesOf = (k: string) => B.flatMap((b, i) => b.N.filter((o) => o.cost && o.e.some(([e]) => e === k)).map((o) => ({ i, o })));
+  const capped = mustHave.filter((k) => limits[k] > 0 && tilesOf(k).length > limits[k]);
+  if (!capped.some((k) => tilesOf(k).filter(({ i, o }) => first.S[i][o.j]).length > limits[k])) return { S: first.S, exact: true };
+  const choices = capped.map((k) => combos(tilesOf(k), limits[k]));
+  const total = choices.reduce((n, c) => n * c.length, 1);
+  const rest = (k: string, keep: { o: Node }[]) => tilesOf(k).filter((t) => !keep.some((x) => x.o === t.o)).map((t) => t.o);
+  if (total > MAX_LIMIT_SOLVES) {
+    // Too many ways to choose: count the tiles the unlimited route took (cheapest first), then fill up from the rest.
+    const uncounted = new Set<Node>();
+    capped.forEach((k) => {
+      const t = tilesOf(k).sort((a, b) => Number(!!first.S[b.i][b.o.j]) - Number(!!first.S[a.i][a.o.j]) || a.o.cost - b.o.cost);
+      rest(k, t.slice(0, limits[k])).forEach((o) => uncounted.add(o));
+    });
+    return { S: (await run(uncounted)).S, exact: false };
+  }
+  let best: Awaited<ReturnType<typeof run>> | null = null;
+  const pick = async (n: number, keep: { o: Node }[][]) => {
+    if (n === capped.length) {
+      const r = await run(new Set(capped.flatMap((k, q) => rest(k, keep[q]))));
+      if (!best || vecCmp(r.v, best.v) > 0) best = r;
+      return;
+    }
+    for (const c of choices[n]) await pick(n + 1, [...keep, c]);
+  };
+  await pick(0, []);
+  return { S: best!.S, exact: true };
 }
 
 // Result checks: start tile, connectivity and budgets. A failure discards the result.
