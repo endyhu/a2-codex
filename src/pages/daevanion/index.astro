@@ -364,6 +364,8 @@ const groups = [
       document.querySelectorAll<HTMLInputElement>('input[data-pool]').forEach((i) => { i.value = String(poolsOf()[i.dataset.pool as Pool]); });
       $('#order').innerHTML = ORDER[state.mode].map(([t, s]) => `<li>${t}${s ? `<small>${s}</small>` : ''}</li>`).join('') + `<li class="note">${ORDER_NOTE}</li>`;
     }
+    // Tiles of a skill on the boards that count in the route.
+    const tiles = (k: string) => all.filter(included).reduce((n, b) => n + b.N.filter((o) => o.cost && o.e.some(([e]) => e === k)).length, 0);
     function drawSkills() {
       const must = mustOf(), ign = ignoredOf(), ks = skillKeys();
       const btn = (a: string, name: string, svg: string) => `<button type="button" class="ib" data-a="${a}" aria-label="${a === 'x' ? 'Remove' : 'Move ' + a} ${esc(name)}" title="${a === 'x' ? 'Remove' : 'Move ' + a}">${svg}</button>`;
@@ -371,7 +373,7 @@ const groups = [
       const group = (title: string, kind: string) => {
         const picked = must.filter((k) => D.skc[label(k)] === kind), list = ks.filter((k) => D.skc[label(k)] === kind && !must.includes(k));
         if (!picked.length && !list.length) return '';
-        const rows = picked.map((k, i) => `<li data-k="${esc(k)}"><b>${i + 1}</b>${badge(k)}<span class="nm">${esc(label(k))}</span><input type="number" class="lim" min="1" step="1" inputmode="numeric" placeholder="all" value="${limitsOf()[k] ?? ''}" data-lim="${esc(k)}" aria-label="Levels wanted for ${esc(label(k))}" title="Levels wanted. Empty takes as many as the route allows"><span class="ac">${btn('up', label(k), ICON.up)}${btn('down', label(k), ICON.down)}${btn('x', label(k), ICON.x)}</span></li>`).join('');
+        const rows = picked.map((k, i) => `<li data-k="${esc(k)}"><b>${i + 1}</b>${badge(k)}<span class="nm">${esc(label(k))}</span><input type="number" class="lim" min="1" step="1" inputmode="numeric" placeholder="${tiles(k)}" max="${tiles(k)}" value="${limitsOf()[k] ?? ''}" data-lim="${esc(k)}" aria-label="Levels wanted for ${esc(label(k))}" title="Levels wanted. Empty takes as many as the route allows (${tiles(k)} on the boards)"><span class="ac">${btn('up', label(k), ICON.up)}${btn('down', label(k), ICON.down)}${btn('x', label(k), ICON.x)}</span></li>`).join('');
         const chip = (k: string) => `<button type="button" class="chip${ign.includes(k) ? ' off' : ''}" data-add="${esc(k)}" title="${ign.includes(k) ? 'Ignored, scores nothing. Right-click to use it again' : 'Click to add. Right-click to ignore'}">${badge(k)}${esc(label(k))}</button>`;
         return `<div class="kind" data-kind="${kind}"><h4>${title}</h4>${rows ? `<ol class="picked">${rows}</ol>` : ''}${list.length ? `<div class="chipset">${list.map(chip).join('')}</div>` : ''}</div>`;
       };
@@ -504,11 +506,13 @@ const groups = [
       const n = b.dataset.board!;
       state.boards = state.boards.includes(n) ? state.boards.filter((x) => x !== n) : [...state.boards, n];
       drawSetup();
+      drawSkills();
       change();
     }, { signal }));
     document.querySelectorAll<HTMLInputElement>('input[data-pool]').forEach((i) => i.addEventListener('input', () => {
       const n = Math.floor(Number(i.value));
       poolsOf()[i.dataset.pool as Pool] = Number.isFinite(n) && n > 0 ? n : 0;
+      drawSkills();
       change();
     }, { signal }));
     // Right-click (long-press on touch) ignores or un-ignores a skill.
