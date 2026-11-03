@@ -129,7 +129,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
 
   .cft .sub { grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); margin-top: 6px; }
   .cft .sub[hidden] { display: none; }
-  .cft .ctl { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px 20px; }
+  .cft .ctl { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px 14px; }
   .cft .rate { margin: 0 0 12px; color: var(--muted); }
   .cft .rate b.ok { color: var(--ok); }
   .cft .rate b.warn { color: var(--warn); }
@@ -144,17 +144,19 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
   .cft .stat b.buy { color: var(--ok); }
   .cft .stat small { display: block; margin-top: 1px; color: var(--muted); font-size: 0.76rem; }
   .cft .qty { display: flex; align-items: stretch; color: var(--muted); font-size: 0.74rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
-  .cft .qty span { align-self: center; margin-right: 12px; }
-  .cft .qty input { width: 3.4em; padding: 3px 2px; text-align: center; background: transparent; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; color: var(--text); font: inherit; font-size: 0.88rem; letter-spacing: 0; font-variant-numeric: tabular-nums; appearance: textfield; -moz-appearance: textfield; transition: border-color 0.15s; }
+  .cft .qty span { align-self: center; margin-right: 8px; }
+  .cft .qty input { width: 3.1em; padding: 3px 2px; text-align: center; background: var(--bg); border: 1px solid var(--line); border-radius: 3px; color: var(--text); font: inherit; font-size: 0.88rem; letter-spacing: 0; font-variant-numeric: tabular-nums; appearance: textfield; -moz-appearance: textfield; transition: border-color 0.15s; }
   .cft .qty input::-webkit-outer-spin-button, .cft .qty input::-webkit-inner-spin-button { appearance: none; margin: 0; }
-  .cft .qty input:hover, .cft .qty input:focus-visible { outline: none; border-bottom-color: var(--accent); }
+  .cft .qty input#mast { width: 2.5em; }
+  .cft .qty input:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+  .cft .qty input:focus-visible { outline: none; border-color: var(--accent); }
   .cft .rst { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; margin-left: 26px; padding: 0; background: none; border: 0; color: var(--muted); cursor: pointer; transition: color 0.15s; }
   .cf .mh { display: flex; align-items: center; justify-content: space-between; }
   .cf .mh-r { width: 9.5em; }
   .cft .rst[hidden] { display: none; }
   .cft .rst svg { width: 16px; height: 16px; }
   .cft .rst:hover, .cft .rst:focus-visible { color: var(--text); outline: none; }
-  .cft .qty .step { width: 22px; padding: 0; background: none; border: 0; color: var(--muted); font: inherit; font-size: 1rem; line-height: 1; cursor: pointer; transition: color 0.15s; }
+  .cft .qty .step { width: 18px; padding: 0; background: none; border: 0; color: var(--muted); font: inherit; font-size: 1rem; line-height: 1; cursor: pointer; transition: color 0.15s; }
   .cft .qty .step:hover, .cft .qty .step:focus-visible { color: var(--accent); outline: none; }
   .cft .lead { margin: 0 0 8px; }
   .cft .scroll { overflow-x: auto; }
