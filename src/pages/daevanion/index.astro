@@ -45,7 +45,10 @@ const groups = [
         {groups.map((g) => (
           <div class="pool">
             <label for={`pool-${g.pool}`}>{g.label}</label>
-            <input id={`pool-${g.pool}`} class="num" type="number" min="0" step="1" inputmode="numeric" data-pool={g.pool} />
+            <div class="nbox">
+              <input id={`pool-${g.pool}`} class="num" type="number" min="0" step="1" inputmode="numeric" data-pool={g.pool} />
+              <div class="nspin"><button type="button" class="nstep" data-n="1" aria-label="One more" tabindex="-1"><svg viewBox="0 0 10 6" aria-hidden="true"><path d="M1 5l4-4 4 4"/></svg></button><button type="button" class="nstep" data-n="-1" aria-label="One less" tabindex="-1"><svg viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg></button></div>
+            </div>
             {g.boards.length > 1 ? (
               <div class="togs" role="group" aria-label={`${g.label} boards`}>
                 {g.boards.map((n) => <button type="button" class="tog" aria-pressed="true" data-board={n}>{n}</button>)}
@@ -119,16 +122,27 @@ const groups = [
   .modes button[aria-checked='true'] .ico { color: var(--accent); background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent) 40%, transparent); }
   @media (max-width: 480px) { .modes small { display: none; } .modes strong { grid-row: 1 / 3; } }
   .pools { display: grid; gap: 18px; }
-  .pool { display: grid; grid-template-columns: 8.5em 6.5em minmax(0, 1fr); align-items: center; gap: 10px 10px; }
+  .pool { display: grid; grid-template-columns: 8.5em auto minmax(0, 1fr); align-items: center; gap: 10px 10px; }
   .pool label { color: var(--muted); font-size: 0.86rem; }
   .num { width: 100%; padding: 5px 8px; background: var(--bg); border: 1px solid var(--line); border-radius: 3px; color: var(--text); font: inherit; font-variant-numeric: tabular-nums; transition: border-color 0.15s; }
   .num:focus-visible { border-color: var(--accent); outline: none; }
+  /* Number box: plain input, up / down arrows appear inside on hover or focus (always on touch). */
+  .nbox { position: relative; display: flex; }
+  .nbox .num { width: calc(5ch + 22px); padding: 5px 9px; text-align: center; appearance: textfield; -moz-appearance: textfield; }
+  .nbox .num::-webkit-outer-spin-button, .nbox .num::-webkit-inner-spin-button { appearance: none; margin: 0; }
+  .nbox .num:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+  .nspin { position: absolute; top: 1px; right: 1px; bottom: 1px; display: flex; flex-direction: column; width: 12px; opacity: 0; transition: opacity 0.15s; }
+  .nbox:hover .nspin, .nbox:focus-within .nspin { opacity: 1; }
+  .nstep { display: grid; place-items: center; flex: 1; min-height: 0; padding: 0; background: none; border: 0; color: var(--muted); cursor: pointer; transition: color 0.15s; }
+  .nstep svg { width: 8px; height: 5px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .nstep:hover { color: var(--accent); }
+  @media (pointer: coarse) { .nspin { opacity: 1; width: 26px; } .nbox .num { padding: 5px 26px; width: calc(5ch + 52px); } }
   .togs { grid-column: 1 / -1; order: -1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
   .tog { min-width: 0; padding: 3px 4px; text-align: center; font-size: 0.82rem; font-weight: 600; line-height: 1.5; background: var(--panel); border: 1px solid var(--line); border-radius: 3px; color: var(--muted); font: inherit; cursor: pointer; opacity: 0.6; transition: border-color 0.15s, color 0.15s, background 0.15s, box-shadow 0.15s, opacity 0.15s; }
   .tog:hover, .tog:focus-visible { opacity: 1; border-color: color-mix(in srgb, var(--accent) 55%, transparent); color: var(--text); outline: none; }
   .tog[aria-pressed='true'] { opacity: 1; color: var(--text); border-color: color-mix(in srgb, var(--accent) 70%, transparent); background: radial-gradient(120% 140% at 0% 0%, var(--accent-soft), var(--panel) 75%); box-shadow: 0 0 16px -10px var(--accent); }
   .pool .only { padding: 4px 0; color: var(--muted); font-size: 0.84rem; }
-  @media (max-width: 480px) { .pool { grid-template-columns: minmax(0, 1fr) 6.5em; } .pool .only { grid-column: 1 / -1; } .togs { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 480px) { .pool { grid-template-columns: minmax(0, 1fr) auto; } .pool .only { grid-column: 1 / -1; } .togs { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
   /* Skills */
   .bd { display: inline-grid; place-items: center; width: 26px; height: 26px; flex: none; border-radius: 3px; font-size: 0.66rem; font-style: normal; font-weight: 700; color: #fff; }
@@ -516,6 +530,11 @@ const groups = [
       poolsOf()[i.dataset.pool as Pool] = Number.isFinite(n) && n > 0 ? n : 0;
       drawSkills();
       change();
+    }, { signal }));
+    document.querySelectorAll<HTMLElement>('.nstep').forEach((b) => b.addEventListener('click', () => {
+      const i = b.closest('.nbox')!.querySelector<HTMLInputElement>('input')!;
+      i.value = String(Math.max(0, Math.floor(Number(i.value)) + Number(b.dataset.n)));
+      i.dispatchEvent(new Event('input'));
     }, { signal }));
     // Right-click (long-press on touch) ignores or un-ignores a skill.
     $('#skills').addEventListener('contextmenu', (e) => {
