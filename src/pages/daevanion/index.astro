@@ -584,6 +584,24 @@ const groups = [
     };
     $('#skills').addEventListener('pointerup', drop, { signal });
     $('#skills').addEventListener('pointercancel', drop, { signal });
+    // Wheel or arrow keys on a focused limit box: up adds a level, down takes one, and going under 1 clears it (all).
+    const nudge = (inp: HTMLInputElement, d: number) => {
+      const n = (Math.floor(Number(inp.value)) || 0) + d, max = tiles(inp.dataset.lim!);
+      inp.value = n < 1 ? '' : String(Math.min(n, max));
+      inp.dispatchEvent(new Event('input', { bubbles: true }));
+    };
+    $('#skills').addEventListener('wheel', (e) => {
+      const inp = e.target as HTMLInputElement;
+      if (!inp.dataset?.lim || document.activeElement !== inp) return;
+      e.preventDefault();
+      nudge(inp, e.deltaY < 0 ? 1 : -1);
+    }, { signal, passive: false });
+    $('#skills').addEventListener('keydown', (e) => {
+      const inp = e.target as HTMLInputElement;
+      if (!inp.dataset?.lim || (e.key !== 'ArrowUp' && e.key !== 'ArrowDown')) return;
+      e.preventDefault();
+      nudge(inp, e.key === 'ArrowUp' ? 1 : -1);
+    }, { signal });
     $('#tabs').addEventListener('click', (e) => {
       const b = (e.target as HTMLElement).closest<HTMLElement>('button[data-i]');
       if (!b) return;
