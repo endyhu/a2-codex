@@ -23,7 +23,7 @@ const PLAN_HARD_CAP = 1500000;
 // Fixed stat orders, best first. Standard boards: Attack Bonus and Critical Hit have their own tiers, the rest follow.
 export const STAT_ORDER = ['fixingdamage', 'critical', 'hpmax', 'defense', 'criticalresist', 'mpmax'];
 const AZPHEL_STAT_ORDER = ['pvpadddamage', 'pvpcritical', 'pvpaccuracy', 'abnormalaccuracy', 'abnormalresistance', 'hpmax', 'pvpdamagedefense', 'pvpcriticalresist', 'pvpevasion', 'mpmax'];
-const ARIEL_STAT_ORDER = ['pveadddamage', 'critical', 'bossnpcadddamage', 'bossnpcamplifydamage', 'pveaccuracy', 'hpmax', 'pvedamagedefense', 'bossnpcdefense', 'bossnpcdecreasedamage', 'criticalresist', 'pveevasion', 'mpmax'];
+const ARIEL_STAT_ORDER = ['bossnpcamplifydamage', 'pveadddamage', 'bossnpcadddamage', 'critical', 'pveaccuracy', 'hpmax', 'pvedamagedefense', 'bossnpcdefense', 'bossnpcdecreasedamage', 'criticalresist', 'pveevasion', 'mpmax'];
 // Order stat totals are listed in: standard stats first, then Azphel's, then Ariel's.
 export const STAT_RANK = [...new Set([...STAT_ORDER, ...AZPHEL_STAT_ORDER, ...ARIEL_STAT_ORDER])];
 const PINNED_STATS =['fixingdamage', 'critical'];
