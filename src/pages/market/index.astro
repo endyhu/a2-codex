@@ -186,7 +186,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
           const s = want.get(p[i]);
           if (!s) continue;
           let price = p[i + 1];
-          if (t) for (let j = 0; j < t.length; j += 2) if (t[j] === p[i]) price = t[j + 1]; // 7-day median of the cheapest price on that server
+          if (t) for (let j = 0; j < t.length; j += 2) if (t[j] === p[i]) price = Math.min(t[j + 1], price); // 7-day median of the cheapest price on that server, never above the current listing (same rule as Crafting)
           list.push({ s, price, n: p[i + 2] });
         }
         list.sort((a, b) => a.price - b.price || a.s[1].localeCompare(b.s[1]));
