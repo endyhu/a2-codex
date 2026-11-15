@@ -35,12 +35,20 @@ const props = JSON.parse(flight.slice(open, end + 1));
 const TYPES = {
   wp_da: 'Daggers', wp_gs: 'Greatswords', wp_ma: 'Maces', wp_sw: 'Swords', weapon_guarder: 'Guards', wp_mb: 'Spellbooks', wp_or: 'Orbs',
   wp_bw: 'Bows', wp_st: 'Staves', acc_er: 'Earrings', acc_nl: 'Necklaces', acc_ring: 'Rings', acc_bracelet: 'Bracelets',
-  item_craft: 'Components',
+  item_craft: 'Materials',
 };
 // Armor item names to the slot names the Gear page uses.
 const SLOTS = { Breastplate: 'Top', Greaves: 'Legs', Boots: 'Shoes' };
+// Alchemy sub-tabs as in game: Spellbook, Orb, Potion, Scroll, Manastone, Materials (powders, scales, crystals, paper, ...).
+const alchemyType = (it) => {
+  const m = it.icon.match(/icon_(wp_mb|wp_or|item_usable_potion|item_usable_scroll|item_usable_enchant_(?:magicstone|soulstone))/)?.[1];
+  return { wp_mb: 'Spellbook', wp_or: 'Orb', item_usable_potion: 'Potion', item_usable_scroll: 'Scroll' }[m] ?? (m ? 'Manastone' : 'Materials');
+};
 const typeOf =(r) => {
-  const it = props.items[r.product], code = it.icon.match(/icon_(wp_[a-z]+|acc_[a-z]+|weapon_guarder|item_craft|item_usable|gm)/i)?.[1] ?? it.icon.match(/(weapon_guarder|item_craft|item_usable)/)?.[1];
+  const it = props.items[r.product];
+  if (r.category === 'Alchemy') return alchemyType(it);
+  if (r.category === 'Cooking') return 'Food';
+  const code = it.icon.match(/icon_(wp_[a-z]+|acc_[a-z]+|weapon_guarder|item_craft|item_usable|gm)/i)?.[1] ?? it.icon.match(/(weapon_guarder|item_craft|item_usable)/)?.[1];
   if (code === 'item_usable') return r.category === 'Cooking' ? 'Food' : 'Consumables';
   if (code === 'gm') return SLOTS[it.name.split(' ').pop()] ?? it.name.split(' ').pop();
   return TYPES[code] ?? 'Other';

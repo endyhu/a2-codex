@@ -6,8 +6,8 @@ import layoutGrid from 'lucide-static/icons/layout-grid.svg?raw';import anvil fr
 // Icon per item type (the `type` of a recipe in crafting.json); the page script reads them from #sub-icons.
 const lucide = import.meta.glob('/node_modules/lucide-static/icons/*.svg', { query: '?raw', import: 'default', eager: true }) as Record<string, string>;
 const typeIcons: Record<string, string> = Object.fromEntries(Object.entries({
-  all: 'layout-grid', Swords: 'shield', Greatswords: 'sword', Maces: 'hammer', Guards: 'shield-half', Staves: 'wand', Orbs: 'orbit', Spellbooks: 'book-open',
-  Earrings: 'gem', Necklaces: 'link', Rings: 'circle-dot', Bracelets: 'circle', Helm: 'crown', Pauldrons: 'shield', Top: 'shirt', Cloak: 'ghost', Gloves: 'hand', Shoes: 'footprints', Components: 'package', Consumables: 'flask-conical', Food: 'utensils',
+  all: 'layout-grid', Swords: 'shield', Greatswords: 'sword', Maces: 'hammer', Guards: 'shield-half', Staves: 'wand', Orb: 'orbit', Spellbook: 'book-open', Potion: 'flask-conical', Scroll: 'scroll', Manastone: 'gem', Materials: 'package',
+  Earrings: 'gem', Necklaces: 'link', Rings: 'circle-dot', Bracelets: 'circle', Helm: 'crown', Pauldrons: 'shield', Top: 'shirt', Cloak: 'ghost', Gloves: 'hand', Shoes: 'footprints', Consumables: 'flask-conical', Food: 'utensils',
 }).map(([type, icon]) => [type, lucide[`/node_modules/lucide-static/icons/${icon}.svg`]]));
 typeIcons.Legs = legsIcon;
 typeIcons.Bows = bowIcon;
@@ -314,6 +314,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
     // Item types of the chosen profession, in the order the recipes list them.
     const renderSub = () => {
       const types = state.prof === 'all' ? [] : [...new Set(craft.recipes.filter((r) => r.profession === state.prof).map((r) => r.type))];
+      if (state.prof === 'Alchemy') { const o = ['Spellbook', 'Orb', 'Potion', 'Scroll', 'Manastone', 'Materials']; types.sort((a, b) => o.indexOf(a) - o.indexOf(b)); }
       if (!types.includes(state.sub)) state.sub = 'all';
       subEl.hidden = !types.length;
       subEl.innerHTML = types.length ? [['all', 'All types'], ...types.map((t) => [t, t])].map(([v, l]) => `<button type="button" class="tog" role="radio" aria-checked="${v === state.sub}" data-v="${esc(v)}"><span class="ico">${icons[v] ?? ''}</span>${esc(l)}</button>`).join('') : '';
@@ -490,7 +491,7 @@ const factions: [string, string][] = [['all', 'Both'], ['Elyos', 'Elyos'], ['Asm
       }
       return t / r.qty;
     };
-    // Components are crafted or bought: your choice, otherwise whichever is cheaper in the reference column.
+    // Materials are crafted or bought: your choice, otherwise whichever is cheaper in the reference column.
     const decide = (id: number): 'craft' | 'buy' => {
       const o = modes.get(id);
       if (o) return o;
