@@ -1,7 +1,7 @@
 // Builds public/crafting.json: every crafting recipe of the Global client (product, output count, mastery, profession, materials).
 // Source: metabot.gg/en/aion-2/crafting, which converts the Global client's own data tables (see https://metabot.gg/en/aion-2/methodology).
 // Usage: mise exec -- node scripts/crafting-snapshot.mjs   (re-run after each patch)
-import { writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 
 const res = await fetch('https://metabot.gg/en/aion-2/crafting', { headers: { 'User-Agent': 'a2codex-snapshot (a2codex.prezenith.com)' } });
 if (!res.ok) throw new Error(`crafting: HTTP ${res.status}`);
@@ -70,6 +70,11 @@ for (const id of [...used].sort((a, b) => a - b)) {
   items[id] = [it.name, it.grade];
 }
 
+
+// The client table has a second, unobtainable set of Star/True Dragon Lord recipes (e.g. Star Ring 310330019 and 310330115, True Ring 310330015 and an Asmodian 310330111);
+// only one item per name is on the market (Star = Asmodian, True = Elyos). Keep the recipes whose product is a market item.
+const marketIds = new Set(JSON.parse(readFileSync(new URL('../public/market.json', import.meta.url), 'utf8')).items.map((i) => i[0]));
+recipes.splice(0, recipes.length, ...recipes.filter((r) => !/^(Star|True) Dragon Lord /.test(props.items[r.product].name) || marketIds.has(r.product)));
 
 // Dragon Lord "Splendent X" recipes (114, all mastery 0): the client table lists only the extra materials (e.g. 11 Fine Thick Balaur Horn
 // + 4 Wrathful Mind), but the item X itself is consumed too (owner, in game: Splendent Star Dragon Lord Greatsword needs a Star Dragon Lord
