@@ -36,8 +36,9 @@ jobs:
         run: |
           curl -fsS --max-time 30 https://a2codex.prezenith.com/market.json -o /tmp/market.json
           node -e "const m = JSON.parse(require('fs').readFileSync('/tmp/market.json', 'utf8')); if (!m.servers?.length || !m.items?.length) process.exit(1)"
-          cp /tmp/market.json public/market.json
-          node -e "const m = JSON.parse(require('fs').readFileSync('/tmp/market.json', 'utf8')); if (Date.now() - Date.parse(m.generated) < 36e5) console.log('recent=true')" >> "$GITHUB_OUTPUT"
+          # Keep whichever is newer: the live prices or the committed ones.
+          node -e "const fs = require('fs'); if (Date.parse(JSON.parse(fs.readFileSync('/tmp/market.json', 'utf8')).generated) > Date.parse(JSON.parse(fs.readFileSync('public/market.json', 'utf8')).generated)) fs.copyFileSync('/tmp/market.json', 'public/market.json')"
+          node -e "const m = JSON.parse(require('fs').readFileSync('public/market.json', 'utf8')); if (Date.now() - Date.parse(m.generated) < 36e5) console.log('recent=true')" >> "$GITHUB_OUTPUT"
       - run: npm run build
       - uses: actions/upload-pages-artifact@v5
         with:
