@@ -23,7 +23,9 @@ const PLAN_HARD_CAP = 1500000;
 // Fixed stat orders, best first. Standard boards: Attack Bonus and Critical Hit have their own tiers, the rest follow.
 export const STAT_ORDER = ['fixingdamage', 'critical', 'hpmax', 'defense', 'criticalresist', 'mpmax'];
 const AZPHEL_STAT_ORDER = ['pvpadddamage', 'pvpcritical', 'pvpaccuracy', 'abnormalaccuracy', 'abnormalresistance', 'hpmax', 'pvpdamagedefense', 'pvpcriticalresist', 'pvpevasion', 'mpmax'];
-const ARIEL_STAT_ORDER = ['bossnpcamplifydamage', 'pveadddamage', 'bossnpcadddamage', 'critical', 'pveaccuracy', 'bossnpcdecreasedamage', 'pvedamagedefense', 'bossnpcdefense', 'hpmax', 'criticalresist', 'pveevasion', 'mpmax'];
+const ARIEL_STAT_ORDER = ['bossnpcamplifydamage', 'pveadddamage', 'bossnpcadddamage', 'critical', 'pveaccuracy', 'bossnpcdecreasedamage', 'hpmax', 'pvedamagedefense', 'bossnpcdefense', 'criticalresist', 'pveevasion', 'mpmax'];
+// PvP focus: Critical Hit Resist moves above the two defense stats.
+const ARIEL_PVP_STAT_ORDER = ['bossnpcamplifydamage', 'pveadddamage', 'bossnpcadddamage', 'critical', 'pveaccuracy', 'bossnpcdecreasedamage', 'hpmax', 'criticalresist', 'pvedamagedefense', 'bossnpcdefense', 'pveevasion', 'mpmax'];
 // Order stat totals are listed in: standard stats first, then Azphel's, then Ariel's.
 export const STAT_RANK = [...new Set([...STAT_ORDER, ...AZPHEL_STAT_ORDER, ...ARIEL_STAT_ORDER])];
 const PINNED_STATS =['fixingdamage', 'critical'];
@@ -84,7 +86,7 @@ export function weigh(boards: Board[], mode: Mode, mustHave: string[], D: GameDa
   const orders: Record<Pool, string[]> = {
     c: STAT_ORDER,
     a: AZPHEL_STAT_ORDER.filter((k) => present('a').has(k)),
-    q: ARIEL_STAT_ORDER.filter((k) => present('q').has(k)),
+    q: (pvp ? ARIEL_PVP_STAT_ORDER : ARIEL_STAT_ORDER).filter((k) => present('q').has(k)),
   };
   const soft = STAT_ORDER.filter((k) => !PINNED_STATS.includes(k));
   for (const b of boards) for (const o of b.N) {
