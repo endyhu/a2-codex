@@ -26,6 +26,13 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      # If the snapshot below fails, keep the newer of the live prices and the committed fallback instead of the old committed file.
+      - name: Reuse the live market data when newer
+        continue-on-error: true
+        run: |
+          curl -fsS --max-time 30 https://a2codex.prezenith.com/market.json -o /tmp/market.json
+          node -e "const fs = require('fs'); const live = JSON.parse(fs.readFileSync('/tmp/market.json', 'utf8')), repo = JSON.parse(fs.readFileSync('public/market.json', 'utf8')); if (!live.servers?.length || !live.items?.length || Date.parse(live.generated) <= Date.parse(repo.generated)) process.exit(1)"
+          cp /tmp/market.json public/market.json
       - run: node scripts/market-snapshot.mjs
         continue-on-error: true
         timeout-minutes: 15
